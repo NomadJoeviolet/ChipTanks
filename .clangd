@@ -1,0 +1,29 @@
+# Clangd configuration for ChipSkies.
+#
+# This setup keeps clangd in sync with the STM32 cross-compilation toolchain by
+# pointing it to the CMake compile_commands.json database and letting it query
+# the real GCC driver for system includes/defines.
+
+CompilationDatabase: build/Debug
+
+CompileFlags:
+  Add:
+    - "--query-driver=C:/IncludeAll/Tools/EmbeddedToolChain/arm-none-eabi/14.3 rel1/bin/arm-none-eabi-g++.exe"
+    - "--query-driver=C:/IncludeAll/Tools/EmbeddedToolChain/arm-none-eabi/14.3 rel1/bin/arm-none-eabi-gcc.exe"
+
+Diagnostics:
+  Suppress:
+    - "no-member"
+    - "file-not-found"
+    - "clang(pp_hash_error)"
+    - "err_no_member"
+    - "err_access"
+    - "err_access_protected"
+  UnusedIncludes: None
+  MissingIncludes: None
+  ClangTidy:
+    Add:
+      - readability-*
+      - modernize-*
+    Remove:
+      - modernize-use-trailing-return-type
