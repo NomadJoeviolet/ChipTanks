@@ -4,8 +4,8 @@
 *                         www.segger.com                             *
 **********************************************************************
 
-File          : C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipSkies/ChipSkies.jdebug
-Created       : 18 Nov 2025 19:21
+File          : C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/ChipTanks.jdebug
+Created       : 20 Nov 2025 01:22
 Ozone Version : V3.38g
 */
 
@@ -22,8 +22,8 @@ void OnProjectLoad (void) {
   //
   // Dialog-generated settings
   //
-  Project.AddPathSubstitute ("C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipSkies", "$(ProjectDir)");
-  Project.AddPathSubstitute ("c:/includeall/workspace/codes/stm32cubemx_projects/chipskies", "$(ProjectDir)");
+  Project.AddPathSubstitute ("C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks", "$(ProjectDir)");
+  Project.AddPathSubstitute ("c:/includeall/workspace/codes/stm32cubemx_projects/chiptanks", "$(ProjectDir)");
   Project.SetDevice ("STM32F103C8");
   Project.SetHostIF ("USB", "69408944");
   Project.SetTargetIF ("SWD");
@@ -32,7 +32,7 @@ void OnProjectLoad (void) {
   //
   // User settings
   //
-  File.Open ("$(ProjectDir)/build/Debug/ChipSkies.elf");
+  File.Open ("$(ProjectDir)/build/Debug/ChipTanks.elf");
   Project.SetOSPlugin ("FreeRTOSPlugin_CM3");
 }
 
