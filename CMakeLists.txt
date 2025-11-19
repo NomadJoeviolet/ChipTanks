@@ -43,16 +43,29 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined library search paths
 )
 
+file(GLOB_RECURSE SRCPP_FILES ${CMAKE_CURRENT_SOURCE_DIR}/App/*.cpp)
+file(GLOB_RECURSE   SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/App/*.c  )
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
-    App/threads.cpp
+    ${SRCPP_FILES}
+    ${SRC_FILES}
+    # App/threads.cpp
+    # App/Peripheral/OLED/font.c
+    # App/Peripheral/OLED/oled.c
 )
 
+# file(GLOB_RECURSE HEADER_FILES ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
-
+    App/Data
+    App/Role
+    App/Bullet
+    App/Peripheral/OLED
+    App/Peripheral/KEY
+    
+    Lib/etl/include
 )
 
 # Add project symbols (macros)

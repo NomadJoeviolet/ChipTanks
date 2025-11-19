@@ -67,16 +67,28 @@ const osThreadAttr_t oldeTask_attributes = {
   .stack_size = sizeof(oldeTaskBuffer),
   .priority = (osPriority_t) osPriorityHigh,
 };
-/* Definitions for drawPicTask */
-osThreadId_t drawPicTaskHandle;
-uint32_t drawPicTaskBuffer[ 256 ];
-osStaticThreadDef_t drawPicTaskControlBlock;
-const osThreadAttr_t drawPicTask_attributes = {
-  .name = "drawPicTask",
-  .cb_mem = &drawPicTaskControlBlock,
-  .cb_size = sizeof(drawPicTaskControlBlock),
-  .stack_mem = &drawPicTaskBuffer[0],
-  .stack_size = sizeof(drawPicTaskBuffer),
+/* Definitions for keyScan */
+osThreadId_t keyScanHandle;
+uint32_t keyScanBuffer[ 128 ];
+osStaticThreadDef_t keyScanControlBlock;
+const osThreadAttr_t keyScan_attributes = {
+  .name = "keyScan",
+  .cb_mem = &keyScanControlBlock,
+  .cb_size = sizeof(keyScanControlBlock),
+  .stack_mem = &keyScanBuffer[0],
+  .stack_size = sizeof(keyScanBuffer),
+  .priority = (osPriority_t) osPriorityHigh,
+};
+/* Definitions for gameControl */
+osThreadId_t gameControlHandle;
+uint32_t gameControlBuffer[ 256 ];
+osStaticThreadDef_t gameControlControlBlock;
+const osThreadAttr_t gameControl_attributes = {
+  .name = "gameControl",
+  .cb_mem = &gameControlControlBlock,
+  .cb_size = sizeof(gameControlControlBlock),
+  .stack_mem = &gameControlBuffer[0],
+  .stack_size = sizeof(gameControlBuffer),
   .priority = (osPriority_t) osPriorityHigh,
 };
 
@@ -87,7 +99,8 @@ const osThreadAttr_t drawPicTask_attributes = {
 
 void StartDefaultTask(void *argument);
 extern void oledTaskThread(void *argument);
-extern void drawPicThread(void *argument);
+extern void keyScanThread(void *argument);
+extern void gameControlThread(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -124,8 +137,11 @@ void MX_FREERTOS_Init(void) {
   /* creation of oldeTask */
   oldeTaskHandle = osThreadNew(oledTaskThread, NULL, &oldeTask_attributes);
 
-  /* creation of drawPicTask */
-  drawPicTaskHandle = osThreadNew(drawPicThread, NULL, &drawPicTask_attributes);
+  /* creation of keyScan */
+  keyScanHandle = osThreadNew(keyScanThread, NULL, &keyScan_attributes);
+
+  /* creation of gameControl */
+  gameControlHandle = osThreadNew(gameControlThread, NULL, &gameControl_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
