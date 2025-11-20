@@ -3,6 +3,9 @@
 
 #include "role.hpp"
 
+// class GameEntityManager; // 添加前向声明，避免重复引用
+// extern GameEntityManager g_entityManager;
+
 class LeadingRole : public IRole {
 public:
     LeadingRole() {//会优先执行 基类构造函数
@@ -29,26 +32,49 @@ public:
             m_pdata->spatialData.refPosX = m_pdata->spatialData.currentPosX ;
             m_pdata->spatialData.refPosY = m_pdata->spatialData.currentPosY ;
        }
-    }    
+    }
+
+    void doAction() override {
+        // Implement action logic for the leading role
+
+        switch (m_pdata->actionData.currentState) {
+        case ActionState::IDLE:
+            // Do nothing
+            break;
+        case ActionState::MOVING:
+            switch (m_pdata->actionData.moveMode) {
+            case MoveMode::LEFT:
+                move(-1, 0);
+                break;
+            case MoveMode::RIGHT:
+                move(1, 0);
+                break;
+            case MoveMode::UP:
+                move(0, -1);
+                break;
+            case MoveMode::DOWN:
+                move(0, 1);
+                break;
+            default:
+                break;
+            }
+            m_pdata->actionData.currentState = ActionState::IDLE;
+            m_pdata->actionData.moveMode = MoveMode::NONE;
+            break;
+        }
+
+        shoot();
+
+    }
+    
+    void die() override {
+        
+    }
 
     void think() override {
         // Implement player-specific logic if needed
 
     }
-
-    // void move(int8_t dirX, int8_t dirY) override {
-    //   uint8_t tmpX = m_pdata->spatialData.currentPosX + dirX * m_pdata->spatialData.moveSpeed;
-    //   uint8_t tmpY = m_pdata->spatialData.currentPosY + dirY * m_pdata->spatialData.moveSpeed;
-    //   // Boundary checks (assuming screen size 128x64)
-    //   if (tmpX < 0 || tmpX > 128 - m_pdata->spatialData.sizeX)
-    //       return;
-    //   if (tmpY < 0 || tmpY > 64 - m_pdata->spatialData.sizeY)
-    //       return;
-
-    //   m_pdata->spatialData.refPosX = tmpX;
-    //   m_pdata->spatialData.refPosY = tmpY;
-
-    // }
 
     void shoot() override {
         // Implement shooting logic for the leading role

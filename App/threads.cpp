@@ -38,6 +38,17 @@ void oledTaskThread(void *argument) {
                                OLED_COLOR_NORMAL);
             }
         }
+
+        for(auto bulletPtr : g_entityManager.m_bullets) {
+            if(bulletPtr != nullptr && bulletPtr->m_data != nullptr && bulletPtr->m_data->img != nullptr) {
+                OLED_DrawImage(bulletPtr->m_data->spatialData.currentPosX,
+                               bulletPtr->m_data->spatialData.currentPosY,
+                               bulletPtr->m_data->img,
+                               OLED_COLOR_NORMAL);
+            }
+        }
+
+         // 调试信息显示
         OLED_ShowFrame();
         osDelay(20);
     }
@@ -60,14 +71,22 @@ void keyScanThread(void *argument) {
     key.init();
     for (;;) {
         key.scan();
-        if (key.m_keyButton[15] == 1 )
-            pLeadingRole->move(-1, 0); // Move left
-        if (key.m_keyButton[11] == 1 )
-            pLeadingRole->move(0, 1); // Move down
-        if (key.m_keyButton[10] == 1 )
-            pLeadingRole->move(0, -1); // Move up
-        if (key.m_keyButton[7] == 1 )
-            pLeadingRole->move(1, 0); // Move right
+        if (key.m_keyButton[15] == 1 ) {
+            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+            pLeadingRole->getData()->actionData.moveMode = MoveMode::LEFT; // Move left
+        }
+        else if (key.m_keyButton[11] == 1 ) {
+            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+            pLeadingRole->getData()->actionData.moveMode = MoveMode::DOWN; // Move down
+        }
+        else if (key.m_keyButton[10] == 1 ) {
+            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+            pLeadingRole->getData()->actionData.moveMode = MoveMode::UP; // Move up
+        }
+        else if (key.m_keyButton[7] == 1 ) {
+            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+            pLeadingRole->getData()->actionData.moveMode = MoveMode::RIGHT; // Move right
+        }
         osDelay(40);
     }
 }
@@ -100,30 +119,24 @@ void gameControlThread(void *argument) {
      g_entityManager.addRole(pLeadingRole);
     
     // 添加一些敌人角色进行测试
-    FeilianEnemy* enemyFeilian[9] = {new FeilianEnemy(124,1,80,0),
-                                    new FeilianEnemy(124,24,80,24),
-                                    new FeilianEnemy(124,48,80,48),
-                                    new FeilianEnemy(124+30,24,95,24),
-                                    new FeilianEnemy(124+30,1,95,0),
-                                    new FeilianEnemy(124+30,48,95,48),
-                                    new FeilianEnemy(124+30*2,24,110,24),
-                                    new FeilianEnemy(124+30*2,1,110,0),
-                                    new FeilianEnemy(124+30*2,48,110,48)};
-
-    for(int i=0; i<9; i++)
-        g_entityManager.addRole(enemyFeilian[i]);    
 
     for (;;) {
         if(g_entityManager.m_roles.size() == 1 ) {
             // 全部敌人被消灭，重新添加敌人
-            for(int i=0; i<9; i++) {
-                enemyFeilian[i] = new FeilianEnemy(124 + (i/3)*30, (i%3)*24 + 1, 80 + (i/3)*15, (i%3)*24);
-                g_entityManager.addRole(enemyFeilian[i]);
+            for(int i=0; i<6; i++) {
+                IRole* enemyFeilian = new FeilianEnemy(124 + (i/3)*30, (i%3)*24 + 1, 80 + (i/3)*15, (i%3)*24);
+                if(!g_entityManager.addRole(enemyFeilian)) {
+                    delete enemyFeilian ;
+                }
             }
         }
 
+        g_entityManager.updateAllRolesActions();
+        g_entityManager.updateAllBulletsActions();
         g_entityManager.updateAllRoles();
+        g_entityManager.updateAllBullets();
         g_entityManager.cleanupInvalidRoles();
+        g_entityManager.cleanupInvalidBullets();
 
         // debugCurrentPosX = pLeadingRole->getData()->spatialData.currentPosX ;
         // debugCurrentPosY = pLeadingRole->getData()->spatialData.currentPosY;

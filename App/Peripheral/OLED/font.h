@@ -58,6 +58,10 @@ extern const Image TaotieShowImg;
 extern const Image TyphonShowImg;
 extern const Image XiangliuShowImg;
 
+extern const Image BasicBulletImg;
+extern const Image FireBallBulletImg;
+extern const Image LightningLineBulletImg;
+
 #ifdef __cplusplus
 }
 #endif

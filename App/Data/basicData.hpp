@@ -11,8 +11,8 @@ enum class RoleIdentity {
 
 enum class BulletType {
     NORMAL = 0,
-    LASER = 1,
-    PLASMA = 2,
+    FIRE_BALL = 1,
+    LIGHTNING_LINE = 2,
 };
 
 
@@ -77,12 +77,13 @@ public:
     //攻击速度
     uint8_t shootSpeed;
     uint16_t shootCooldownTimer;
+    uint16_t shootCooldownResetTime;
     uint8_t shootCooldownSpeed;
     //攻击力
     uint8_t attackPower;
     //子弹类型
     BulletType bulletType;
-    uint16_t bulletSpeed;
+    int8_t bulletSpeed;
 };
 
 class InitData {
@@ -90,6 +91,34 @@ public:
     uint8_t posX{};
     uint8_t posY{};
     uint8_t init_count{};
+};
+
+enum class ActionState {
+    IDLE = 0,
+    MOVING = 1,
+    ATTACKING = 2
+};
+
+enum class AttackMode {
+    NONE = 0,
+    SINGLE_SHOT = 1,
+    BURST_FIRE = 2,
+    CONTINUOUS_FIRE = 3
+};
+
+enum class MoveMode {
+    NONE = 0,
+    UP = 1,
+    DOWN = 2,
+    LEFT = 3,
+    RIGHT = 4
+};
+
+class ActionData {
+public:
+    ActionState currentState{};
+    AttackMode attackMode{};
+    MoveMode moveMode{};
 };
 
 class RoleData
@@ -101,6 +130,11 @@ public:
     //身份信息
     RoleIdentity identity;
     bool isInited = false;
+    bool isActive = false;
+    bool isDead = false ;
+
+    //动作信息
+    ActionData actionData;
 
     //血量信息
     uint8_t currentHealth;
@@ -136,6 +170,7 @@ public:
         attackData.attackPower = 10;
         attackData.bulletType = BulletType::NORMAL;
         attackData.bulletSpeed = 5;//每0.1s移动5个像素
+        attackData.shootCooldownResetTime = 1000; // Added initialization for shootCooldownResetTime
 
         spatialData = SpatialMovementData(1,0,0,0,0,0,0);
         img = nullptr;
@@ -145,6 +180,9 @@ public:
 class BulletData
 {
 public:
+    //来自
+    RoleIdentity fromIdentity{RoleIdentity::UNKNOWN};
+
     //空间移动信息
     SpatialMovementData spatialData;
     //伤害值
@@ -155,15 +193,11 @@ public:
     //是否激活
     bool isActive{ true };
     //图片信息
-    Image* img = nullptr;
+    const Image* img = nullptr;
 public:
-    BulletData() {
-        spatialData = SpatialMovementData(2,0,0,0,0,0,0);
-        damage = 10;
-        range = 2;
-    }
+    BulletData() = default; ;
 
-    BulletData(int8_t speed, uint8_t currentPosX, uint8_t currentPosY, uint8_t dmg , BulletType type ) {
+    BulletData(int8_t speed, uint8_t currentPosX, uint8_t currentPosY, uint8_t dmg , uint8_t rg , BulletType type ) {
             //根据类型进行初始化
             this->type = type;
             switch (this->type)
@@ -172,6 +206,8 @@ public:
                 //img = &bulletImg;
                 damage = dmg;
                 spatialData = SpatialMovementData(speed, currentPosX, currentPosY, currentPosX, currentPosY, img->w, img->h);
+                isActive = true;
+                range = rg;
                 break;
             }
         }

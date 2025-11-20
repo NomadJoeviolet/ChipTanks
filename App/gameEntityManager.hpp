@@ -4,6 +4,8 @@
 #include "math.h"
 #include "role.hpp"
 #include "etl/vector.h"
+
+#include "FreeRTOS.h"
 #include "task.h"
 
 class GameEntityManager {
@@ -211,6 +213,10 @@ public:
             // Simple AABB collision detection
             BulletData* dataA = bullet_A->m_data;
             RoleData* dataB = role_B->getData();
+            
+            if (dataA->fromIdentity == dataB->identity) {
+                continue; // Skip collision check if bullet and role have the same identity
+            }
 
             if (dataA->spatialData.refPosX < dataB->spatialData.currentPosX + dataB->spatialData.sizeX-1 &&
                 dataA->spatialData.refPosX + dataA->spatialData.sizeX-1 > dataB->spatialData.currentPosX &&
@@ -225,6 +231,9 @@ public:
         return collisionDetected;
     }
 
+    /**
+     * @brief 更新所有角色状态和位置
+     */
     void updateAllRoles() {
         taskENTER_CRITICAL();
         for(auto rolePtr : m_roles) {
@@ -235,6 +244,44 @@ public:
                 collisionResult = checkRoleRefPositionCollision(rolePtr);
                 }
                 rolePtr->update(collisionResult);
+            }
+        }
+        taskEXIT_CRITICAL();
+    }
+
+    void updateAllBullets() {
+        taskENTER_CRITICAL();
+        for(auto bulletPtr : m_bullets) {
+            if(bulletPtr != nullptr) {
+                CollisionResult collisionResult = {false, CollisionDirection::NONE};
+                //碰撞处理
+                bool isCollision = checkBulletRefPositionCollision(bulletPtr);
+                if(isCollision) {
+                    collisionResult.isCollision = true;
+                }
+                bulletPtr->update(collisionResult);
+            }
+        }
+        taskEXIT_CRITICAL();
+    }
+
+    // 更新所有角色的AI行动决策
+    void updateAllRolesActions() {
+        taskENTER_CRITICAL();
+        for(auto rolePtr : m_roles) {
+            if(rolePtr != nullptr && rolePtr->getData()->isInited) {
+                rolePtr->think();
+                rolePtr->doAction();
+            }
+        }
+        taskEXIT_CRITICAL();
+    }
+
+    void updateAllBulletsActions() {
+        taskENTER_CRITICAL();
+        for(auto bulletPtr : m_bullets) {
+            if(bulletPtr != nullptr) {
+                bulletPtr->doAction();
             }
         }
         taskEXIT_CRITICAL();

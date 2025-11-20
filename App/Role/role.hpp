@@ -2,10 +2,17 @@
 #define ROLE_HPP
 
 #include "basicData.hpp"
+#include "bullet.hpp"
 #include "etl/algorithm.h"
+
 
 extern uint8_t controlDelayTime ;
 
+/**
+ * @brief 角色接口类
+ * @note 所有角色类均需继承该接口类
+ * @note think()函数用于实现AI逻辑，决定Action状态
+ */
 class IRole {
 protected:
     RoleData* m_pdata = nullptr ;
@@ -26,7 +33,9 @@ public:
         return m_pdata;
     }
 
+    virtual void doAction() = 0;
     virtual void init() = 0;
+    virtual void die() = 0;
     // virtual void move(int8_t dirX, int8_t dirY) = 0;
     virtual void shoot() = 0;
     virtual void think() = 0;
@@ -52,8 +61,6 @@ public:
             init();
             return ;
         }
-
-        think();
 
         //位置更新
         if(!collisionResult.isCollision) {
@@ -96,7 +103,7 @@ public:
         if (m_pdata->heatData.currentHeat > 0 )
         {
             m_pdata->heatData.heatCoolDownTimer += controlDelayTime ;
-            if (m_pdata->heatData.heatCoolDownTimer >= 200) //每300ms降温一次
+            if (m_pdata->heatData.heatCoolDownTimer >= 200) //每200ms降温一次
             {
                 if (m_pdata->heatData.currentHeat <= m_pdata->heatData.heatCoolDownRate)
                     m_pdata->heatData.currentHeat = 0;
@@ -104,6 +111,11 @@ public:
                     m_pdata->heatData.currentHeat -= m_pdata->heatData.heatCoolDownRate;
                 m_pdata->heatData.heatCoolDownTimer = 0 ;
             }
+        }
+
+        //检查血量状态
+        if(m_pdata->currentHealth == 0 && !m_pdata->isDead) {
+            m_pdata->isDead = true ;
         }
         
     }
@@ -116,7 +128,7 @@ public:
     }
 
     bool isActive() {
-        return m_pdata->currentHealth > 0;
+        return m_pdata->isActive ;
     }
 
 };

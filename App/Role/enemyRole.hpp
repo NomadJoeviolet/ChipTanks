@@ -2,7 +2,7 @@
 #define ENEMYROLE_HPP
 
 #include "role.hpp"
-#include "task.h"
+//#include "task.h"
 
 /***************小型敌人***************/
 
@@ -13,17 +13,17 @@
  */
 class FeilianEnemy : public IRole {
 public:
-    uint8_t action_count = 0 ;
+    uint8_t action_count = 0;
 
 public:
-    FeilianEnemy(uint8_t startX=164, uint8_t startY=32 , uint8_t initPosX=96  , uint8_t initPosY=0 ) {
+    FeilianEnemy(uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0) {
         m_pdata->identity = RoleIdentity::ENEMY;
-        m_pdata->img = &feilianImg ;
+        m_pdata->img      = &feilianImg;
 
-        m_pdata->spatialData.currentPosX = startX ; // Starting X position
-        m_pdata->spatialData.currentPosY = startY ; // Starting Y position
-        m_pdata->initData.posX = initPosX;
-        m_pdata->initData.posY = initPosY;
+        m_pdata->spatialData.currentPosX = startX; // Starting X position
+        m_pdata->spatialData.currentPosY = startY; // Starting Y position
+        m_pdata->initData.posX           = initPosX;
+        m_pdata->initData.posY           = initPosY;
 
         m_pdata->spatialData.refPosX = startX;
         m_pdata->spatialData.refPosY = startY;
@@ -31,72 +31,33 @@ public:
         m_pdata->spatialData.sizeX = m_pdata->img->w;
         m_pdata->spatialData.sizeY = m_pdata->img->h;
 
-        m_pdata->spatialData.moveSpeed = 1 ; // Set mo1ement speed
+        m_pdata->spatialData.moveSpeed = 1; // Set mo1ement speed
+
+        m_pdata->isActive = true;
+
+        m_pdata->attackData.attackPower = 5 ;
+        m_pdata->attackData.shootCooldownSpeed = 50 ;
+        m_pdata->attackData.shootCooldownTimer = 0 ;
+        m_pdata->attackData.shootCooldownResetTime = 10000  ;
+        m_pdata->attackData.shootCooldownResetTime = 500 / controlDelayTime ; // 500ms cooldown
+        m_pdata->attackData.bulletSpeed = 1 ;
+        
+        m_pdata->heatData.maxHeat = 100 ;
+        m_pdata->heatData.currentHeat = 0 ;
+        m_pdata->heatData.heatPerShot = 20 ;
+        m_pdata->heatData.heatCoolDownRate = 10 ;
+
         // Initialize other enemy-specific data here
     }
+    
     ~FeilianEnemy() override = default;
 
-    void init() override {
-        m_pdata->initData.init_count += controlDelayTime ;
-        // Initialize enemy role specifics
-        
-        taskENTER_CRITICAL();
-
-        if( m_pdata->spatialData.currentPosX > m_pdata->initData.posX ) {
-            if(m_pdata->initData.init_count >= 100) { // 每100ms移动一次
-                m_pdata->spatialData.currentPosX -= m_pdata->spatialData.moveSpeed ;
-                m_pdata->initData.init_count = 0 ;
-            }
-        } else {
-            m_pdata->isInited = true ;
-            m_pdata->spatialData.refPosX = m_pdata->spatialData.currentPosX ;
-            m_pdata->spatialData.refPosY = m_pdata->spatialData.currentPosY ;
-            m_pdata->initData.init_count = 0 ;
-        }
-
-        taskEXIT_CRITICAL();
-    }
-
-    void think() override {
-        // Implement enemy AI logic
-        action_count += controlDelayTime ;
-        if(action_count < 100) // 每100ms决定一次行动
-            return ;
-
-        uint8_t randomAction = rand() % 5 ;
-        // Random action: 0 - move left, 1 - move right, 2 - move down, 3 - move up, 4 - stay still
-        if (randomAction == 0) {
-            move(-1, 0); // Move left
-        } else if (randomAction == 1) {
-            move(1, 0); // Move right
-        } else if (randomAction == 2) {
-            move(0, 1); // Move down
-        } else if (randomAction == 3) {
-            move(0, -1); // Move up
-        } else if (randomAction == 4) {
-            // Stay still
-        } 
-        action_count = 0 ;
-
-    }
-
-    // void move(int8_t dirX, int8_t dirY) override {
-    //     // Implement enemy movement logic
-    //   uint8_t tmpX = m_pdata->spatialData.currentPosX + dirX * m_pdata->spatialData.moveSpeed;
-    //   uint8_t tmpY = m_pdata->spatialData.currentPosY + dirY * m_pdata->spatialData.moveSpeed;
-    //   // Boundary checks (assuming screen size 128x64)
-    //   if (tmpX < 0 || tmpX > 128 - m_pdata->spatialData.sizeX)
-    //       return;
-    //   if (tmpY < 0 || tmpY > 64 - m_pdata->spatialData.sizeY)
-    //       return;
-
-    //   m_pdata->spatialData.refPosX = tmpX;
-    //   m_pdata->spatialData.refPosY = tmpY;
-    // }
-
-    void shoot() override {
-        // Implement enemy shooting logic
-    }
+    
+    void init() ;  // 只保留声明
+    void think() ;  // 只保留声明
+    void doAction() ;  // 只保留声明
+    void die() ;  // 只保留声明
+    void shoot() ;  // 只保留声明
 
 };
 
@@ -124,7 +85,6 @@ public:
     void shoot() override {
         // Implement enemy shooting logic
     }
-
 };
 
 class ChiMeiEnemy : public IRole {
@@ -146,7 +106,6 @@ public:
     void shoot() override {
         // Implement enemy shooting logic
     }
-
 };
 
 class TaotieEnemy : public IRole {
@@ -168,9 +127,7 @@ public:
     void shoot() override {
         // Implement enemy shooting logic
     }
-
 };
-
 
 class TyphonEnemy : public IRole {
 public:
@@ -191,9 +148,7 @@ public:
     void shoot() override {
         // Implement enemy shooting logic
     }
-
 };
-
 
 class XiangliuEnemy : public IRole {
 public:
@@ -213,8 +168,8 @@ public:
 
     void shoot() override {
         // Implement enemy shooting logic
-    }
 
+    }
 };
 
 #endif // ENEMYROLE_HPP
