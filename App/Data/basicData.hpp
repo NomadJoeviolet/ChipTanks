@@ -10,7 +10,7 @@ enum class RoleIdentity {
 };
 
 enum class BulletType {
-    NORMAL = 0,
+    BASIC = 0,
     FIRE_BALL = 1,
     LIGHTNING_LINE = 2,
 };
@@ -23,13 +23,25 @@ public:
     uint8_t heatCoolDownRate{};
     uint8_t heatCoolDownTimer{};
     uint8_t heatPerShot{};
-    bool isOverheated{ false };
 public:
     HeatData() = default;
     HeatData(uint8_t current, uint8_t max, uint8_t coolDownRate, uint8_t perShot)
-        : currentHeat(current), maxHeat(max), heatCoolDownRate(coolDownRate), heatPerShot(perShot), isOverheated(false) {}
+        : currentHeat(current), maxHeat(max), heatCoolDownRate(coolDownRate), heatPerShot(perShot) {}
 };
 
+// 血量数据结构体
+// 每隔一段时间自动回复一定量的血量
+// 每 healResetTime/healSpeed 毫秒回复 healValue 点血量
+class HealthData {
+public:
+    uint8_t currentHealth{};
+    uint8_t maxHealth{};
+
+    uint8_t healValue = 3 ;
+    uint16_t healTimeCounter = 0 ;
+    uint16_t healResetTime = 15000 ; 
+    uint8_t healSpeed = 5 ;
+};
 
 /**
  * @brief 空间移动数据结构体
@@ -81,8 +93,7 @@ public:
     uint8_t shootCooldownSpeed;
     //攻击力
     uint8_t attackPower;
-    //子弹类型
-    BulletType bulletType;
+    //子弹速度
     int8_t bulletSpeed;
 };
 
@@ -137,8 +148,7 @@ public:
     ActionData actionData;
 
     //血量信息
-    uint8_t currentHealth;
-    uint8_t maxHealth;
+    HealthData healthData;
 
     //等级信息
     uint8_t level;
@@ -158,18 +168,25 @@ public:
 public:
     RoleData() {
         identity = RoleIdentity::UNKNOWN ;
-        currentHealth = 100;
-        maxHealth = 100;
+
+        //血量信息初始化
+        healthData.currentHealth = 100;
+        healthData.maxHealth = 100;
+        healthData.healValue = 3 ;
+        healthData.healTimeCounter = 0 ;
+        healthData.healResetTime = 15000 ;
+        healthData.healSpeed = 5 ;
+
+        //等级初始化
         level = 1;
         heatData = HeatData(0, 100, 10 , 10);
-
+        
         //射击后，cooldown计时器增加，只有当计时器达到0时才能再次射击
         attackData.shootSpeed = 5;
         attackData.shootCooldownTimer = 0;
         attackData.shootCooldownSpeed = 5;
         attackData.attackPower = 10;
-        attackData.bulletType = BulletType::NORMAL;
-        attackData.bulletSpeed = 5;//每0.1s移动5个像素
+        attackData.bulletSpeed = 1 ;
         attackData.shootCooldownResetTime = 1000; // Added initialization for shootCooldownResetTime
 
         spatialData = SpatialMovementData(1,0,0,0,0,0,0);
@@ -202,7 +219,7 @@ public:
             this->type = type;
             switch (this->type)
             {
-            case BulletType::NORMAL:
+            case BulletType::BASIC:
                 //img = &bulletImg;
                 damage = dmg;
                 spatialData = SpatialMovementData(speed, currentPosX, currentPosY, currentPosX, currentPosY, img->w, img->h);

@@ -29,6 +29,12 @@ void oledTaskThread(void *argument) {
 
     for (;;) {
         OLED_NewFrame();
+
+        //像是角色信息
+        char infoStr[32];
+        sprintf(infoStr, "HP:(%d/%d)", pLeadingRole->getData()->healthData.currentHealth, pLeadingRole->getData()->healthData.maxHealth);
+        OLED_PrintString(0,56, infoStr, &font8x6 , OLED_COLOR_NORMAL);
+
         // 绘制游戏界面
         for(auto rolePtr : g_entityManager.m_roles) {
             if(rolePtr != nullptr && rolePtr->getData() != nullptr && rolePtr->getData()->img != nullptr) {
@@ -47,6 +53,7 @@ void oledTaskThread(void *argument) {
                                OLED_COLOR_NORMAL);
             }
         }
+
 
          // 调试信息显示
         OLED_ShowFrame();
@@ -123,7 +130,7 @@ void gameControlThread(void *argument) {
     for (;;) {
         if(g_entityManager.m_roles.size() == 1 ) {
             // 全部敌人被消灭，重新添加敌人
-            for(int i=0; i<6; i++) {
+            for(int i=0; i< 9 ; i++) {
                 IRole* enemyFeilian = new FeilianEnemy(124 + (i/3)*30, (i%3)*24 + 1, 80 + (i/3)*15, (i%3)*24);
                 if(!g_entityManager.addRole(enemyFeilian)) {
                     delete enemyFeilian ;

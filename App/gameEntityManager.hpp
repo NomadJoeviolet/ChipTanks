@@ -22,6 +22,8 @@ public:
     GameEntityManager(const GameEntityManager&) = delete;
     GameEntityManager& operator=(const GameEntityManager&) = delete;
 public:
+
+    //Add添加
     bool addRole(IRole* role) {
         if(role == nullptr || m_roles.full())
             return false;
@@ -135,9 +137,10 @@ public:
                 dataA->spatialData.refPosY + dataA->spatialData.sizeY-1 > dataB->spatialData.currentPosY) {
                 collisionDetected.isCollision = true;
 
-                role_A->takeDamage(20); // Example damage value on collision
-                role_B->takeDamage(20); // Example damage value on collision
-
+                if(role_A->getData()->identity != role_B->getData()->identity ) {
+                    role_A->takeDamage(20); // damage value on collision
+                    role_B->takeDamage(20); // damage value on collision
+                }
                 // Determine collision direction
                 // if (dataA->spatialData.refPosX < dataB->spatialData.currentPosX) {
                 //     collisionDetected.direction = CollisionDirection::LEFT;
@@ -223,6 +226,7 @@ public:
                 dataA->spatialData.refPosY < dataB->spatialData.currentPosY + dataB->spatialData.sizeY-1 &&
                 dataA->spatialData.refPosY + dataA->spatialData.sizeY-1 > dataB->spatialData.currentPosY) {
                 collisionDetected = true;
+                role_B->takeDamage(dataA->damage); // Apply damage to the role
                 break;
             }
 
