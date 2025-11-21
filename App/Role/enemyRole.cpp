@@ -1,6 +1,8 @@
 #include "enemyRole.hpp"
 #include "bullet.hpp"
 
+#include "etl/algorithm.h"
+#include "../Peripheral/OLED/oled.h"
 #include "../gameEntityManager.hpp"
 extern GameEntityManager g_entityManager;
 
@@ -9,11 +11,11 @@ extern GameEntityManager g_entityManager;
 //基础攻击力: 1-5 （低攻击），5-15（中攻击），15+（高攻击）
 //基础移动速度: 1（低速），2（中速），3（高速）
 
-
 //controlDelayTime 由 threads.cpp 控制线程定义
-//controlDelayTime = 10 
+//controlDelayTime = 10
 //设计冷却和热量机制查看role.cpp
-//冷却时间=resetTime/ (Speed) ms
+//射击冷却时间=resetTime/ (Speed) ms
+//热量冷却速率= heatCoolDownRate 每次冷却时间间隔由200ms
 
 /**
  * @brief FeilianEnemy class
@@ -28,60 +30,69 @@ extern GameEntityManager g_entityManager;
 //射击冷却时间：4000/5 ms
 //热量机制：每次射击增加20点热量，最大热量100点，冷却速率10点/200ms
 
-FeilianEnemy::FeilianEnemy(uint8_t startX, uint8_t startY , uint8_t initPosX , uint8_t initPosY , uint8_t level ): IRole() {
-
+FeilianEnemy::FeilianEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level)
+: IRole() {
     //图片信息
-    m_pdata->img      = &feilianImg;
+    m_pdata->img = &feilianImg;
 
     //身份信息
-    m_pdata->identity = RoleIdentity::ENEMY;
-    m_pdata->isActive = true;
-    m_pdata->isInited = false ;
-    m_pdata->isDead   = false ;
+    m_pdata->identity          = RoleIdentity::ENEMY;
+    m_pdata->isActive          = true;
+    m_pdata->initData.isInited = false;
+
+    //等级信息
+    m_pdata->level = level;
 
     //血量信息
-    m_pdata->level         = level;
-    m_pdata->healthData.currentHealth = 30+level*1 ;
-    m_pdata->healthData.maxHealth     = 30+level*1 ;
-    //回血
-    m_pdata->healthData.healValue      = 0 ;
-    m_pdata->healthData.healTimeCounter= 0 ;
-    m_pdata->healthData.healResetTime  = 15000 ;
-    m_pdata->healthData.healSpeed      = 0 ;
+    m_pdata->healthData.currentHealth = 30 + level * 1;
+    m_pdata->healthData.maxHealth     = 30 + level * 1;
+
+    //回血信息
+    m_pdata->healthData.healValue       = 0;
+    m_pdata->healthData.healTimeCounter = 0;
+    m_pdata->healthData.healResetTime   = 15000;
+    m_pdata->healthData.healSpeed       = 0;
 
     //空间移动信息
-    m_pdata->spatialData.currentPosX = startX; // Starting X position
-    m_pdata->spatialData.currentPosY = startY; // Starting Y position
-    m_pdata->spatialData.refPosX = startX;
-    m_pdata->spatialData.refPosY = startY;
-    m_pdata->spatialData.sizeX = m_pdata->img->w;
-    m_pdata->spatialData.sizeY = m_pdata->img->h;
-    m_pdata->spatialData.moveSpeed = 3 ; // Set mo1ement speed
+    m_pdata->spatialData.canCrossBorder = false;
+    m_pdata->spatialData.currentPosX    = startX; // Starting X position
+    m_pdata->spatialData.currentPosY    = startY; // Starting Y position
+    m_pdata->spatialData.refPosX        = startX;
+    m_pdata->spatialData.refPosY        = startY;
+    m_pdata->spatialData.sizeX          = m_pdata->img->w;
+    m_pdata->spatialData.sizeY          = m_pdata->img->h;
+    m_pdata->spatialData.moveSpeed      = 3; // Set mo1ement speed
 
     //初始化位置
-    m_pdata->initData.posX           = initPosX;
-    m_pdata->initData.posY           = initPosY;
+    m_pdata->initData.posX = initPosX;
+    m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 0+level*1 ;
+    m_pdata->attackData.attackPower            = 1 + level * 1;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 4000 ;
+    m_pdata->attackData.shootCooldownResetTime = 4000;
     m_pdata->attackData.bulletSpeed            = 1;
+
+    m_pdata->attackData.collisionPower         = 10 ;
 
     //热量信息
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 20;
-    m_pdata->heatData.heatCoolDownRate = 10;//每次冷却10点热量，每次冷却时间间隔由200ms
+    m_pdata->heatData.heatCoolDownRate = 10; //每次冷却10点热量，每次冷却时间间隔由200ms
+
+    //死亡状态信息
+    m_pdata->deathData.deathTimer = feilianEnemyDeadTime;
+    m_pdata->deathData.isDead     = false;
 
     // Initialize other enemy-specific data here
 }
 
-void FeilianEnemy::shoot(uint8_t x , uint8_t y , BulletType type) {
+void FeilianEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     // Implement enemy shooting logic
     // 创建一个新的子弹实例
-    IBullet* newBullet = createBullet(x, y, type);
+    IBullet *newBullet = createBullet(x, y, type);
     if (newBullet == nullptr) {
         return; // 无法创建子弹，可能是因为冷却时间未到或热量过高
     }
@@ -106,7 +117,7 @@ void FeilianEnemy::init() {
             m_pdata->initData.init_count = 0;
         }
     } else {
-        m_pdata->isInited            = true;
+        m_pdata->initData.isInited   = true;
         m_pdata->spatialData.refPosX = m_pdata->spatialData.currentPosX;
         m_pdata->spatialData.refPosY = m_pdata->spatialData.currentPosY;
         m_pdata->initData.init_count = 0;
@@ -139,7 +150,7 @@ void FeilianEnemy::think() {
             m_pdata->actionData.moveMode     = MoveMode::NONE;
             m_pdata->actionData.currentState = ActionState::MOVING;
         } else if (randomAction == 5) {
-            m_pdata->actionData.attackMode   = AttackMode::SINGLE_SHOT;
+            m_pdata->actionData.attackMode   = AttackMode::MODE_1;
             m_pdata->actionData.currentState = ActionState::ATTACKING;
         }
     }
@@ -149,7 +160,7 @@ void FeilianEnemy::think() {
 
 void FeilianEnemy::doAction() {
     // Implement enemy action logic
-    if (m_pdata->isDead) {
+    if (m_pdata->deathData.isDead) {
         die();
         return;
     }
@@ -182,16 +193,8 @@ void FeilianEnemy::doAction() {
         uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
         switch (m_pdata->actionData.attackMode) {
-        case AttackMode::SINGLE_SHOT:
-            shoot(m_x, m_y, BulletType::BASIC );
-            break;
-        case AttackMode::BURST_FIRE:
-            // Implement burst fire logic
-            shoot(m_x, m_y, BulletType::BASIC );
-            break;
-        case AttackMode::CONTINUOUS_FIRE:
-            // Implement continuous fire logic
-            shoot(m_x, m_y, BulletType::BASIC );
+        case AttackMode::MODE_1:
+            shoot(m_x, m_y, BulletType::BASIC);
             break;
         default:
             break;
@@ -202,6 +205,31 @@ void FeilianEnemy::doAction() {
     }
 }
 
+void FeilianEnemy::drawRole() {
+    if (m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
+        OLED_DrawImage(
+            m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
+        );
+    }
+
+    if (m_pdata->deathData.isDead) {
+        // Draw death animation or effect
+        // 绘制死亡动画（例如一个简单的圆圈表示消失效果）
+        uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+        uint8_t radius  = (feilianEnemyDeadTime - m_pdata->deathData.deathTimer) / 100; // 从0增长到最大值5
+        radius          = etl::max(radius, uint8_t(1));                                 // 最小半径限制
+
+        OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
+    }
+}
+
 void FeilianEnemy::die() {
+    // Implement enemy death logic
+    if (m_pdata->deathData.deathTimer > 0) {
+        m_pdata->deathData.deathTimer -= controlDelayTime;
+        m_pdata->deathData.deathTimer = etl::max(m_pdata->deathData.deathTimer, uint16_t(0));
+        return;
+    }
     m_pdata->isActive = false;
 }

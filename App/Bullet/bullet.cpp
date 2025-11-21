@@ -1,5 +1,6 @@
 #include "bullet.hpp"
-//子弹方向处理再daAction中进行
+#include "../Peripheral/OLED/oled.h"
+//子弹方向处理再doAction中进行
 
 
 /// IBullet class implementations
@@ -36,7 +37,7 @@ BasicBullet::BasicBullet(
     m_data->range        = rg;
     m_data->fromIdentity = fromIdentity;
 
-    m_data->spatialData = SpatialMovementData(speed, posX, posY, posX, posY, m_data->img->w, m_data->img->h);
+    m_data->spatialData = SpatialMovementData( false,speed, posX, posY, posX, posY, m_data->img->w, m_data->img->h);
 }
 
 void BasicBullet::doAction() {
@@ -78,6 +79,17 @@ void BasicBullet::update(CollisionResult collisionResult) {
         //位置更新
         m_data->spatialData.currentPosX = m_data->spatialData.refPosX;
         m_data->spatialData.currentPosY = m_data->spatialData.refPosY;
+    }
+}
+
+void BasicBullet::drawBullet() {
+    if (m_data != nullptr && m_data->img != nullptr && m_data->isActive) {
+        OLED_DrawImage(
+            m_data->spatialData.currentPosX,
+            m_data->spatialData.currentPosY,
+            m_data->img,
+            OLED_COLOR_NORMAL
+        );
     }
 }
 /***************************************/

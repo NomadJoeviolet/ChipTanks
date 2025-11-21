@@ -30,34 +30,19 @@ void oledTaskThread(void *argument) {
     for (;;) {
         OLED_NewFrame();
 
-        //像是角色信息
+        //显示角色信息
         char infoStr[32];
-        sprintf(infoStr, "HP:(%d/%d)", pLeadingRole->getData()->healthData.currentHealth, pLeadingRole->getData()->healthData.maxHealth);
+        sprintf(infoStr, "HP:(%d/%d) Lv:%d", pLeadingRole->getData()->healthData.currentHealth, pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level);
         OLED_PrintString(0,56, infoStr, &font8x6 , OLED_COLOR_NORMAL);
 
         // 绘制游戏界面
-        for(auto rolePtr : g_entityManager.m_roles) {
-            if(rolePtr != nullptr && rolePtr->getData() != nullptr && rolePtr->getData()->img != nullptr) {
-                OLED_DrawImage(rolePtr->getData()->spatialData.currentPosX,
-                               rolePtr->getData()->spatialData.currentPosY,
-                               rolePtr->getData()->img,
-                               OLED_COLOR_NORMAL);
-            }
-        }
-
-        for(auto bulletPtr : g_entityManager.m_bullets) {
-            if(bulletPtr != nullptr && bulletPtr->m_data != nullptr && bulletPtr->m_data->img != nullptr) {
-                OLED_DrawImage(bulletPtr->m_data->spatialData.currentPosX,
-                               bulletPtr->m_data->spatialData.currentPosY,
-                               bulletPtr->m_data->img,
-                               OLED_COLOR_NORMAL);
-            }
-        }
+        g_entityManager.drawAllRoles();
+        g_entityManager.drawAllBullets();
 
 
          // 调试信息显示
         OLED_ShowFrame();
-        osDelay(20);
+        osDelay(controlDelayTime);
     }
 }
 

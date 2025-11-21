@@ -21,6 +21,7 @@ public:
     virtual void move(int8_t dirX, int8_t dirY) = 0;
     virtual void update(CollisionResult collisionResult) = 0;
     virtual void doAction() {};
+    virtual void drawBullet() = 0;
     
     bool isActive() ;
 };
@@ -30,9 +31,10 @@ public:
     BasicBullet(int8_t speed, uint8_t posX, uint8_t posY, uint8_t rg , uint8_t damage , RoleIdentity fromIdentity) ;
     ~BasicBullet() override = default;
 
-    void doAction();
-    void move(int8_t dirX, int8_t dirY) ;
-    void update(CollisionResult collisionResult);
+    void drawBullet() override;
+    void doAction() override;
+    void move(int8_t dirX, int8_t dirY) override;
+    void update(CollisionResult collisionResult) override;
 
 };
 

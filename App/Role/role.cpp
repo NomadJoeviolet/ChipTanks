@@ -22,10 +22,12 @@ void IRole::move(int8_t dirX, int8_t dirY) {
       uint8_t tmpX = m_pdata->spatialData.currentPosX + dirX * m_pdata->spatialData.moveSpeed;
       uint8_t tmpY = m_pdata->spatialData.currentPosY + dirY * m_pdata->spatialData.moveSpeed;
       // Boundary checks (assuming screen size 128x64)
-      if (tmpX < 0 || tmpX > 128 - m_pdata->spatialData.sizeX )
-          return;
-      if (tmpY < 0 || tmpY > 64 - m_pdata->spatialData.sizeY )
-          return;
+      if (!m_pdata->spatialData.canCrossBorder) {
+          if (tmpX < 0 || tmpX > 128 - m_pdata->spatialData.sizeX )
+              return;
+          if (tmpY < 0 || tmpY > 64 - m_pdata->spatialData.sizeY )
+              return;
+      }
 
       m_pdata->spatialData.refPosX = tmpX;
       m_pdata->spatialData.refPosY = tmpY;
@@ -33,10 +35,15 @@ void IRole::move(int8_t dirX, int8_t dirY) {
 
 void IRole::update(CollisionResult collisionResult) {
         //初始化
-        if(!m_pdata->isInited) {
+        if(!m_pdata->initData.isInited) {
             //首次初始化
             init();
             return ;
+        }
+
+        if(m_pdata->deathData.isDead ) {
+            die();
+            return;
         }
 
         //位置更新
@@ -69,11 +76,11 @@ void IRole::update(CollisionResult collisionResult) {
 
         //射击冷却处理
         if(m_pdata->attackData.shootCooldownTimer > 0) {
-            uint16_t shootCooldownTime = m_pdata->attackData.shootCooldownSpeed ;
-            if(controlDelayTime*shootCooldownTime >= m_pdata->attackData.shootCooldownTimer)
+            uint8_t shootCooldownSpeed = m_pdata->attackData.shootCooldownSpeed ;
+            if(controlDelayTime*shootCooldownSpeed >= m_pdata->attackData.shootCooldownTimer)
                 m_pdata->attackData.shootCooldownTimer = 0;
             else
-            m_pdata->attackData.shootCooldownTimer -= controlDelayTime*shootCooldownTime;
+            m_pdata->attackData.shootCooldownTimer -= controlDelayTime*shootCooldownSpeed;
         }
 
         //热量冷却处理
@@ -103,8 +110,8 @@ void IRole::update(CollisionResult collisionResult) {
         }
 
         //检查血量状态
-        if(m_pdata->healthData.currentHealth == 0 && !m_pdata->isDead) {
-            m_pdata->isDead = true ;
+        if(m_pdata->healthData.currentHealth == 0 && !m_pdata->deathData.isDead) {
+            m_pdata->deathData.isDead = true ;
         }
         
     }

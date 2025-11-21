@@ -37,7 +37,8 @@ public:
     virtual void init() = 0;
     virtual void die() = 0;
     virtual void think() = 0;
-
+    virtual void drawRole() = 0; // 画角色函数声明
+    
     IBullet* createBullet(uint8_t x , uint8_t y , BulletType type ) ;
     void move(int8_t dirX, int8_t dirY);
     void update(CollisionResult collisionResult) ;

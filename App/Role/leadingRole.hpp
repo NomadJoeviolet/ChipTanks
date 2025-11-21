@@ -12,11 +12,12 @@ public:
     ~LeadingRole() override = default;
 
     
-    void init();
-    void doAction() ;
-    void die() ;
-    void think() ;
-    void shoot(uint8_t x , uint8_t y , BulletType type) ;
+    void init() override;
+    void doAction() override;
+    void die() override;
+    void think() override;
+    void shoot(uint8_t x , uint8_t y , BulletType type) override;
+    void drawRole() override;
     
 };
 
