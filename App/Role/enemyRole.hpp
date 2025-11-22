@@ -2,10 +2,26 @@
 #define ENEMYROLE_HPP
 
 #include "role.hpp"
-//#include "task.h"
 
+//controlDelayTime 由 threads.cpp 控制线程定义
+//controlDelayTime = 10
+//设计冷却和热量机制查看role.cpp
+//射击冷却时间=resetTime/ (Speed) ms
+//热量冷却速率= heatCoolDownRate 每次冷却时间间隔由200ms
+
+//普通子弹热量消耗倍率 1
+//火球弹热量消耗倍率 2
+//闪电链弹热量消耗倍率 1.5
+
+//role.cpp中的createBullet决定发射子弹的数值和机制
+//普通子弹击中敌人后造成伤害， attackPower 点伤害
+//火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
+//两次伤害均为 attackPower +10 点伤害
+
+//闪电链弹一束条的范围穿透伤害，1.5*attackPower+10 点伤害
+
+uint8_t const boundary_deadzone = 5; // 左侧边界
 /***************小型敌人***************/
-
 /**
  * @brief FeilianEnemy class
  * @note  中文：飞廉 ｜ 英文：Feilian,神话典故：中国古代神话中的风神，形如鹿、头生角、有翼，行走如飞，负责掌管八面来风。
@@ -14,15 +30,15 @@
  */
 class FeilianEnemy : public IRole {
 public:
-    uint8_t action_count = 0;
-
+    uint16_t              think_count          = 0;
+    static const uint16_t feilianEnemyDeadTime = 500; // 死亡动画时间，单位ms
 public:
-    FeilianEnemy(uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1);
+    FeilianEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+    );
     ~FeilianEnemy() override = default;
 
-    static const uint16_t feilianEnemyDeadTime = 500 ; // 死亡动画时间，单位ms
-
-    void drawRole() override;                          // 只保留声明
+    void drawRole() override;                                   // 只保留声明
     void init() override;                                       // 只保留声明
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
@@ -34,18 +50,26 @@ public:
  * @brief GudiaoEnemy class
  * @note  中文：蛊雕 ｜ 英文：Gudiao,神话典故：山海经中大型猛禽凶兽，以哭声诱捕人类，擅长飞行捕猎，是山中食人恶兽的代表。
  * @note  中速飞行的中型敌人，体型居中（15x15 像素），攻击力较高，适合伏击玩家。
- * @note  攻击方式为发射高伤害普通子弹，每次从身体两侧发射。
+ * @note  攻击方式为发射高伤害普通子弹，每次从身体中心的两侧发射，攻击速度低。
+ * @note  只会发射普通子弹，但行动方式较为直接，死亡后会发出一颗火球弹。
  */
 class GudiaoEnemy : public IRole {
 public:
-    GudiaoEnemy(uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0);
+    uint16_t              think_count         = 0;
+    static const uint16_t gudiaoEnemyDeadTime = 500; // 死亡动画时间，单位ms
+
+public:
+    GudiaoEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+    );
     ~GudiaoEnemy() override = default;
 
-    void init();                                       // 只保留声明
-    void think();                                      // 只保留声明
-    void doAction();                                   // 只保留声明
-    void die();                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type); // 只保留声明
+    void drawRole() override;                                   // 只保留声明
+    void init() override;                                       // 只保留声明
+    void think() override;                                      // 只保留声明
+    void doAction() override;                                   // 只保留声明
+    void die() override;                                        // 只保留声明
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
 
 /**
@@ -55,15 +79,21 @@ public:
  */
 
 class ChiMeiEnemy : public IRole {
+    uint16_t              think_count         = 0;
+    static const uint16_t chimeiEnemyDeadTime = 300; // 死亡动画时间，单位ms
+
 public:
-    ChiMeiEnemy(uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0);
+    ChiMeiEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+    );
     ~ChiMeiEnemy() override = default;
 
-    void init();                                       // 只保留声明
-    void think();                                      // 只保留声明
-    void doAction();                                   // 只保留声明
-    void die();                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type); // 只保留声明
+    void drawRole() override;                                   // 只保留声明
+    void init() override;                                       // 只保留声明
+    void think() override;                                      // 只保留声明
+    void doAction() override;                                   // 只保留声明
+    void die() override;                                        // 只保留声明
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
 
 /**
@@ -80,30 +110,38 @@ public:
 
 class TaotieEnemy : public IRole {
 public:
-    TaotieEnemy(uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0);
+    uint16_t              think_count         = 0;
+    static const uint16_t TaotieEnemyDeadTime = 700; // 死亡动画时间，单位ms
+
+public:
+    TaotieEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+    );
     ~TaotieEnemy() override = default;
 
-    void init();                                       // 只保留声明
-    void think();                                      // 只保留声明
-    void doAction();                                   // 只保留声明
-    void die();                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type); // 只保留声明
+    void drawRole() override;                                   // 只保留声明
+    void init() override;                                       // 只保留声明
+    void think() override;                                      // 只保留声明
+    void doAction() override;                                   // 只保留声明
+    void die() override;                                        // 只保留声明
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
-
 
 /**
  * @brief TaowuEnemy class
- * @note  中文：饕餮 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
+ * @note  中文：梼杌 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
  * @note  上古 “四凶” 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
  * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，中速移动，攻击方式多样且具有威胁性。
  * @note  攻击方式1，随机位置发射大量普通子弹
  * @note  攻击方式2，随机位置发射5个火球弹
  * @note  攻击方式3，闪现移动
- 
+ * 
  */
 class TaowuEnemy : public IRole {
 public:
-    TaowuEnemy(uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0);
+    TaowuEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+    );
     ;
     ~TaowuEnemy() override = default;
     void init();                                       // 只保留声明
@@ -112,7 +150,6 @@ public:
     void die();                                        // 只保留声明
     void shoot(uint8_t x, uint8_t y, BulletType type); // 只保留声明
 };
-
 
 /**
  * @brief XiangliuEnemy class
@@ -128,7 +165,9 @@ public:
  */
 class XiangliuEnemy : public IRole {
 public:
-    XiangliuEnemy(uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0);
+    XiangliuEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+    );
     ~XiangliuEnemy() override = default;
 
     void init();                                       // 只保留声明

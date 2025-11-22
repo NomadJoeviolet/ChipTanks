@@ -37,12 +37,13 @@ void oledTaskThread(void *argument) {
 
         // 绘制游戏界面
         g_entityManager.drawAllRoles();
+        
         g_entityManager.drawAllBullets();
 
 
          // 调试信息显示
         OLED_ShowFrame();
-        osDelay(controlDelayTime);
+        osDelay(controlDelayTime*2); // 控制刷新频率
     }
 }
 
@@ -100,6 +101,7 @@ uint8_t debugCurrentPosY = 0 ;
 
 uint8_t debugEnemyPosX[9] = {} ;
 uint8_t debugEnemyPosY[9] = {} ;
+IRole* debugRole = nullptr ;
 
 /********************************************************************/
 #ifdef __cplusplus
@@ -114,21 +116,45 @@ void gameControlThread(void *argument) {
 
     for (;;) {
         if(g_entityManager.m_roles.size() == 1 ) {
+            //位置小于192
+
             // 全部敌人被消灭，重新添加敌人
-            for(int i=0; i< 9 ; i++) {
-                IRole* enemyFeilian = new FeilianEnemy(124 + (i/3)*30, (i%3)*24 + 1, 80 + (i/3)*15, (i%3)*24);
+            for(int i=0; i< 3 ; i++) {
+                IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
+                if(!g_entityManager.addRole(enemyChiMei)) {
+                    delete enemyChiMei ;
+                }
+            }
+
+            for(int i=0; i< 3 ; i++) {
+                IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
                 if(!g_entityManager.addRole(enemyFeilian)) {
                     delete enemyFeilian ;
                 }
             }
+            IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
+            if(!g_entityManager.addRole(enemyGudiao)) {
+                delete enemyGudiao ;
+            }
+            IRole* enemyTaotie = new TaotieEnemy(180, 0 , 64 , 0 );
+            if(!g_entityManager.addRole(enemyTaotie)) {
+                delete enemyTaotie ;
+            }
+            
+            debugRole = enemyTaotie ;
         }
 
         g_entityManager.updateAllRolesActions();
         g_entityManager.updateAllBulletsActions();
-        g_entityManager.updateAllRoles();
-        g_entityManager.updateAllBullets();
+        g_entityManager.updateAllRolesState();
+        g_entityManager.updateAllBulletsState();
         g_entityManager.cleanupInvalidRoles();
         g_entityManager.cleanupInvalidBullets();
+
+        if(debugRole != nullptr) {
+            debugCurrentPosX = debugRole->getData()->spatialData.currentPosX ;
+            debugCurrentPosY = debugRole->getData()->spatialData.currentPosY ;
+        }
 
         // debugCurrentPosX = pLeadingRole->getData()->spatialData.currentPosX ;
         // debugCurrentPosY = pLeadingRole->getData()->spatialData.currentPosY;

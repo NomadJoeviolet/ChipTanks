@@ -130,10 +130,10 @@ public:
             RoleData *dataA = role_A->getData();
             RoleData *dataB = role_B->getData();
 
-            if (dataA->spatialData.refPosX < dataB->spatialData.currentPosX + dataB->spatialData.sizeX - 1
-                && dataA->spatialData.refPosX + dataA->spatialData.sizeX - 1 > dataB->spatialData.currentPosX
-                && dataA->spatialData.refPosY < dataB->spatialData.currentPosY + dataB->spatialData.sizeY - 1
-                && dataA->spatialData.refPosY + dataA->spatialData.sizeY - 1 > dataB->spatialData.currentPosY) {
+            if (dataA->spatialData.refPosX < dataB->spatialData.currentPosX + dataB->spatialData.sizeX 
+                && dataA->spatialData.refPosX + dataA->spatialData.sizeX > dataB->spatialData.currentPosX
+                && dataA->spatialData.refPosY < dataB->spatialData.currentPosY + dataB->spatialData.sizeY
+                && dataA->spatialData.refPosY + dataA->spatialData.sizeY > dataB->spatialData.currentPosY) {
                 collisionDetected.isCollision = true;
 
                 if (role_A->getData()->identity != role_B->getData()->identity) {
@@ -187,6 +187,9 @@ public:
     bool checkBulletRefPositionCollision(IBullet *bullet_A) {
         bool collisionDetected = false;
         if (bullet_A == nullptr) return false;
+        if (bullet_A->m_data->deathData.isDead) return false;
+        if (bullet_A->m_data->isActive == false) return false;
+
         taskENTER_CRITICAL();
         for (auto role_B : m_roles) {
             if (role_B == nullptr) continue;
@@ -204,11 +207,44 @@ public:
                 && dataA->spatialData.refPosY + dataA->spatialData.sizeY - 1 > dataB->spatialData.currentPosY) {
                 collisionDetected = true;
                 role_B->takeDamage(dataA->damage); // Apply damage to the role
-                break;
+                //所有角色都要检查碰撞，因为子弹可能穿透多个目标
             }
         }
         taskEXIT_CRITICAL();
         return collisionDetected;
+    }
+    /********************************************************************/
+
+    //子弹范围伤害检测
+    /********************************************************************/
+
+    void checkBulletRangeDamage(IBullet *bullet_A) {
+        if (bullet_A == nullptr) return;
+        BulletData *dataA = bullet_A->m_data;
+        if(dataA->range == 0) return; // No range damage for zero range
+
+        taskENTER_CRITICAL();
+        for (auto role_B : m_roles) {
+            if (role_B == nullptr) continue;
+            // Simple circular range damage detection
+            RoleData *dataB = role_B->getData();
+            // Skip if same identity
+            if (dataA->fromIdentity == dataB->identity) {
+                continue;
+            }
+            // Calculate distance between bullet and role centers
+            float centerA_X = dataA->spatialData.currentPosX + dataA->spatialData.sizeX / 2.0f;
+            float centerA_Y = dataA->spatialData.currentPosY + dataA->spatialData.sizeY / 2.0f;
+            float centerB_X = dataB->spatialData.currentPosX + dataB->spatialData.sizeX / 2.0f;
+            float centerB_Y = dataB->spatialData.currentPosY + dataB->spatialData.sizeY / 2.0f;
+            float dx        = centerA_X - centerB_X;
+            float dy        = centerA_Y - centerB_Y;
+            float distance  = sqrtf(dx * dx + dy * dy);
+            if (distance <= dataA->range) {
+                role_B->takeDamage(dataA->damage); // Apply damage to the role
+            }
+        }
+        taskEXIT_CRITICAL();
     }
     /********************************************************************/
 
@@ -217,7 +253,7 @@ public:
     /**
      * @brief 更新所有角色状态和位置
      */
-    void updateAllRoles() {
+    void updateAllRolesState() {
         taskENTER_CRITICAL();
         for (auto rolePtr : m_roles) {
             if (rolePtr != nullptr) {
@@ -235,7 +271,7 @@ public:
     /**
      * @brief 更新所有子弹状态和位置
      */
-    void updateAllBullets() {
+    void updateAllBulletsState() {
         taskENTER_CRITICAL();
         for (auto bulletPtr : m_bullets) {
             if (bulletPtr != nullptr) {
@@ -244,6 +280,7 @@ public:
                 bool isCollision = checkBulletRefPositionCollision(bulletPtr);
                 if (isCollision) {
                     collisionResult.isCollision = true;
+                    checkBulletRangeDamage(bulletPtr);
                 }
                 bulletPtr->update(collisionResult);
             }

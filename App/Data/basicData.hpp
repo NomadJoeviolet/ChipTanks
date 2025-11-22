@@ -37,8 +37,8 @@ public:
 // 每 healResetTime/healSpeed 毫秒回复 healValue 点血量
 class HealthData {
 public:
-    uint8_t currentHealth{};
-    uint8_t maxHealth{};
+    uint16_t currentHealth{};
+    uint16_t maxHealth{};
 
     uint8_t  healValue       = 3;
     uint16_t healTimeCounter = 0;
@@ -61,6 +61,9 @@ class SpatialMovementData {
 public:
     //能否穿越边界
     bool canCrossBorder = false;
+
+    //连续触发碰撞次数（用来碰撞检测后的处理）
+    uint8_t consecutiveCollisionCount = 0;
 
     //移动速度
     int8_t moveSpeed{};
@@ -113,6 +116,8 @@ public:
     uint8_t collisionPower;
     //子弹速度
     int8_t bulletSpeed;
+    //子弹伤害范围
+    uint8_t bulletRange;
 };
 
 class InitData {
@@ -204,8 +209,13 @@ public:
         attackData.shootCooldownSpeed     = 5;
         attackData.attackPower            = 10;
         attackData.collisionPower         = 5;
-        attackData.bulletSpeed            = 1;
         attackData.shootCooldownResetTime = 1000; // Added initialization for shootCooldownResetTime
+
+        //子弹速度
+        attackData.bulletSpeed            = 1;
+        //子弹伤害范围
+        attackData.bulletRange            = 1;
+
 
         //空间移动信息初始化
         spatialData = SpatialMovementData(0, 1, 0, 0, 0, 0, 0, 0);
@@ -223,6 +233,9 @@ class BulletData {
 public:
     //来自
     RoleIdentity fromIdentity{RoleIdentity::UNKNOWN};
+
+    //死亡信息
+    DeathData deathData;
 
     //空间移动信息
     SpatialMovementData spatialData;
@@ -249,6 +262,22 @@ public:
             damage = dmg;
             spatialData =
                 SpatialMovementData(false, speed, currentPosX, currentPosY, currentPosX, currentPosY, img->w, img->h);
+            isActive = true;
+            range    = rg;
+            break;
+        case BulletType::FIRE_BALL:
+            //img = &fireBallImg;
+            damage = dmg;
+            spatialData =
+                SpatialMovementData(false, speed, currentPosX, currentPosY, currentPosX, currentPosY, img->w, img->h);
+            isActive = true;
+            range    = rg;
+            break;
+        case BulletType::LIGHTNING_LINE:
+            //img = &lightningLineImg;
+            damage = dmg;
+            spatialData =
+                SpatialMovementData(true, speed, currentPosX, currentPosY, currentPosX, currentPosY, img->w, img->h);
             isActive = true;
             range    = rg;
             break;

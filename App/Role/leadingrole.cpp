@@ -10,61 +10,76 @@ extern GameEntityManager g_entityManager;
 //射击冷却时间=resetTime/ (Speed) ms
 //热量冷却速率= heatCoolDownRate 每次冷却时间间隔由200ms
 
+//普通子弹热量消耗倍率 1
+//火球弹热量消耗倍率 2
+//闪电链弹热量消耗倍率 1.5
+
+//role.cpp中的createBullet决定发射子弹的数值和机制
+//普通子弹击中敌人后造成伤害， attackPower 点伤害
+//火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
+//两次伤害均为 attackPower +10 点伤害
+
+//闪电链弹一束条的范围穿透伤害，1.5*attackPower+10 点伤害
+
+
 LeadingRole::LeadingRole()
 : IRole() { //会优先执行 基类构造函数
     //图片信息
     m_pdata->img = &tankImg;
 
     //身份信息
-    m_pdata->identity = RoleIdentity::Player;
-    m_pdata->isActive = true ;
-    m_pdata->initData.isInited = false ;
+    m_pdata->identity          = RoleIdentity::Player;
+    m_pdata->isActive          = true;
+    m_pdata->initData.isInited = false;
 
     //等级信息
-    m_pdata->level = 1 ;
+    m_pdata->level = 1;
 
     //血量信息
     m_pdata->healthData.currentHealth = 100;
-    m_pdata->healthData.maxHealth = 100;
+    m_pdata->healthData.maxHealth     = 100;
 
     //回血信息
-    m_pdata->healthData.healValue = 3 ;
-    m_pdata->healthData.healTimeCounter = 0 ;
-    m_pdata->healthData.healResetTime = 15000 ; 
-    m_pdata->healthData.healSpeed = 5 ;
+    m_pdata->healthData.healValue       = 3;
+    m_pdata->healthData.healTimeCounter = 0;
+    m_pdata->healthData.healResetTime   = 15000;//ms
+    m_pdata->healthData.healSpeed       = 5;//  15000/5 = 3000ms 恢复一次血量
 
     //空间移动信息
-    m_pdata->spatialData.canCrossBorder = false ;
-    m_pdata->spatialData.currentPosX = -16;             // Starting X position
-    m_pdata->spatialData.currentPosY = 16;               // Starting Y position
-    m_pdata->spatialData.refPosX     = -16;
-    m_pdata->spatialData.refPosY     = 16;
-    m_pdata->spatialData.sizeX       = m_pdata->img->w; // Width of the role
-    m_pdata->spatialData.sizeY       = m_pdata->img->h; // Height of the role
-    m_pdata->spatialData.moveSpeed   = 1 ;               // Movement speed
+    m_pdata->spatialData.canCrossBorder = false;
+    m_pdata->spatialData.currentPosX    = -16; // Starting X position
+    m_pdata->spatialData.currentPosY    = 16;  // Starting Y position
+    m_pdata->spatialData.refPosX        = -16;
+    m_pdata->spatialData.refPosY        = 16;
+    m_pdata->spatialData.sizeX          = m_pdata->img->w; // Width of the role
+    m_pdata->spatialData.sizeY          = m_pdata->img->h; // Height of the role
+    m_pdata->spatialData.moveSpeed      = 1;               // Movement speed
+    m_pdata->spatialData.consecutiveCollisionCount = 0;
 
     //初始化位置
-    m_pdata->initData.posX = 0 ;
-    m_pdata->initData.posY = 16 ;
+    m_pdata->initData.posX = 0;
+    m_pdata->initData.posY = 16;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 10 ;
-    m_pdata->attackData.shootCooldownSpeed     = 5 ;//每controlDelayTime减少5*controlDelayTime 点冷却时间
+    m_pdata->attackData.attackPower            = 10;
+    m_pdata->attackData.shootCooldownSpeed     = 5; //每controlDelayTime减少5*controlDelayTime 点冷却时间
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 4000 ;//ms
+    m_pdata->attackData.shootCooldownResetTime = 4000; //ms
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.collisionPower         = 20 ;
+    m_pdata->attackData.bulletRange = 10; //只对火球弹生效
+
+    m_pdata->attackData.collisionPower = 20;
 
     //热量信息
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
-    m_pdata->heatData.heatPerShot      = 20;
-    m_pdata->heatData.heatCoolDownRate = 10;//每次冷却10点热量，每次冷却时间间隔由200ms
+    m_pdata->heatData.heatPerShot      = 5;
+    m_pdata->heatData.heatCoolDownRate = 10; //每次冷却10点热量，每次冷却时间间隔由200ms
 
     //死亡状态信息
-    m_pdata->deathData.deathTimer = 500 ;
-    m_pdata->deathData.isDead     = false ;
+    m_pdata->deathData.deathTimer = 500;
+    m_pdata->deathData.isDead     = false;
 }
 
 void LeadingRole::init() {
@@ -76,7 +91,7 @@ void LeadingRole::init() {
             init_count = 0;
         }
     } else {
-        m_pdata->initData.isInited            = true;
+        m_pdata->initData.isInited   = true;
         m_pdata->spatialData.refPosX = m_pdata->spatialData.currentPosX;
         m_pdata->spatialData.refPosY = m_pdata->spatialData.currentPosY;
     }
@@ -111,16 +126,39 @@ void LeadingRole::doAction() {
         break;
     }
 
-    uint8_t m_x = m_pdata->spatialData.currentPosX+m_pdata->spatialData.sizeX/2;
-    uint8_t m_y = m_pdata->spatialData.currentPosY+m_pdata->spatialData.sizeY/2;
-    shoot( m_x , m_y ,
-          BulletType::BASIC);
+    if(m_pdata->attackData.shootCooldownTimer > 0)
+        return; // 冷却中，无法射击
+
+    uint8_t m_x                = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t m_y                = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+    uint8_t whichBulletToShoot = rand() % bulletTypeOwned.BulletOwnedTypeCount;
+    switch (whichBulletToShoot) {
+    case 0:
+        if (bulletTypeOwned.basicBulletOwed)
+            shoot(m_x, m_y, BulletType::BASIC);
+        break;
+    case 1:
+        if (bulletTypeOwned.fireBallBulletOwed)
+            shoot(m_x, m_y, BulletType::FIRE_BALL);
+        else
+            shoot(m_x, m_y, BulletType::BASIC);
+        break;
+    case 2:
+        if (bulletTypeOwned.lightningLineBulletOwed)
+            shoot(m_x, m_y, BulletType::LIGHTNING_LINE);
+        else
+            shoot(m_x, m_y, BulletType::BASIC);
+        break;
+    default:
+        shoot(m_x, m_y, BulletType::BASIC); 
+        break;
+    }
 }
 
-void LeadingRole::die() { 
-    m_pdata->deathData.isDead = false ;
-    m_pdata->deathData.deathTimer = 500;
-    m_pdata->healthData.currentHealth = m_pdata->healthData.maxHealth ;
+void LeadingRole::die() {
+    m_pdata->deathData.isDead         = false;
+    m_pdata->deathData.deathTimer     = 500;
+    m_pdata->healthData.currentHealth = m_pdata->healthData.maxHealth;
 }
 
 void LeadingRole::think() {
@@ -129,26 +167,70 @@ void LeadingRole::think() {
 
 void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
     // Create bullet based on type
-    IBullet* newBullet = createBullet(x, y, type);
-    if (newBullet != nullptr) {
-        // Add bullet to entity manager
-        if (!g_entityManager.addBullet(newBullet)) {
-            delete [] newBullet; // Prevent memory leak if adding fails
-        } else {
-            // Reset shoot cooldown timer
-            m_pdata->attackData.shootCooldownTimer += m_pdata->attackData.shootCooldownResetTime;
-            // Increase heat
-            m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+    switch (type) {
+    case BulletType::BASIC:
+        {
+            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
+                return; // 超过最大热量，无法射击
+             if (m_pdata->attackData.shootCooldownTimer > 0)
+                return; // 冷却中，无法射击
+                
+            IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
+            if (newBullet != nullptr) {
+                if (g_entityManager.addBullet(newBullet)) {
+                    // Successfully added bullet
+                    m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                } else {
+                    delete[] newBullet; // Clean up if not added
+                }
+            }
+        }
+        break;
+    case BulletType::FIRE_BALL:
+        {
+            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot*2 > m_pdata->heatData.maxHeat)
+                return; // 超过最大热量，无法射击
+             if (m_pdata->attackData.shootCooldownTimer > 0)
+                return; // 冷却中，无法射击
+                
+            IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
+            if (newBullet != nullptr) {
+                if (g_entityManager.addBullet(newBullet)) {
+                    // Successfully added bullet
+                    m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                } else {
+                    delete[] newBullet; // Clean up if not added
+                }
+            }
+        }
+        break;
+    case BulletType::LIGHTNING_LINE:
+        {
+            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot*1.5 > m_pdata->heatData.maxHeat)
+                return; // 超过最大热量，无法射击
+             if (m_pdata->attackData.shootCooldownTimer > 0)
+                return; // 冷却中，无法射击
+
+            IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
+            if (newBullet != nullptr) {
+                if (g_entityManager.addBullet(newBullet)) {
+                    // Successfully added bullet
+                    m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                } else {
+                    delete[] newBullet; // Clean up if not added
+                }
+            }
         }
     }
 }
 
 void LeadingRole::drawRole() {
-    if( m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
-        OLED_DrawImage(m_pdata->spatialData.currentPosX,
-                       m_pdata->spatialData.currentPosY,
-                       m_pdata->img,
-                       OLED_COLOR_NORMAL);   
+    if (m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
+        OLED_DrawImage(
+            m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
+        );
     }
 }
-
