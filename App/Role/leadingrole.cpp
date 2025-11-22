@@ -25,6 +25,19 @@ extern GameEntityManager g_entityManager;
 //闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
 
 
+/*********************************************************************/
+/**
+ * @brief LeadingRole class
+ * @note  中文：主角 ｜ 英文：LeadingRole,玩家操控的主要角色，具备平衡的属性和多样的攻击方式。
+ * @note  中等体型（16x16 像素），中等血量，适中的移动速度，能够发射多种类型的子弹，适合各种战斗场景。
+ */
+
+ //升级系统
+ //每升1级，增加20点最大血量，增加1点攻击力，增加5点热量上限，增加1点生命值回复量
+ //每升2级，增加1点热量冷却量，降低1点热量消耗
+ //每升5级，增加1点攻击速度
+
+
 LeadingRole::LeadingRole()
 : IRole() { //会优先执行 基类构造函数
     //图片信息
@@ -39,8 +52,8 @@ LeadingRole::LeadingRole()
     m_pdata->level = 1;
 
     //血量信息
-    m_pdata->healthData.currentHealth = 100;
-    m_pdata->healthData.maxHealth     = 100;
+    m_pdata->healthData.currentHealth = 180;
+    m_pdata->healthData.maxHealth     = 180;
 
     //回血信息
     m_pdata->healthData.healValue       = 3;
@@ -65,7 +78,7 @@ LeadingRole::LeadingRole()
 
     //攻击信息
     m_pdata->attackData.attackPower            = 10;
-    m_pdata->attackData.shootCooldownSpeed     = 5; //每controlDelayTime减少5*controlDelayTime 点冷却时间
+    m_pdata->attackData.shootCooldownSpeed     = 4 ; //每controlDelayTime减少5*controlDelayTime 点冷却时间
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 4000; //ms
     m_pdata->attackData.bulletSpeed            = 1;
@@ -78,7 +91,7 @@ LeadingRole::LeadingRole()
     //热量信息
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
-    m_pdata->heatData.heatPerShot      = 5;
+    m_pdata->heatData.heatPerShot      =  15 ;
     m_pdata->heatData.heatCoolDownRate = 10; //每次冷却10点热量，每次冷却时间间隔由200ms
 
     //死亡状态信息
@@ -246,3 +259,6 @@ void LeadingRole::drawRole() {
         );
     }
 }
+
+/*********************************************************************/
+

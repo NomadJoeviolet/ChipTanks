@@ -167,26 +167,24 @@ public:
  */
 
 class TaowuEnemy : public IRole {
-    uint16_t              think_count         = 0;
+    uint16_t              think_count        = 0;
     static const uint16_t TaowuEnemyDeadTime = 700; // 死亡动画时间，单位ms
 
     uint16_t action_timer   = 0; //倒计时
     uint16_t action_MaxTime = 0; //记录动作最大持续时间
     uint16_t action_count   = 0; //记录动作持续时间
 
-    bool positionChange = false ;
+    bool positionChange = false;
     // 攻击方式1相关参数
     static const uint16_t MassiveBasicBulletFireTime = 3000; // 最短发射时间，单位ms
-    static const uint8_t BulletsPerSecond = 5 ;  // 发射频率，单位ms
+    static const uint8_t  BulletsPerSecond           = 5;    // 发射频率，单位ms
 
     // 攻击方式2相关参数
     static const uint16_t FiveFireballBulletFireTime = 3000; // 发射时间，单位ms
-    static const uint8_t FireballCount = 5 ;  // 发射数量
+    static const uint8_t  FireballCount              = 5;    // 发射数量
 
     // 攻击方式3相关参数
-    static const uint8_t CenterFireballAttackTime = 100 ; // 发射时间，单位ms
-    
-
+    static const uint8_t CenterFireballAttackTime = 100; // 发射时间，单位ms
 
 public:
     TaowuEnemy(
@@ -224,16 +222,37 @@ public:
  */
 class XiangliuEnemy : public IRole {
 public:
+    uint16_t              think_count           = 0;
+    static const uint16_t XiangliuEnemyDeadTime = 700; // 死亡动画时间，单位ms
+
+    uint16_t action_timer   = 0; //倒计时
+    uint16_t action_MaxTime = 0; //记录动作最大持续时间
+    uint16_t action_count   = 0; //记录动作持续时间
+
+    uint8_t summonedEnemyCount = 0; // 已召唤的敌人数量
+    uint8_t maxSummonedEnemyCount = 4 ; // 最大召唤的敌人数量
+
+public:
     XiangliuEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
     );
     ~XiangliuEnemy() = default;
 
+    void drawRole() override;                                   // 只保留声明
     void init() override;                                       // 只保留声明
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
     void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
+
+
+    void fireNineRowsBasicBullets();      // 攻击方式1，发射九排普通子弹
+    void fireThreeRowsLightningBullets(); // 攻击方式2，发射三排闪电
+    void fireThreeRowsFireballBullets();  // 攻击方式3，发射三排火球弹
+    void summonThreeChiMeiMinions();       // 攻击方式4，生成3只ChiMeiEnemy作为召唤物协同作战
+    void summonTwoFeilianMinions();        // 攻击方式5，生成2只FeilianEnemy作为召唤物协同作战
+    void summonOneGudiaoMinion();          // 攻击方式6，生成1只GudiaoEnemy作为召唤物协同作战
+
 };
 
 #endif // ENEMYROLE_HPP
