@@ -20,7 +20,6 @@
 
 //闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
 
-
 uint8_t const boundary_deadzone = 5; // 左侧边界
 /***************小型敌人***************/
 /**
@@ -37,7 +36,7 @@ public:
     FeilianEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
     );
-    ~FeilianEnemy() override = default;
+    ~FeilianEnemy() = default;
 
     void drawRole() override;                                   // 只保留声明
     void init() override;                                       // 只保留声明
@@ -63,7 +62,7 @@ public:
     GudiaoEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
     );
-    ~GudiaoEnemy() override = default;
+    ~GudiaoEnemy() = default;
 
     void drawRole() override;                                   // 只保留声明
     void init() override;                                       // 只保留声明
@@ -87,7 +86,7 @@ public:
     ChiMeiEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
     );
-    ~ChiMeiEnemy() override = default;
+    ~ChiMeiEnemy() = default;
 
     void drawRole() override;                                   // 只保留声明
     void init() override;                                       // 只保留声明
@@ -101,7 +100,7 @@ public:
  * @brief TaotieEnemy class
  * @note  中文：饕餮 ｜ 英文：Taotie,神话典故：四凶之一，羊身人面、眼在腋下、虎齿人爪，声音似婴儿；
  * @note  上古 “四凶” 之一，贪婪无度，能吞食天地万物，专食人类与牲畜，象征极致贪欲。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，中速移动，攻击方式多样且具有威胁性。
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，低速移动，攻击方式多样且具有威胁性，擅长近战。
  * @note  攻击方式1，将玩家向自己拉近，进行吞噬攻击 
  * @note  攻击方式2，发射三排普通子弹
  * @note  攻击方式3，向前冲撞，进行撞击攻击
@@ -114,32 +113,31 @@ public:
     uint16_t              think_count         = 0;
     static const uint16_t TaotieEnemyDeadTime = 700; // 死亡动画时间，单位ms
 
-    uint16_t action_timer = 0;//倒计时
+    uint16_t action_timer   = 0; //倒计时
     uint16_t action_MaxTime = 0; //记录动作最大持续时间
-    uint16_t action_count = 0;//记录动作持续时间
+    uint16_t action_count   = 0; //记录动作持续时间
 
     //拉近玩家相关参数
-    static const uint8_t pullDistance = 30 ;      // 拉近距离
+    static const uint8_t pullDistance = 30; // 拉近距离
 
     // 冲锋相关参数
-    static const uint8_t chargeDistance = 30 ; // 冲锋移动距离
+    static const uint8_t chargeDistance = 30; // 冲锋移动距离
 
     // 碾压记录
-    static const uint8_t crushChargeDistance = 100 ; // 碾压出现位置距离玩家左侧距离
-    bool appearedForCrush = false ;
-    bool comeBackForCrush = false ;
+    static const uint8_t crushChargeDistance = 100; // 碾压出现位置距离玩家左侧距离
+    bool                 appearedForCrush    = false;
+    bool                 comeBackForCrush    = false;
 
     // 攻击模式5
     // 冲锋并冲锋相关参数
-    static const uint8_t pullAndChargeDistance = 50 ; // 拉近并冲锋移动距离
+    static const uint8_t pullAndChargeDistance = 50; // 拉近并冲锋移动距离
     //实际向前冲锋距离为 pullAndChargeDistance/2
-    
 
 public:
     TaotieEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
     );
-    ~TaotieEnemy() override = default;
+    ~TaotieEnemy() = default;
 
     void drawRole() override;                                   // 只保留声明
     void init() override;                                       // 只保留声明
@@ -157,26 +155,44 @@ public:
 
 /**
  * @brief TaowuEnemy class
- * @note  中文：梼杌 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
+ * @note  中文：饕餮 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
  * @note  上古 “四凶” 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，中速移动，攻击方式多样且具有威胁性。
- * @note  攻击方式1，随机位置发射大量普通子弹
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
+ * @note  攻击方式1，随机位置发射大量普通子弹，血量越低，发射持续时间越长，基础时间为3秒，最多为6秒，每秒发射5发
  * @note  攻击方式2，随机位置发射5个火球弹
- * @note  攻击方式3，闪现移动
- * 
+ * @note  攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
+ * @note  攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
+ * @note  攻击方式5，随机闪现移动
+ * @note  攻击方式6，定向闪现，对齐玩家位置闪现
  */
+
 class TaowuEnemy : public IRole {
+    uint16_t              think_count         = 0;
+    static const uint16_t TaotieEnemyDeadTime = 700; // 死亡动画时间，单位ms
+
+    uint16_t action_timer   = 0; //倒计时
+    uint16_t action_MaxTime = 0; //记录动作最大持续时间
+    uint16_t action_count   = 0; //记录动作持续时间
+
+
 public:
     TaowuEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
     );
     ;
-    ~TaowuEnemy() override = default;
-    void init();                                       // 只保留声明
-    void think();                                      // 只保留声明
-    void doAction();                                   // 只保留声明
-    void die();                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type); // 只保留声明
+    ~TaowuEnemy() = default;
+    void init() override;                                       // 只保留声明
+    void think() override;                                      // 只保留声明
+    void doAction() override;                                   // 只保留声明
+    void die() override;                                        // 只保留声明
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
+
+    void fireContinuousMassiveBasicBullets();     // 攻击方式1，随机位置发射大量普通子弹
+    void fireFiveFireballBulletsAtRandom();       // 攻击方式2，随机位置发射5个火球弹
+    void fireCenterFireballAndSideBasicBullets(); // 攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
+    void fireSingleRowNotchedBasicBullets();      // 攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
+    void blinkToRandomPosition();                 // 攻击方式5，随机闪现移动
+    void blinkToPlayerAlignedPosition();          // 攻击方式6，定向闪现，对齐玩家位置闪现
 };
 
 /**
@@ -196,13 +212,13 @@ public:
     XiangliuEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
     );
-    ~XiangliuEnemy() override = default;
+    ~XiangliuEnemy() = default;
 
-    void init();                                       // 只保留声明
-    void think();                                      // 只保留声明
-    void doAction();                                   // 只保留声明
-    void die();                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type); // 只保留声明
+    void init() override;                                       // 只保留声明
+    void think() override;                                      // 只保留声明
+    void doAction() override;                                   // 只保留声明
+    void die() override;                                        // 只保留声明
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
 
 #endif // ENEMYROLE_HPP

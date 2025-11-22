@@ -872,7 +872,7 @@ void ChiMeiEnemy::die() {
  * @brief TaotieEnemy class
  * @note  中文：饕餮 ｜ 英文：Taotie,神话典故：四凶之一，羊身人面、眼在腋下、虎齿人爪，声音似婴儿；
  * @note  上古 “四凶” 之一，贪婪无度，能吞食天地万物，专食人类与牲畜，象征极致贪欲。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，中速移动，攻击方式多样且具有威胁性。
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，低速移动，攻击方式多样且具有威胁性，擅长近战。
  * @note  攻击方式1，将玩家向自己拉近，进行吞噬攻击 
  * @note  攻击方式2，发射三排普通子弹
  * @note  攻击方式3，向前冲撞，进行撞击攻击
@@ -1084,7 +1084,7 @@ void TaotieEnemy::think() {
                 break;
 
             case 3:
-                //攻击模式3 - 冲锋撞击攻击 
+                //攻击模式3 - 冲锋撞击攻击
                 //500ms冲锋+1000ms停顿+500ms回退
                 action_timer                   = 2000; // 饕餮攻击动作持续时间2000ms
                 action_MaxTime                 = action_timer;
@@ -1115,15 +1115,6 @@ void TaotieEnemy::think() {
                 action_count                   = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
             }
-
-            // if (m_pdata->attackData.shootCooldownTimer <= 0) {
-            //     m_pdata->actionData.attackMode   = AttackMode::MODE_1;
-            //     m_pdata->actionData.currentState = ActionState::ATTACKING;
-            // } else {
-            //     // 如果在冷却中，则不进行攻击，保持空闲状态
-            //     m_pdata->actionData.moveMode     = MoveMode::NONE;
-            //     m_pdata->actionData.currentState = ActionState::IDLE;
-            // }
         }
     }
 }
@@ -1238,7 +1229,7 @@ void TaotieEnemy::die() {
 //攻击技能
 void TaotieEnemy::pullPlayerAndDevourAttack() {
     //将玩家向自己拉近，进行吞噬攻击
-    if (action_count < action_MaxTime / pullDistance ) // 每50ms拉近一次
+    if (action_count < action_MaxTime / pullDistance) // 每50ms拉近一次
         return;
     action_count = 0;
 
@@ -1322,7 +1313,7 @@ void TaotieEnemy::appearLeftAndRollBackCrushAttack() {
     // //向后碾压，从玩家左侧出现，进行碾压攻击
 
     //因为要算来回，所以距离触发时间除以2
-    if (action_count < action_MaxTime / crushChargeDistance/2 ) // 4000/100/2=20 ms移动一次
+    if (action_count < action_MaxTime / crushChargeDistance / 2) // 4000/100/2=20 ms移动一次
         return;
     action_count = 0;
 
@@ -1416,11 +1407,13 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
  * @brief TaowuEnemy class
  * @note  中文：饕餮 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
  * @note  上古 “四凶” 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，中速移动，攻击方式多样且具有威胁性。
- * @note  攻击方式1，随机位置发射大量普通子弹
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
+ * @note  攻击方式1，随机位置发射大量普通子弹，血量越低，发射持续时间越长，基础时间为3秒，最多为6秒，每秒发射5发
  * @note  攻击方式2，随机位置发射5个火球弹
- * @note  攻击方式3，闪现移动
- 
+ * @note  攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
+ * @note  攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
+ * @note  攻击方式5，随机闪现移动
+ * @note  攻击方式6，定向闪现，对齐玩家位置闪现
  */
 
 /*******************************************************************/
@@ -1430,10 +1423,10 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
  * @brief XiangliuEnemy class
  * @note  中文：相柳 ｜ 英文：Xiangliu,神话典故：九头蛇形怪兽，居于洪水之中，毒气弥漫，所到之处草木皆枯，河流干涸。
  * @note  九头蛇形怪兽，能喷射剧毒，所到之处草木皆枯，河流干涸，象征灾难与毁灭。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，中速移动，攻击方式多样且具有威胁性。
- * @note  攻击方式1，发射九排普通子弹
- * @note  攻击方式2，发射三排闪电
- * @note  攻击方式3，发射三排火球弹
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），中血量，中攻击力，中速移动，攻击方式多样且具有威胁性，擅长召唤。
+ * @note  攻击方式1，发射九列普通子弹
+ * @note  攻击方式2，发射三列闪电
+ * @note  攻击方式3，发射三列火球弹
  * @note  攻击方式4，生成3只ChiMeiEnemy作为召唤物协同作战
  * @note  攻击方式5，生成2只FeilianEnemy作为召唤物协同作战
  * @note  攻击方式6，生成1只GudiaoEnemy作为召唤物协同作战
