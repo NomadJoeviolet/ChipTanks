@@ -158,8 +158,8 @@ public:
  * @note  中文：饕餮 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
  * @note  上古 “四凶” 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
  * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
- * @note  攻击方式1，随机位置发射大量普通子弹，血量越低，发射持续时间越长，基础时间为3秒，最多为6秒，每秒发射5发
- * @note  攻击方式2，随机位置发射5个火球弹
+ * @note  攻击方式1，闪现至中间位置，随机位置发射大量普通子弹，血量越低，发射持续时间越长，基础时间为3秒，最多为6秒，每秒发射5发
+ * @note  攻击方式2，随机位置发射5个火球弹，持续时间3s
  * @note  攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
  * @note  攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
  * @note  攻击方式5，随机闪现移动
@@ -168,11 +168,24 @@ public:
 
 class TaowuEnemy : public IRole {
     uint16_t              think_count         = 0;
-    static const uint16_t TaotieEnemyDeadTime = 700; // 死亡动画时间，单位ms
+    static const uint16_t TaowuEnemyDeadTime = 700; // 死亡动画时间，单位ms
 
     uint16_t action_timer   = 0; //倒计时
     uint16_t action_MaxTime = 0; //记录动作最大持续时间
     uint16_t action_count   = 0; //记录动作持续时间
+
+    bool positionChange = false ;
+    // 攻击方式1相关参数
+    static const uint16_t MassiveBasicBulletFireTime = 3000; // 最短发射时间，单位ms
+    static const uint8_t BulletsPerSecond = 5 ;  // 发射频率，单位ms
+
+    // 攻击方式2相关参数
+    static const uint16_t FiveFireballBulletFireTime = 3000; // 发射时间，单位ms
+    static const uint8_t FireballCount = 5 ;  // 发射数量
+
+    // 攻击方式3相关参数
+    static const uint8_t CenterFireballAttackTime = 100 ; // 发射时间，单位ms
+    
 
 
 public:
@@ -181,6 +194,8 @@ public:
     );
     ;
     ~TaowuEnemy() = default;
+
+    void drawRole() override;                                   // 只保留声明
     void init() override;                                       // 只保留声明
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
