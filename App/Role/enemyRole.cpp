@@ -922,7 +922,7 @@ TaotieEnemy::TaotieEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8
     m_pdata->attackData.attackPower            = 5 + level * 2;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 32000; //32000 ms
+    m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
     m_pdata->attackData.bulletSpeed            = 1;
 
     m_pdata->attackData.bulletRange            = 10;   //只对火球弹生效
@@ -1190,6 +1190,7 @@ void TaotieEnemy::doAction() {
             m_pdata->actionData.currentState = ActionState::IDLE;
             m_pdata->actionData.attackMode   = AttackMode::NONE;
             action_count                     = 0;
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // 攻击后进入冷却时间
         }
         break;
     }
@@ -1412,8 +1413,8 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
  * @note  攻击方式2，随机位置发射5个火球弹，持续时间3s
  * @note  攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
  * @note  攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
- * @note  攻击方式5，随机闪现移动
- * @note  攻击方式6，定向闪现，对齐玩家位置闪现
+ * @note  攻击方式5，原地留下火球弹并消失
+ * @note  攻击方式6，定向闪现，对齐玩家位置闪现，清除CD
  */
 
 TaowuEnemy::TaowuEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level)
@@ -1456,10 +1457,10 @@ TaowuEnemy::TaowuEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t
     m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 15 + level * 5;
+    m_pdata->attackData.attackPower            = 10 + level * 2;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 20000; //20000 ms
+    m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
     m_pdata->attackData.bulletSpeed            = 1;
 
     m_pdata->attackData.bulletRange            = 10;   //只对火球弹生效
@@ -1650,7 +1651,7 @@ void TaowuEnemy::think() {
                 break;
             case 5:
                 //攻击模式5 - 随机闪现移动
-                action_timer                   = 100; // 梼杌攻击动作持续时间100ms
+                action_timer                   = 1000; // 梼杌攻击动作持续时间1000ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 positionChange = false ;
@@ -1746,6 +1747,13 @@ void TaowuEnemy::doAction() {
             m_pdata->actionData.currentState = ActionState::IDLE;
             m_pdata->actionData.attackMode   = AttackMode::NONE;
             action_count                     = 0;
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // 攻击后进入冷却时间
+
+            //攻击模式6，清除CD
+            if( m_pdata->actionData.attackMode == AttackMode::MODE_6 )
+            {
+                m_pdata->attackData.shootCooldownTimer = 0; //清除冷却时间，快速攻击
+            }
         }
         break;
     }
@@ -1881,23 +1889,39 @@ void TaowuEnemy::fireSingleRowNotchedBasicBullets() {
 }
 
 void TaowuEnemy::blinkToRandomPosition() { 
-    if( action_count < action_MaxTime-10 ) // 1000ms 闪现一次
+    if( action_count < 200 ) 
         return;
     action_count = 0;
 
     if( !positionChange )
     {
         //改变位置
-        m_pdata->spatialData.currentPosX = 40 + (rand() % 41) ; // 40-80 随机位置
-        m_pdata->spatialData.currentPosY = 1 + (rand() % 32) ;   // 0-32 随机位置
+        m_pdata->spatialData.currentPosX = 140 ; // 40-80 随机位置
+        m_pdata->spatialData.currentPosY = 1 ;   // 0-32 随机位置
         m_pdata->spatialData.refPosX     = m_pdata->spatialData.currentPosX ;
         m_pdata->spatialData.refPosY     = m_pdata->spatialData.currentPosY ;
         positionChange = true ;
     }
+    else {
+        if( action_timer < 300 ){
+            //恢复原位置
+            m_pdata->spatialData.currentPosX = 63 ;
+            m_pdata->spatialData.currentPosY = 1 ;
+            m_pdata->spatialData.refPosX     = 63 ;
+            m_pdata->spatialData.refPosY     = 1 ;
+        }
+        else {
+            //发射火球弹
+            uint8_t m_x = 119 ;
+            uint8_t m_y = rand() % 60+1 ;
+            m_pdata->attackData.shootCooldownTimer = 0; //重置冷却时间，快速发射子弹
+            shoot(m_x , m_y , BulletType::FIRE_BALL);
+        }
+    }
 }
 
 void TaowuEnemy::blinkToPlayerAlignedPosition() {
-    if( action_count < action_MaxTime-10 ) // 1000ms 闪现一次
+    if( action_count < action_MaxTime-10 ) // 闪现一次
         return;
     action_count = 0;
 
@@ -1908,14 +1932,14 @@ void TaowuEnemy::blinkToPlayerAlignedPosition() {
     {
         //改变位置，对齐玩家位置
         uint8_t playerY = player->getData()->spatialData.currentPosY+player->getData()->spatialData.sizeY/2 ;
-        uint8_t targetY = playerY - m_pdata->spatialData.sizeY/2 ;
+        int8_t targetY = playerY - m_pdata->spatialData.sizeY/2 ;
 
         //X位置随机
-        m_pdata->spatialData.currentPosX = 40 + (rand() % 41) ; // 40-80 随机位置
+        m_pdata->spatialData.currentPosX = 30 + (rand() % 51) ; // 30-80 随机位置
 
         //确保BOSS位置在屏幕内
-        if( targetY < 1 ) targetY = 1 ;
-        if( targetY > 32 ) targetY = 63 ;
+        if( targetY < -31 ) targetY = -31 ;
+        if( targetY > 95 ) targetY = 95 ;
 
         m_pdata->spatialData.currentPosY = targetY ;
         m_pdata->spatialData.refPosX     = m_pdata->spatialData.currentPosX ;
@@ -1986,8 +2010,9 @@ XiangliuEnemy::XiangliuEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, u
     m_pdata->attackData.attackPower            = 12 + level * 3;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 20000; //20000 ms
+    m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
     m_pdata->attackData.bulletSpeed            = 1;
+    //攻击速度 15000 ms
 
     m_pdata->attackData.bulletRange            = 10;   //只对火球弹生效
     m_pdata->attackData.bulletDamageMultiplier = 1.5f; //只对闪电链弹生效
@@ -2129,33 +2154,52 @@ void XiangliuEnemy::think() {
             }
 
             uint8_t randomAttackMode         = rand() % 6 + 1; // 1-6 攻击方式
+            if( randomAttackMode > 3 && g_entityManager.m_roles.size() >= 3  )
+                randomAttackMode -= 3 ; // 如果场上敌人过多，则减少召唤物攻击方式的概率
+
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             switch (randomAttackMode) {
             case 1:
-                
+                action_count                   = 0;
+                action_timer                   = 500 ; // 相柳攻击动作持续时间500ms
+                action_MaxTime                 = action_timer;
+
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
                 break;
             case 2:
-                
+                action_count                   = 0;
+                action_timer                   = 500 ; // 相柳攻击动作持续时间500ms
+                action_MaxTime                 = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_2;
                 break;
 
             case 3:
+                action_count                   = 0;
+                action_timer                   = 500 ; // 相柳攻击动作持续时间500ms
+                action_MaxTime                 = action_timer;
                 
                 break;
             case 4:
-                
+                action_count                   = 0;
+                action_timer                   = 500 ; // 相柳攻击动作持续时间500ms
+                action_MaxTime                 = action_timer;
                 
                 m_pdata->actionData.attackMode = AttackMode::MODE_4;
                 break;
             case 5:
+                action_count                   = 0;
+                action_timer                   = 500 ; // 相柳攻击动作持续时间500ms
+                action_MaxTime                 = action_timer;
                 
                 m_pdata->actionData.attackMode = AttackMode::MODE_5;
                 break;
             case 6:
-                
+                action_count                   = 0;
+                action_timer                   = 500 ; // 相柳攻击动作持续时间500ms
+                action_MaxTime                 = action_timer;    
+
                 m_pdata->actionData.attackMode = AttackMode::MODE_6;
                 break;
             default:
@@ -2213,23 +2257,22 @@ void XiangliuEnemy::doAction() {
         switch (m_pdata->actionData.attackMode) {
         //执行攻击动作
         case AttackMode::MODE_1:
-
+            fireNineRowsBasicBullets();
             break;
         case AttackMode::MODE_2:
-            
+            fireThreeRowsLightningBullets();
             break;
-
         case AttackMode::MODE_3:
-            
+            fireThreeRowsFireballBullets();
             break;
         case AttackMode::MODE_4:
-            
+            summonThreeChiMeiMinions();
             break;
         case AttackMode::MODE_5:
-           
-            break;
+           summonTwoFeilianMinions();
+            break;  
         case AttackMode::MODE_6:
-            
+            summonOneGudiaoMinion();
             break;
         default:
             break;
@@ -2239,6 +2282,7 @@ void XiangliuEnemy::doAction() {
             m_pdata->actionData.currentState = ActionState::IDLE;
             m_pdata->actionData.attackMode   = AttackMode::NONE;
             action_count                     = 0;
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // 攻击后进入冷却时间
         }
         break;
     }
@@ -2276,6 +2320,113 @@ void XiangliuEnemy::die() {
 }
 
 //攻击技能
+void XiangliuEnemy::fireNineRowsBasicBullets() {
+    //发射九排普通子弹
+    if( action_count < action_MaxTime-10 ) // 发射一次
+        return;
+    action_count = 0;
+
+    uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+    //发射子弹，间隔2个像素，中间留有空隙
+    int8_t offsetYList[9] = {-31, -29, -27, -2, 0, 2, -27, 29, 31};
+    for (uint8_t i = 0; i < 9; i++) {
+        m_pdata->attackData.shootCooldownTimer = 0; //重置冷却时间，快速发射子弹
+        shoot(m_x , m_y + offsetYList[i] , BulletType::BASIC);
+        m_pdata->attackData.shootCooldownTimer = 0; //重置冷却时间，快速发射子弹
+        shoot(m_x+18 , m_y + offsetYList[i] , BulletType::BASIC);
+    }
+
+}
+
+void XiangliuEnemy::fireThreeRowsLightningBullets() {
+    if( action_count < action_MaxTime-10 ) // 发射一次
+        return;
+    action_count = 0;
+
+    //调整位置
+    m_pdata->spatialData.currentPosX = 64+10 ;
+    m_pdata->spatialData.refPosX     = 1 ;
+
+    //发射三排闪电
+    uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+    //发射子弹，间隔21个像素
+    int8_t offsetYList[3] = {-21, 0, 21};
+    for (uint8_t i = 0; i < 3; i++) {
+        m_pdata->attackData.shootCooldownTimer = 0; //重置冷却时间，快速发射子弹
+        shoot(m_x , m_y + offsetYList[i] , BulletType::LIGHTNING_LINE);
+    }
+    
+}
+
+void XiangliuEnemy::fireThreeRowsFireballBullets() {
+    if( action_count < action_MaxTime-10 ) // 发射一次
+        return;
+    action_count = 0;
+    //发射三排火球弹
+    uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+    //发射子弹，间隔21个像素
+    int8_t offsetYList[3] = {-21, 0, 21};
+    for (uint8_t i = 0; i < 3; i++) {
+        m_pdata->attackData.shootCooldownTimer = 0; //重置冷却时间，快速发射子弹
+        shoot(m_x , m_y + offsetYList[i] , BulletType::FIRE_BALL);
+    }
+
+}
+
+void XiangliuEnemy::summonThreeChiMeiMinions() {
+    if( action_count < action_MaxTime-10 ) // 召唤一次
+        return;
+    action_count = 0;
+
+    uint8_t posX[3] = { 10 , 30 , 50 } ;
+    uint8_t posY[3] = { 30 , 60 , 80 } ;
+
+    for ( uint8_t i = 0 ; i < 3 ; i++ )
+    {
+        IRole *minion = new ChiMeiEnemy( posX[i] , posY[i] , posX[i] , posY[i] , rand() % 3 + 1 );
+        if( minion != nullptr ) {
+            if( !g_entityManager.addRole( minion ))
+                delete  minion ; // Clean up if not added
+        }
+    }
+    
+}
+
+void XiangliuEnemy::summonTwoFeilianMinions() {
+    if( action_count < action_MaxTime-10 ) // 召唤一次
+        return;
+    action_count = 0;
+
+    uint8_t posX[2] = { 40 , 40 } ;
+    uint8_t posY[2] = { 0 , 50 } ;
+    for ( uint8_t i = 0 ; i < 2 ; i++ )
+    {
+        IRole *minion = new FeilianEnemy( posX[i] , posY[i] , posX[i] , posY[i] , rand() % 3 + 1 );
+        if( minion != nullptr ) {
+            if( !g_entityManager.addRole( minion ))
+                delete  minion ; // Clean up if not added
+        }
+    }
+}
+
+void XiangliuEnemy::summonOneGudiaoMinion() {
+    if( action_count < action_MaxTime-10 ) // 召唤一次
+        return;
+    action_count = 0;
+
+    uint8_t posX = 40 ;
+    uint8_t posY = 25 ;
+    
+    IRole *minion = new GudiaoEnemy( posX , posY , posX , posY , rand() % 3 + 1 );
+    if( minion != nullptr ) {
+        if( !g_entityManager.addRole( minion ))
+            delete  minion ; // Clean up if not added
+    }
+
+}
 
 
 

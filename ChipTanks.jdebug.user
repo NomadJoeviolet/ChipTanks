@@ -1,35 +1,40 @@
 
 
-Breakpoint=C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/enemyRole.cpp:225:9, State=BP_STATE_DISABLED
-Breakpoint=C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/leadingrole.cpp:128:34, State=BP_STATE_DISABLED
-Breakpoint=C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/leadingrole.cpp:141:9, State=BP_STATE_DISABLED
-OpenDocument="startup_stm32f103xb.s", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/startup_stm32f103xb.s", Line=54
+Breakpoint=C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/enemyRole.cpp:889:5, State=BP_STATE_DISABLED
+Breakpoint=C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/enemyRole.cpp:1372:13, State=BP_STATE_DISABLED
+Breakpoint=C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/leadingrole.cpp:131:17, State=BP_STATE_DISABLED
+Breakpoint=C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/leadingrole.cpp:143:13, State=BP_STATE_DISABLED
 OpenDocument="main.c", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/Core/Src/main.c", Line=59
-OpenDocument="role.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/role.cpp", Line=6
-OpenDocument="enemyRole.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/enemyRole.cpp", Line=511
+OpenDocument="enemyRole.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/enemyRole.cpp", Line=1364
+OpenDocument="stm32f1xx_it.c", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/Core/Src/stm32f1xx_it.c", Line=76
+OpenDocument="startup_stm32f103xb.s", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/startup_stm32f103xb.s", Line=54
+OpenDocument="tasks.c", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/Middlewares/Third_Party/FreeRTOS/Source/tasks.c", Line=3630
 OpenDocument="leadingrole.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/leadingrole.cpp", Line=116
-OpenDocument="gameEntityManager.hpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/gameEntityManager.hpp", Line=31
-OpenDocument="threads.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/threads.cpp", Line=77
+OpenDocument="role.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/role.cpp", Line=41
+OpenDocument="threads.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/threads.cpp", Line=101
+OpenDocument="bullet.cpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Bullet/bullet.cpp", Line=0
+OpenDocument="stm32f1xx_hal_i2c.c", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_i2c.c", Line=7616
+OpenDocument="gameEntityManager.hpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/gameEntityManager.hpp", Line=294
 OpenDocument="enemyRole.hpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Role/enemyRole.hpp", Line=56
 OpenDocument="bullet.hpp", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Bullet/bullet.hpp", Line=0
 OpenDocument="ChipTanks.jdebug", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/ChipTanks.jdebug", Line=0
-OpenDocument="tasks.c", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/Middlewares/Third_Party/FreeRTOS/Source/tasks.c", Line=3640
+OpenDocument="oled.c", FilePath="C:/IncludeAll/WorkSpace/Codes/STM32CubeMX_projects/ChipTanks/App/Peripheral/OLED/oled.c", Line=214
 OpenToolbar="Debug", Floating=0, x=0, y=0
-OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=959, h=179, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=3, w=959, h=169, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=1, w=959, h=125, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=3, w=959, h=349, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
 OpenWindow="Source Files", DockArea=LEFT, x=0, y=1, w=697, h=181, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
-OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=959, h=167, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=0, w=959, h=125, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Break & Tracepoints", DockArea=LEFT, x=0, y=0, w=697, h=231, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VectorCatchIndexMask=254
 OpenWindow="Memory 1", DockArea=BOTTOM, x=1, y=0, w=216, h=336, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, EditorAddress=0x0
-OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=2, w=959, h=259, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=RIGHT, x=0, y=2, w=959, h=175, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Functions", DockArea=LEFT, x=0, y=3, w=697, h=181, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 OpenWindow="Code Profile", DockArea=LEFT, x=0, y=2, w=697, h=181, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, GroupByFiles=0, SortRespectsFilters=0, ParentRelativeLoad=0
 OpenWindow="Data Sampling", DockArea=BOTTOM, x=2, y=0, w=1265, h=336, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
-OpenWindow="Timeline", DockArea=BOTTOM, x=0, y=0, w=1077, h=336, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=1, CodePaneShown=1, PinCursor="Cursor Movable", TimePerDiv="1 ns / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="850;-69", DataGraphShowNamesAtCursor=0, PowerGraphDrawAsPoints=0, PowerGraphLegendShown=1, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="850;-69", CodeGraphLegendShown=1, CodeGraphLegendPosition="801;0"
+OpenWindow="Timeline", DockArea=BOTTOM, x=0, y=0, w=1077, h=336, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=1, CodePaneShown=1, PinCursor="Cursor Movable", TimePerDiv="1 ns / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="849;0", DataGraphShowNamesAtCursor=0, PowerGraphDrawAsPoints=0, PowerGraphLegendShown=1, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="850;0", CodeGraphLegendShown=1, CodeGraphLegendPosition="800;0"
 OpenWindow="Console", DockArea=BOTTOM, x=0, y=1, w=2560, h=147, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
 SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
 TableHeader="Vector Catches", SortCol="", SortOrder="ASCENDING", VisibleCols=["";"Vector Catch";"Description"], ColWidths=[50;300;500]
-TableHeader="Break & Tracepoints", SortCol="", SortOrder="DESCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[100;100;126;382]
+TableHeader="Break & Tracepoints", SortCol="", SortOrder="DESCENDING", VisibleCols=["";"Type";"Location";"Extras"], ColWidths=[100;100;126;614]
 TableHeader="Functions", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Address";"Size";"#Insts";"Class";"Source"], ColWidths=[1634;104;100;100;118;278]
 TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[237;154;118;104;234;112]
 TableHeader="Source Files", SortCol="File", SortOrder="ASCENDING", VisibleCols=["File";"Status";"Size";"#Insts";"Path"], ColWidths=[263;100;100;100;1086]
@@ -38,11 +43,14 @@ TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", Visibl
 TableHeader="Data Sampling Setup", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[118;100;100;100;100;100;110;126;411]
 TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
 TableHeader="Task List", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Name";"Run Count";"Priority";"Status";"Timeout";"Stack Info";"ID";"Mutex Count";"Notified Value";"Notify State"], ColWidths=[110;110;110;110;110;110;110;110;110;110]
-TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[100;144;689]
 TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Access"], ColWidths=[247;328;134;250;100]
 TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
 TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;366]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[100;144;689]
 WatchedExpression="newBullet", Window=Watched Data 1
 WatchedExpression="radius", Window=Watched Data 1
 WatchedExpression="debugCurrentPosX", RefreshRate=5, Window=Watched Data 1
 WatchedExpression="debugCurrentPosY", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="isInited", Window=Watched Data 1
+WatchedExpression="m_pdata", Window=Watched Data 1
+WatchedExpression="tmpX", Window=Watched Data 1

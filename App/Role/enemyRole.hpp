@@ -162,8 +162,8 @@ public:
  * @note  攻击方式2，随机位置发射5个火球弹，持续时间3s
  * @note  攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
  * @note  攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
- * @note  攻击方式5，随机闪现移动
- * @note  攻击方式6，定向闪现，对齐玩家位置闪现
+ * @note  攻击方式5，原地留下火球弹并消失
+ * @note  攻击方式6，定向闪现，对齐玩家位置闪现，同时消除CD
  */
 
 class TaowuEnemy : public IRole {
@@ -204,7 +204,7 @@ public:
     void fireFiveFireballBulletsAtRandom();       // 攻击方式2，随机位置发射5个火球弹
     void fireCenterFireballAndSideBasicBullets(); // 攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
     void fireSingleRowNotchedBasicBullets();      // 攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
-    void blinkToRandomPosition();                 // 攻击方式5，随机闪现移动
+    void blinkToRandomPosition();                 // 攻击方式5，原地留下火球弹并消失
     void blinkToPlayerAlignedPosition();          // 攻击方式6，定向闪现，对齐玩家位置闪现
 };
 
@@ -229,8 +229,6 @@ public:
     uint16_t action_MaxTime = 0; //记录动作最大持续时间
     uint16_t action_count   = 0; //记录动作持续时间
 
-    uint8_t summonedEnemyCount = 0; // 已召唤的敌人数量
-    uint8_t maxSummonedEnemyCount = 4 ; // 最大召唤的敌人数量
 
 public:
     XiangliuEnemy(

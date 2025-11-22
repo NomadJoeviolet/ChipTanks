@@ -136,25 +136,25 @@ void gameControlThread(void *argument) {
             //     delete enemyGudiao ;
             // }
 
-            //BOSS饕餮测试
+            // // BOSS饕餮测试
             // IRole* enemyTaotie = new TaotieEnemy(180, 0 , 64 , 0 );
             // if(!g_entityManager.addRole(enemyTaotie)) {
             //     delete enemyTaotie ;
             // }
 
-            //BOSS梼杌测试
-            IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
-            if (!g_entityManager.addRole(enemyTaowu)) {
-                delete enemyTaowu;
-            }
-
-            // BOSS相柳测试
-            // IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
-            // if (!g_entityManager.addRole(enemyXiangliu)) {
-            //     delete enemyXiangliu;
+            // //BOSS梼杌测试
+            // IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
+            // if (!g_entityManager.addRole(enemyTaowu)) {
+            //     delete enemyTaowu;
             // }
 
-            debugRole = enemyTaowu;
+            // BOSS相柳测试
+            IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
+            if (!g_entityManager.addRole(enemyXiangliu)) {
+                delete enemyXiangliu;
+            }
+
+            //debugRole = enemyTaowu;
         }
 
         g_entityManager.updateAllRolesActions();
