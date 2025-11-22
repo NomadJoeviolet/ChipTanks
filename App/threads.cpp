@@ -119,23 +119,24 @@ void gameControlThread(void *argument) {
             //位置小于192
 
             // 全部敌人被消灭，重新添加敌人
-            for(int i=0; i< 3 ; i++) {
-                IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-                if(!g_entityManager.addRole(enemyChiMei)) {
-                    delete enemyChiMei ;
-                }
-            }
+            // for(int i=0; i< 3 ; i++) {
+            //     IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
+            //     if(!g_entityManager.addRole(enemyChiMei)) {
+            //         delete enemyChiMei ;
+            //     }
+            // }
 
-            for(int i=0; i< 3 ; i++) {
-                IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-                if(!g_entityManager.addRole(enemyFeilian)) {
-                    delete enemyFeilian ;
-                }
-            }
-            IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
-            if(!g_entityManager.addRole(enemyGudiao)) {
-                delete enemyGudiao ;
-            }
+            // for(int i=0; i< 3 ; i++) {
+            //     IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
+            //     if(!g_entityManager.addRole(enemyFeilian)) {
+            //         delete enemyFeilian ;
+            //     }
+            // }
+            // IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
+            // if(!g_entityManager.addRole(enemyGudiao)) {
+            //     delete enemyGudiao ;
+            // }
+
             IRole* enemyTaotie = new TaotieEnemy(180, 0 , 64 , 0 );
             if(!g_entityManager.addRole(enemyTaotie)) {
                 delete enemyTaotie ;

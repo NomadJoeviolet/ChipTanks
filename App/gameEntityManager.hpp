@@ -79,9 +79,23 @@ public:
     }
     /********************************************************************/
 
-    //清除需要回收的角色和子弹
+    //获取player角色指针
+    /********************************************************************/
+    IRole *getPlayerRole() {
+        taskENTER_CRITICAL();
+        for (auto role : m_roles) {
+            if (role != nullptr && role->getData()->identity == RoleIdentity::Player) {
+                taskEXIT_CRITICAL();
+                return role;
+            }
+        }
+        taskEXIT_CRITICAL();
+        return nullptr;
+    }
     /********************************************************************/
 
+    //清除需要回收的角色和子弹
+    /********************************************************************/
     void cleanupInvalidRoles() {
         taskENTER_CRITICAL();
         auto it = m_roles.begin();
@@ -130,7 +144,7 @@ public:
             RoleData *dataA = role_A->getData();
             RoleData *dataB = role_B->getData();
 
-            if (dataA->spatialData.refPosX < dataB->spatialData.currentPosX + dataB->spatialData.sizeX 
+            if (dataA->spatialData.refPosX < dataB->spatialData.currentPosX + dataB->spatialData.sizeX
                 && dataA->spatialData.refPosX + dataA->spatialData.sizeX > dataB->spatialData.currentPosX
                 && dataA->spatialData.refPosY < dataB->spatialData.currentPosY + dataB->spatialData.sizeY
                 && dataA->spatialData.refPosY + dataA->spatialData.sizeY > dataB->spatialData.currentPosY) {
@@ -221,7 +235,7 @@ public:
     void checkBulletRangeDamage(IBullet *bullet_A) {
         if (bullet_A == nullptr) return;
         BulletData *dataA = bullet_A->m_data;
-        if(dataA->range == 0) return; // No range damage for zero range
+        if (dataA->range == 0) return; // No range damage for zero range
 
         taskENTER_CRITICAL();
         for (auto role_B : m_roles) {

@@ -1,9 +1,12 @@
 #include "role.hpp"
 
+#include "FreeRTOS.h"
+#include "task.h"
 //一定要注意这里的子弹创建函数的实现和细节
 //此处决定发射子弹的数值和类型
 
 IBullet *IRole::createBullet(uint8_t x, uint8_t y, BulletType type) {
+
     // Implement bullet creation logic
     switch (type) {
     case BulletType::BASIC:
@@ -33,7 +36,7 @@ IBullet *IRole::createBullet(uint8_t x, uint8_t y, BulletType type) {
             IBullet *newBullet = new LightningLineBullet(
                 0 , x, y,
                 0,                                    // Range
-                m_pdata->attackData.attackPower *1.5 +10 , // Lightning Line does even more damage
+                m_pdata->attackData.attackPower * m_pdata->attackData.bulletDamageMultiplier , // Lightning Line does even more damage
                 m_pdata->identity
             );
             return newBullet;
@@ -42,12 +45,22 @@ IBullet *IRole::createBullet(uint8_t x, uint8_t y, BulletType type) {
     default:
         return nullptr;
     }
+
 }
 
-void IRole::move(int8_t dirX, int8_t dirY) {
+void IRole::move(int8_t dirX, int8_t dirY,bool ignoreSpeed) {
     // Implement enemy movement logic
-    uint8_t tmpX = m_pdata->spatialData.currentPosX + dirX * m_pdata->spatialData.moveSpeed;
-    uint8_t tmpY = m_pdata->spatialData.currentPosY + dirY * m_pdata->spatialData.moveSpeed;
+    int16_t tmpX, tmpY;//会有负数
+
+
+    if(!ignoreSpeed) {
+        tmpX = m_pdata->spatialData.currentPosX + dirX * m_pdata->spatialData.moveSpeed;
+        tmpY = m_pdata->spatialData.currentPosY + dirY * m_pdata->spatialData.moveSpeed;
+    }
+    else {
+        tmpX = m_pdata->spatialData.currentPosX + dirX ;
+        tmpY = m_pdata->spatialData.currentPosY + dirY ;
+    }
     // Boundary checks (assuming screen size 128x64)
     if (!m_pdata->spatialData.canCrossBorder) {
         if (tmpX < 0 || tmpX > 128 - m_pdata->spatialData.sizeX) return;
@@ -55,8 +68,8 @@ void IRole::move(int8_t dirX, int8_t dirY) {
     }
     if(m_pdata->spatialData.canCrossBorder) {
         // Wrap around logic
-       if(tmpX < -64 || tmpX > 192 ) return ;
-       if(tmpY < -32 || tmpY > 56 ) return ;
+       if(tmpX < -80 || tmpX > 180 ) return ;
+       if(tmpY < 0 || tmpY > 50 ) return ;
     }
 
     m_pdata->spatialData.refPosX = tmpX;

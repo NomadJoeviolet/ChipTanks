@@ -117,7 +117,9 @@ public:
     //子弹速度
     int8_t bulletSpeed;
     //子弹伤害范围
-    uint8_t bulletRange;
+    uint8_t bulletRange;//只对火球弹生效
+    //子弹伤害倍率
+    float bulletDamageMultiplier;//只对闪电链弹生效
 };
 
 class InitData {
@@ -213,8 +215,10 @@ public:
 
         //子弹速度
         attackData.bulletSpeed            = 1;
-        //子弹伤害范围
+        //火球弹伤害范围
         attackData.bulletRange            = 1;
+        //闪电链伤害倍率
+        attackData.bulletDamageMultiplier = 1.5f;
 
 
         //空间移动信息初始化
@@ -253,7 +257,7 @@ public:
     BulletData() = default;
     ;
 
-    BulletData(int8_t speed, uint8_t currentPosX, uint8_t currentPosY, uint8_t dmg, uint8_t rg, BulletType type) {
+    BulletData(int8_t speed, uint8_t currentPosX, uint8_t currentPosY, uint8_t dmg, uint8_t rg, BulletType type , float dmgMultiplier = 1.0f) {
         //根据类型进行初始化
         this->type = type;
         switch (this->type) {

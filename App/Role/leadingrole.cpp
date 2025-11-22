@@ -2,6 +2,9 @@
 #include "../gameEntityManager.hpp"
 #include "../Peripheral/OLED/oled.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 extern GameEntityManager g_entityManager;
 
 //controlDelayTime 由 threads.cpp 控制线程定义
@@ -19,7 +22,7 @@ extern GameEntityManager g_entityManager;
 //火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
 //两次伤害均为 attackPower +10 点伤害
 
-//闪电链弹一束条的范围穿透伤害，1.5*attackPower+10 点伤害
+//闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
 
 
 LeadingRole::LeadingRole()
@@ -68,6 +71,7 @@ LeadingRole::LeadingRole()
     m_pdata->attackData.bulletSpeed            = 1;
 
     m_pdata->attackData.bulletRange = 10; //只对火球弹生效
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //只对闪电链弹生效
 
     m_pdata->attackData.collisionPower = 20;
 
@@ -98,6 +102,10 @@ void LeadingRole::init() {
 }
 
 void LeadingRole::doAction() {
+    if(m_pdata->initData.isInited == false) {
+        return;
+    }
+
     // Implement action logic for the leading role
 
     switch (m_pdata->actionData.currentState) {
@@ -166,6 +174,8 @@ void LeadingRole::think() {
 }
 
 void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
+    taskENTER_CRITICAL();
+
     // Create bullet based on type
     switch (type) {
     case BulletType::BASIC:
@@ -225,6 +235,8 @@ void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
             }
         }
     }
+
+    taskEXIT_CRITICAL();
 }
 
 void LeadingRole::drawRole() {

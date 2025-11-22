@@ -40,7 +40,7 @@ public:
     virtual void drawRole() = 0; // 画角色函数声明
     
     IBullet* createBullet(uint8_t x , uint8_t y , BulletType type ) ;
-    void move(int8_t dirX, int8_t dirY);
+    void move(int8_t dirX, int8_t dirY , bool ignoreSpeed  = false) ;
     void update(CollisionResult collisionResult) ;
     void takeDamage(uint8_t damage) ;
     bool isActive() ;

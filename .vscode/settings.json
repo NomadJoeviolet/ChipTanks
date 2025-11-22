@@ -1,6 +1,25 @@
 {
     "files.associations": {
         "new": "cpp",
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "array": "cpp",
+        "condition_variable": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "functional": "cpp",
+        "iterator": "cpp",
+        "memory_resource": "cpp",
+        "optional": "cpp",
+        "format": "cpp",
+        "numeric": "cpp",
+        "ostream": "cpp",
+        "stop_token": "cpp",
+        "streambuf": "cpp",
+        "thread": "cpp",
+        "tuple": "cpp",
+        "utility": "cpp",
+        "variant": "cpp"
     }
 }

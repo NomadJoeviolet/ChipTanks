@@ -81,7 +81,7 @@ const osThreadAttr_t keyScan_attributes = {
 };
 /* Definitions for gameControl */
 osThreadId_t gameControlHandle;
-uint32_t gameControlBuffer[ 256 ];
+uint32_t gameControlBuffer[ 512 ];
 osStaticThreadDef_t gameControlControlBlock;
 const osThreadAttr_t gameControl_attributes = {
   .name = "gameControl",

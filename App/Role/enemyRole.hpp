@@ -18,7 +18,8 @@
 //火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
 //两次伤害均为 attackPower +10 点伤害
 
-//闪电链弹一束条的范围穿透伤害，1.5*attackPower+10 点伤害
+//闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
+
 
 uint8_t const boundary_deadzone = 5; // 左侧边界
 /***************小型敌人***************/
@@ -113,6 +114,27 @@ public:
     uint16_t              think_count         = 0;
     static const uint16_t TaotieEnemyDeadTime = 700; // 死亡动画时间，单位ms
 
+    uint16_t action_timer = 0;//倒计时
+    uint16_t action_MaxTime = 0; //记录动作最大持续时间
+    uint16_t action_count = 0;//记录动作持续时间
+
+    //拉近玩家相关参数
+    static const uint8_t pullDistance = 30 ;      // 拉近距离
+
+    // 冲锋相关参数
+    static const uint8_t chargeDistance = 30 ; // 冲锋移动距离
+
+    // 碾压记录
+    static const uint8_t crushChargeDistance = 100 ; // 碾压出现位置距离玩家左侧距离
+    bool appearedForCrush = false ;
+    bool comeBackForCrush = false ;
+
+    // 攻击模式5
+    // 冲锋并冲锋相关参数
+    static const uint8_t pullAndChargeDistance = 50 ; // 拉近并冲锋移动距离
+    //实际向前冲锋距离为 pullAndChargeDistance/2
+    
+
 public:
     TaotieEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
@@ -125,6 +147,12 @@ public:
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
     void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
+
+    void pullPlayerAndDevourAttack();        // 吸引玩家并进行吞噬攻击，攻击方式1
+    void fireThreeRowsBasicBullets();        // 发射三排普通子弹，攻击方式2
+    void chargeForwardAndRamAttack();        // 向前冲撞并进行撞击攻击，攻击方式3
+    void appearLeftAndRollBackCrushAttack(); // 从左侧出现并进行碾压攻击，攻击方式4
+    void pullPlayerAndChargeForwardAttack(); // 吸引玩家并向前冲撞攻击，攻击方式5
 };
 
 /**
