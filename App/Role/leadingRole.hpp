@@ -49,7 +49,7 @@ public:
     uint16_t              experiencePoints      = 0;
     
     //满级为 10 级
-    uint16_t experienceToLevelUp[10] = {0, 100, 120, 145 , 180 , 220 , 265 , 320 ,  380 , 500 }; // 每级所需经验值
+    uint16_t experienceToLevelUp[11] = {0, 100, 120, 145 , 180 , 220 , 265 , 320 ,  380 , 500 , 999}; // 每级所需经验值
 
 
 public:

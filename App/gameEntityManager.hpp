@@ -287,6 +287,11 @@ public:
                     collisionResult = checkRoleRefPositionCollision(rolePtr);
                 }
                 rolePtr->update(collisionResult);
+                
+                if(rolePtr->getData()->identity == RoleIdentity::Player) {
+                    LeadingRole* playerRole = (LeadingRole*)rolePtr;
+                    playerRole->levelUp(); //检查升级
+                }
             }
         }
         taskEXIT_CRITICAL();

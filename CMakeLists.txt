@@ -62,9 +62,10 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     App/Data
     App/Role
     App/Bullet
+    App/PerkCard
     App/Peripheral/OLED
     App/Peripheral/KEY
-    
+
     Lib/etl/include
 )
 

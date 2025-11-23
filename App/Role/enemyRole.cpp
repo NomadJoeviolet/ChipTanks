@@ -2371,7 +2371,7 @@ void XiangliuEnemy::summonThreeChiMeiMinions() {
         return;
     action_count = 0;
 
-    uint8_t posX[3] = {10, 30, 50};
+    uint8_t posX[3] = {20, 40, 60};
     uint8_t posY[3] = {1, 32, 50};
 
     for (uint8_t i = 0; i < 3; i++) {
@@ -2387,7 +2387,7 @@ void XiangliuEnemy::summonTwoFeilianMinions() {
         return;
     action_count = 0;
 
-    uint8_t posX[2] = {40, 40};
+    uint8_t posX[2] = {50, 50};
     uint8_t posY[2] = {0, 50};
     for (uint8_t i = 0; i < 2; i++) {
         IRole *minion = new FeilianEnemy(posX[i], posY[i], posX[i], posY[i], rand() % 3 + 1);
@@ -2402,7 +2402,7 @@ void XiangliuEnemy::summonOneGudiaoMinion() {
         return;
     action_count = 0;
 
-    uint8_t posX = 40;
+    uint8_t posX = 50;
     uint8_t posY = 25;
 
     IRole *minion = new GudiaoEnemy(posX, posY, posX, posY, rand() % 3 + 1);

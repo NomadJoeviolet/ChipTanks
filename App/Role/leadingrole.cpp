@@ -56,10 +56,10 @@ LeadingRole::LeadingRole()
     m_pdata->healthData.maxHealth     = 180;
 
     //回血信息
-    m_pdata->healthData.healValue       = 3;
+    m_pdata->healthData.healValue       = 5;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 15000;//ms
-    m_pdata->healthData.healSpeed       = 5;//  15000/5 = 3000ms 恢复一次血量
+    m_pdata->healthData.healSpeed       = 3;//  15000/5 = 3000ms 恢复一次血量
 
     //空间移动信息
     m_pdata->spatialData.canCrossBorder = false;
@@ -78,7 +78,10 @@ LeadingRole::LeadingRole()
 
     //攻击信息
     m_pdata->attackData.attackPower            = 10;
+
+    //初始值为4，最大值16
     m_pdata->attackData.shootCooldownSpeed     = 4 ; //每controlDelayTime减少5*controlDelayTime 点冷却时间
+
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 4000; //ms
     m_pdata->attackData.bulletSpeed            = 1;
@@ -91,8 +94,8 @@ LeadingRole::LeadingRole()
     //热量信息
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
-    m_pdata->heatData.heatPerShot      =  15 ;
-    m_pdata->heatData.heatCoolDownRate = 10; //每次冷却10点热量，每次冷却时间间隔由200ms
+    m_pdata->heatData.heatPerShot      =  0 ;//初始15
+    m_pdata->heatData.heatCoolDownRate = 4 ; //每次冷却4点热量，每次冷却时间间隔由200ms
 
     //死亡状态信息
     m_pdata->deathData.deathTimer = 500;
@@ -288,7 +291,7 @@ void LeadingRole::levelUp() {
 
         // Every 5 levels, increase shoot cooldown speed by 1
         if (m_pdata->level % 5 == 0) {
-            m_pdata->attackData.shootCooldownSpeed += 1;
+            m_pdata->attackData.shootCooldownSpeed += 2;
         }
     }
 }

@@ -5,6 +5,14 @@
 //一定要注意这里的子弹创建函数的实现和细节
 //此处决定发射子弹的数值和类型
 
+
+//role.cpp中的createBullet决定发射子弹的数值和机制
+//普通子弹击中敌人后造成伤害， attackPower 点伤害
+//火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
+//两次伤害均为 attackPower +10 点伤害
+
+//闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
+
 IBullet *IRole::createBullet(uint8_t x, uint8_t y, BulletType type) {
 
     // Implement bullet creation logic

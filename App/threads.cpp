@@ -4,11 +4,15 @@
 
 #include "etl/vector.h"
 
+#include "font.h"
+
 #include "Bullet/bullet.hpp"
 #include "Role/leadingRole.hpp"
 #include "Role/enemyRole.hpp"
+
+
+#include "gamePerkCardManager.hpp"
 #include "gameEntityManager.hpp"
-#include "font.h"
 
 GameEntityManager g_entityManager;
 LeadingRole      *pLeadingRole = nullptr; // 全局主角指针
@@ -113,6 +117,8 @@ extern "C" {
 #endif
 
 void gameControlThread(void *argument) {
+    // 创建主角角色
+    pLeadingRole = new LeadingRole();
     g_entityManager.addRole(pLeadingRole);
 
     // 添加一些敌人角色进行测试
@@ -140,11 +146,11 @@ void gameControlThread(void *argument) {
             //     delete enemyGudiao ;
             // }
 
-            // // BOSS饕餮测试
-            // IRole* enemyTaotie = new TaotieEnemy(180, 0 , 64 , 0 );
-            // if(!g_entityManager.addRole(enemyTaotie)) {
-            //     delete enemyTaotie ;
-            // }
+            // BOSS饕餮测试
+            IRole* enemyTaotie = new TaotieEnemy(180, 0 , 64 , 0 );
+            if(!g_entityManager.addRole(enemyTaotie)) {
+                delete enemyTaotie ;
+            }
 
             // //BOSS梼杌测试
             // IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
@@ -152,11 +158,11 @@ void gameControlThread(void *argument) {
             //     delete enemyTaowu;
             // }
 
-            // BOSS相柳测试
-            IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
-            if (!g_entityManager.addRole(enemyXiangliu)) {
-                delete enemyXiangliu;
-            }
+            // // BOSS相柳测试
+            // IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
+            // if (!g_entityManager.addRole(enemyXiangliu)) {
+            //     delete enemyXiangliu;
+            // }
 
             //debugRole = enemyTaowu;
         }
