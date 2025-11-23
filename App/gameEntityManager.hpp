@@ -10,6 +10,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+
+// 管理游戏中的实体：角色和子弹
+// 会被多个模块引用
+// 归gameProgressManager管理
+
 class GameEntityManager {
 public:
     etl::vector<IRole *, 20>    m_roles;   //角色池，存放所有角色指针

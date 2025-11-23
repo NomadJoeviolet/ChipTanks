@@ -3,6 +3,7 @@
 #include "cmsis_os2.h"
 
 #include "etl/vector.h"
+#include "etl/algorithm.h"
 
 #include "font.h"
 
@@ -10,12 +11,12 @@
 #include "Role/leadingRole.hpp"
 #include "Role/enemyRole.hpp"
 
-
 #include "gamePerkCardManager.hpp"
 #include "gameEntityManager.hpp"
 
-GameEntityManager g_entityManager;
-LeadingRole      *pLeadingRole = nullptr; // 全局主角指针
+GameEntityManager   g_entityManager;
+GamePerkCardManager g_perkCardManager;
+LeadingRole        *pLeadingRole = nullptr; // 全局主角指针
 
 uint8_t controlDelayTime = 10; // 控制线程延时，单位ms
 
@@ -33,19 +34,26 @@ void oledTaskThread(void *argument) {
     for (;;) {
         OLED_NewFrame();
 
-        //显示角色信息
-        char infoStr[32];
-        sprintf(
-            infoStr, "HP:%d/%d Lv.%d EXP:%d", pLeadingRole->getData()->healthData.currentHealth,
-            pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level,
-            pLeadingRole->experiencePoints
-        );
-        OLED_PrintString(0, 56, infoStr, &font8x6, OLED_COLOR_NORMAL);
+        if (g_perkCardManager.m_isSelecting && g_perkCardManager.isInited) {
+            // 处于选卡状态，显示选卡界面
+            g_perkCardManager.drawSelectionUI();
 
-        // 绘制游戏界面
-        g_entityManager.drawAllRoles();
+        } else {
+            // 非选卡状态，显示游戏界面
 
-        g_entityManager.drawAllBullets();
+            //显示角色信息
+            char infoStr[32];
+            sprintf(
+                infoStr, "HP:%d/%d Lv.%d EXP:%d", pLeadingRole->getData()->healthData.currentHealth,
+                pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level,
+                pLeadingRole->experiencePoints
+            );
+            OLED_PrintString(0, 56, infoStr, &font8x6, OLED_COLOR_NORMAL);
+
+            // 绘制游戏界面
+            g_entityManager.drawAllRoles();
+            g_entityManager.drawAllBullets();
+        }
 
         // 调试信息显示
         OLED_ShowFrame();
@@ -66,26 +74,45 @@ extern "C" {
 #endif
 
 void keyScanThread(void *argument) {
+    uint16_t scanDelayTime = 40; // 按键扫描线程延时，单位ms
     key.init();
     for (;;) {
         key.scan();
-        pLeadingRole = (LeadingRole *)g_entityManager.getPlayerRole();
-        if (pLeadingRole != nullptr) {
-            if (key.m_keyButton[15] == 1) {
-                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
-            } else if (key.m_keyButton[11] == 1) {
-                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
-            } else if (key.m_keyButton[10] == 1) {
-                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
-            } else if (key.m_keyButton[7] == 1) {
-                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
+        if (key.m_keyButton[14] == 1) {
+            g_perkCardManager.triggerPerkSelection();
+        }
+        if (!g_perkCardManager.m_isSelecting) {
+            pLeadingRole = (LeadingRole *)g_entityManager.getPlayerRole();
+            if (pLeadingRole != nullptr) {
+                if (key.m_keyButton[15] == 1) {
+                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
+                } else if (key.m_keyButton[11] == 1) {
+                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
+                } else if (key.m_keyButton[10] == 1) {
+                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
+                } else if (key.m_keyButton[7] == 1) {
+                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
+                }
+            }
+        } else {
+            scanDelayTime = 100; // 选卡时降低扫描频率，节省资源
+            if (key.m_keyButton[11] == 1)
+                g_perkCardManager.m_selectedIndex = etl::min(
+                    (uint8_t)(g_perkCardManager.m_selectedIndex + 1), (uint8_t)(g_perkCardManager.m_selectedSize - 1)
+                );
+            if (key.m_keyButton[10] == 1)
+                g_perkCardManager.m_selectedIndex =
+                    etl::max((int16_t)(g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
+            if(key.m_keyButton[3] == 1) {
+                g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
             }
         }
-        osDelay(40);
+
+        osDelay(scanDelayTime);
     }
 }
 
@@ -121,8 +148,10 @@ void gameControlThread(void *argument) {
     pLeadingRole = new LeadingRole();
     g_entityManager.addRole(pLeadingRole);
 
-    // 添加一些敌人角色进行测试
+    // 初始化Perk卡片管理器
+    g_perkCardManager.initWarehouse();
 
+    // 添加一些敌人角色进行测试
     for (;;) {
         if (g_entityManager.m_roles.size() == 1) {
             // 全部敌人被消灭，重新添加敌人
@@ -147,9 +176,9 @@ void gameControlThread(void *argument) {
             // }
 
             // BOSS饕餮测试
-            IRole* enemyTaotie = new TaotieEnemy(180, 0 , 64 , 0 );
-            if(!g_entityManager.addRole(enemyTaotie)) {
-                delete enemyTaotie ;
+            IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
+            if (!g_entityManager.addRole(enemyTaotie)) {
+                delete enemyTaotie;
             }
 
             // //BOSS梼杌测试
