@@ -11,7 +11,6 @@
 #include "Role/leadingRole.hpp"
 #include "Role/enemyRole.hpp"
 
-
 #include "gameEntityManager.hpp"
 #include "gamePerkCardManager.hpp"
 #include "gameProgressManager.hpp"
@@ -36,26 +35,42 @@ void oledTaskThread(void *argument) {
 
     for (;;) {
         OLED_NewFrame();
+        if (!g_entityManager.isGameOver) {
+            if (g_progressManager.isPlayingOpeningCG) {
+                // 播放开场动画
+                OLED_DrawCircle(64, 32, 30 - (g_progressManager.openingCGTimer / 100), OLED_COLOR_NORMAL);
+                if (g_progressManager.openingCGTimer > 2 * controlDelayTime)
+                    g_progressManager.openingCGTimer -= controlDelayTime * 2;
+                else
+                    g_progressManager.isPlayingOpeningCG = false;
+            }
 
-        if (g_perkCardManager.m_isSelecting && g_perkCardManager.isInited) {
-            // 处于选卡状态，显示选卡界面
-            g_perkCardManager.drawSelectionUI();
+            else if (g_progressManager.showBoss) {
+                // 展示Boss海报
+                g_progressManager.drawShowBoss();
+            }
 
-        } else {
-            // 非选卡状态，显示游戏界面
+            else if (g_perkCardManager.m_isSelecting && g_perkCardManager.isInited) {
+                // 处于选卡状态，显示选卡界面
+                g_perkCardManager.drawSelectionUI();
+            } else {
+                // 非选卡状态，显示游戏界面
 
-            //显示角色信息
-            char infoStr[32];
-            sprintf(
-                infoStr, "HP:%d/%d Lv.%d EXP:%d", pLeadingRole->getData()->healthData.currentHealth,
-                pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level,
-                pLeadingRole->experiencePoints
-            );
-            OLED_PrintString(0, 56, infoStr, &font8x6, OLED_COLOR_NORMAL);
+                //显示角色信息
+                char infoStr[32];
+                if (pLeadingRole != nullptr) {
+                    sprintf(
+                        infoStr, "HP:%d/%d Lv.%d EXP:%d", pLeadingRole->getData()->healthData.currentHealth,
+                        pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level,
+                        pLeadingRole->experiencePoints
+                    );
+                    OLED_PrintString(0, 56, infoStr, &font8x6, OLED_COLOR_NORMAL);
+                }
 
-            // 绘制游戏界面
-            g_entityManager.drawAllRoles();
-            g_entityManager.drawAllBullets();
+                // 绘制游戏界面
+                g_entityManager.drawAllRoles();
+                g_entityManager.drawAllBullets();
+            }
         }
 
         // 调试信息显示
@@ -81,44 +96,49 @@ void keyScanThread(void *argument) {
     key.init();
     for (;;) {
         key.scan();
-        if (key.m_keyButton[14] == 1) {
-            g_perkCardManager.triggerPerkSelection();
-        }
-        if (!g_perkCardManager.m_isSelecting) {
-            scanDelayTime = 40; // 非选卡时恢复正常扫描频率
-            pLeadingRole  = (LeadingRole *)g_entityManager.getPlayerRole();
-            if (pLeadingRole != nullptr) {
-                if (key.m_keyButton[15] == 1) {
-                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
-                } else if (key.m_keyButton[11] == 1) {
-                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
-                } else if (key.m_keyButton[10] == 1) {
-                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
-                } else if (key.m_keyButton[7] == 1) {
-                    pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-                    pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
+
+        if (!g_entityManager.isGameOver) {
+            // 游戏进行中才响应按键
+            if (key.m_keyButton[14] == 1) {
+                g_perkCardManager.triggerPerkSelection();
+            }
+            if (!g_perkCardManager.m_isSelecting) {
+                scanDelayTime = 40; // 非选卡时恢复正常扫描频率
+                pLeadingRole  = (LeadingRole *)g_entityManager.getPlayerRole();
+                if (pLeadingRole != nullptr) {
+                    if (key.m_keyButton[15] == 1) {
+                        pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                        pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
+                    } else if (key.m_keyButton[11] == 1) {
+                        pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                        pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
+                    } else if (key.m_keyButton[10] == 1) {
+                        pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                        pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
+                    } else if (key.m_keyButton[7] == 1) {
+                        pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                        pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
+                    }
+                }
+            } else {
+                scanDelayTime                     = 100; // 选卡时降低扫描频率，节省资源
+                g_perkCardManager.m_selectedIndex = etl::min(
+                    (uint8_t)(g_perkCardManager.m_selectedIndex), (uint8_t)(g_perkCardManager.m_selectedSize - 1)
+                );
+                g_perkCardManager.m_selectedIndex = etl::max((int16_t)(g_perkCardManager.m_selectedIndex), (int16_t)0);
+                if (key.m_keyButton[11] == 1)
+                    g_perkCardManager.m_selectedIndex = etl::min(
+                        (uint8_t)(g_perkCardManager.m_selectedIndex + 1),
+                        (uint8_t)(g_perkCardManager.m_selectedSize - 1)
+                    );
+                if (key.m_keyButton[10] == 1)
+                    g_perkCardManager.m_selectedIndex =
+                        etl::max((int16_t)(g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
+                if (key.m_keyButton[3] == 1) {
+                    g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
                 }
             }
-        } else {
-            scanDelayTime = 100; // 选卡时降低扫描频率，节省资源
-            g_perkCardManager.m_selectedIndex =
-                etl::min((uint8_t)(g_perkCardManager.m_selectedIndex), (uint8_t)(g_perkCardManager.m_selectedSize - 1));
-            g_perkCardManager.m_selectedIndex = etl::max((int16_t)(g_perkCardManager.m_selectedIndex), (int16_t)0);
-            if (key.m_keyButton[11] == 1)
-                g_perkCardManager.m_selectedIndex = etl::min(
-                    (uint8_t)(g_perkCardManager.m_selectedIndex + 1), (uint8_t)(g_perkCardManager.m_selectedSize - 1)
-                );
-            if (key.m_keyButton[10] == 1)
-                g_perkCardManager.m_selectedIndex =
-                    etl::max((int16_t)(g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
-            if (key.m_keyButton[3] == 1) {
-                g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
-            }
         }
-
         osDelay(scanDelayTime);
     }
 }
@@ -151,61 +171,74 @@ extern "C" {
 #endif
 
 void gameControlThread(void *argument) {
+    //初始是Game Over状态
+    g_entityManager.isGameOver = true;
 
-    
     for (;;) {
-
-        // 添加一些敌人角色进行测试
-        if (g_entityManager.m_roles.size() == 1) {
-            // 全部敌人被消灭，重新添加敌人
-
-            // 普通敌人测试
-            // for(int i=0; i< 3 ; i++) {
-            //     IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-            //     if(!g_entityManager.addRole(enemyChiMei)) {
-            //         delete enemyChiMei ;
-            //     }
-            // }
-
-            // for(int i=0; i< 3 ; i++) {
-            //     IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-            //     if(!g_entityManager.addRole(enemyFeilian)) {
-            //         delete enemyFeilian ;
-            //     }
-            // }
-            // IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
-            // if(!g_entityManager.addRole(enemyGudiao)) {
-            //     delete enemyGudiao ;
-            // }
-
-            // // BOSS饕餮测试
-            // IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
-            // if (!g_entityManager.addRole(enemyTaotie)) {
-            //     delete enemyTaotie;
-            // }
-
-            // //BOSS梼杌测试
-            // IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
-            // if (!g_entityManager.addRole(enemyTaowu)) {
-            //     delete enemyTaowu;
-            // }
-
-            // // BOSS相柳测试
-            // IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
-            // if (!g_entityManager.addRole(enemyXiangliu)) {
-            //     delete enemyXiangliu;
-            // }
-
-            //debugRole = enemyTaowu;
+        if (g_entityManager.isGameOver) {
+            //游戏结束，重置游戏进度
+            g_progressManager.resetGameProgress();
+        } else {
+            //游戏进行中
+            if (!g_perkCardManager.m_isSelecting && !g_progressManager.isPlayingOpeningCG
+                && !g_progressManager.showBoss) {
+                // 非选卡状态且非开场动画且非展示Boss海报，更新游戏逻辑
+                // 更新游戏进度
+                g_progressManager.updateGameProgress();
+                // 更新所有角色和子弹的动作和状态
+                g_entityManager.updateAllRolesActions();
+                g_entityManager.updateAllBulletsActions();
+                g_entityManager.updateAllRolesState();
+                g_entityManager.updateAllBulletsState();
+                // 清除需要回收的角色和子弹
+                g_entityManager.cleanupInvalidRoles();
+                g_entityManager.cleanupInvalidBullets();
+            }
         }
 
-        g_entityManager.updateAllRolesActions();
-        g_entityManager.updateAllBulletsActions();
-        g_entityManager.updateAllRolesState();
-        g_entityManager.updateAllBulletsState();
-        g_entityManager.cleanupInvalidRoles();
-        g_entityManager.cleanupInvalidBullets();
+        // 添加一些敌人角色进行测试
+        // if (g_entityManager.m_roles.size() == 1 && !g_entityManager.isGameOver ) {
+        //     // 全部敌人被消灭，重新添加敌人
 
+        //     // 普通敌人测试
+        //     // for(int i=0; i< 3 ; i++) {
+        //     //     IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
+        //     //     if(!g_entityManager.addRole(enemyChiMei)) {
+        //     //         delete enemyChiMei ;
+        //     //     }
+        //     // }
+
+        //     // for(int i=0; i< 3 ; i++) {
+        //     //     IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
+        //     //     if(!g_entityManager.addRole(enemyFeilian)) {
+        //     //         delete enemyFeilian ;
+        //     //     }
+        //     // }
+        //     // IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
+        //     // if(!g_entityManager.addRole(enemyGudiao)) {
+        //     //     delete enemyGudiao ;
+        //     // }
+
+        //     // // BOSS饕餮测试
+        //     // IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
+        //     // if (!g_entityManager.addRole(enemyTaotie)) {
+        //     //     delete enemyTaotie;
+        //     // }
+
+        //     // //BOSS梼杌测试
+        //     // IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
+        //     // if (!g_entityManager.addRole(enemyTaowu)) {
+        //     //     delete enemyTaowu;
+        //     // }
+
+        //     // // BOSS相柳测试
+        //     // IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
+        //     // if (!g_entityManager.addRole(enemyXiangliu)) {
+        //     //     delete enemyXiangliu;
+        //     // }
+
+        //     //debugRole = enemyTaowu;
+        // }
 
         osDelay(controlDelayTime);
     }

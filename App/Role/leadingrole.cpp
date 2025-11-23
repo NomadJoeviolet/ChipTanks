@@ -180,9 +180,9 @@ void LeadingRole::doAction() {
 }
 
 void LeadingRole::die() {
-    m_pdata->deathData.isDead         = false;
+    m_pdata->deathData.isDead         = true;
+    m_pdata->isActive                = false;
     m_pdata->deathData.deathTimer     = 500;
-    m_pdata->healthData.currentHealth = m_pdata->healthData.maxHealth;
 }
 
 void LeadingRole::think() {

@@ -108,7 +108,7 @@ public:
         auto it = m_roles.begin();
         while (it != m_roles.end()) {
             IRole *rolePtr = *it;
-            if (rolePtr != nullptr && !rolePtr->isActive() && rolePtr->getData()->identity != RoleIdentity::Player) {
+            if (rolePtr != nullptr && !rolePtr->isActive() ) {
                 if(rolePtr->getData()->identity == RoleIdentity::ENEMY) {
                     //获取掉落经验值
                     gainDropExperiencePoints(rolePtr->getData()->deathData.dropExperiencePoints);
@@ -372,7 +372,7 @@ public:
     /********************************************************************/
 
     //清除所有实体，资源回收
-    void clearAllEntities(bool deleteObjects = false) {
+    void clearAllEntities(bool deleteObjects = true) {
         cleanUpAllRoles(deleteObjects);
         cleanUpAllBullets(deleteObjects);
     }
