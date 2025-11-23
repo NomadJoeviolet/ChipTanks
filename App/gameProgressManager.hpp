@@ -26,6 +26,7 @@ public:
     uint16_t showBossTimer = 0;     // 展示Boss海报计时器
     //播放3秒Boss海报
 
+    bool PauseGame = false; // 暂停游戏标记
 public:
     GameProgressManager()  = default;
     ~GameProgressManager() = default;
@@ -40,9 +41,14 @@ public:
         g_entityManager.isGameOver = false;
         g_entityManager.clearAllEntities();
 
+        // 重置暂停状态
+        PauseGame = false;
+
+        // 重置开场动画状态
         isPlayingOpeningCG = true;
         openingCGTimer     = 3000; // 3秒开场动画
 
+        // 重置展示Boss海报状态
         showBoss      = false;
         showBossTimer = 0;
 
@@ -59,6 +65,11 @@ public:
         g_perkCardManager.initWarehouse();
     }
 
+    // 更新游戏进度
+    void updateGameProgress() { }
+
+    // 绘图展示功能
+    // 绘制开场动画
     void drawOpeningCG() {
         if (openingCGTimer >= 2 * controlDelayTime)
             openingCGTimer -= 2 * controlDelayTime;
@@ -68,15 +79,10 @@ public:
         time_count += 2 * controlDelayTime;
         if (time_count < 200) return;
         time_count = 0;
+
+        // 绘制动态圆圈效果
+
     }
-
-
-    void updateGameProgress() {
-        
-    }
-
-
-    // 绘图展示功能
 
     // 绘制展示Boss海报
     void drawShowBoss() {

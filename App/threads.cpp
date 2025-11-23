@@ -43,6 +43,9 @@ void oledTaskThread(void *argument) {
                     g_progressManager.openingCGTimer -= controlDelayTime * 2;
                 else
                     g_progressManager.isPlayingOpeningCG = false;
+
+                
+                // g_progressManager.drawOpeningCG();
             }
 
             else if (g_progressManager.showBoss) {
@@ -97,7 +100,7 @@ void keyScanThread(void *argument) {
     for (;;) {
         key.scan();
 
-        if (!g_entityManager.isGameOver) {
+        if (!g_entityManager.isGameOver && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss ) {
             // 游戏进行中才响应按键
             if (key.m_keyButton[14] == 1) {
                 g_perkCardManager.triggerPerkSelection();
@@ -197,48 +200,48 @@ void gameControlThread(void *argument) {
         }
 
         // 添加一些敌人角色进行测试
-        // if (g_entityManager.m_roles.size() == 1 && !g_entityManager.isGameOver ) {
-        //     // 全部敌人被消灭，重新添加敌人
+        if (g_entityManager.m_roles.size() == 1 && !g_entityManager.isGameOver ) {
+            // 全部敌人被消灭，重新添加敌人
 
-        //     // 普通敌人测试
-        //     // for(int i=0; i< 3 ; i++) {
-        //     //     IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-        //     //     if(!g_entityManager.addRole(enemyChiMei)) {
-        //     //         delete enemyChiMei ;
-        //     //     }
-        //     // }
+            // 普通敌人测试
+            // for(int i=0; i< 3 ; i++) {
+            //     IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
+            //     if(!g_entityManager.addRole(enemyChiMei)) {
+            //         delete enemyChiMei ;
+            //     }
+            // }
 
-        //     // for(int i=0; i< 3 ; i++) {
-        //     //     IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-        //     //     if(!g_entityManager.addRole(enemyFeilian)) {
-        //     //         delete enemyFeilian ;
-        //     //     }
-        //     // }
-        //     // IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
-        //     // if(!g_entityManager.addRole(enemyGudiao)) {
-        //     //     delete enemyGudiao ;
-        //     // }
+            // for(int i=0; i< 3 ; i++) {
+            //     IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
+            //     if(!g_entityManager.addRole(enemyFeilian)) {
+            //         delete enemyFeilian ;
+            //     }
+            // }
+            // IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
+            // if(!g_entityManager.addRole(enemyGudiao)) {
+            //     delete enemyGudiao ;
+            // }
 
-        //     // // BOSS饕餮测试
-        //     // IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
-        //     // if (!g_entityManager.addRole(enemyTaotie)) {
-        //     //     delete enemyTaotie;
-        //     // }
+            // // BOSS饕餮测试
+            // IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
+            // if (!g_entityManager.addRole(enemyTaotie)) {
+            //     delete enemyTaotie;
+            // }
 
-        //     // //BOSS梼杌测试
-        //     // IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
-        //     // if (!g_entityManager.addRole(enemyTaowu)) {
-        //     //     delete enemyTaowu;
-        //     // }
+            //BOSS梼杌测试
+            IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
+            if (!g_entityManager.addRole(enemyTaowu)) {
+                delete enemyTaowu;
+            }
 
-        //     // // BOSS相柳测试
-        //     // IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
-        //     // if (!g_entityManager.addRole(enemyXiangliu)) {
-        //     //     delete enemyXiangliu;
-        //     // }
+            // // BOSS相柳测试
+            // IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
+            // if (!g_entityManager.addRole(enemyXiangliu)) {
+            //     delete enemyXiangliu;
+            // }
 
-        //     //debugRole = enemyTaowu;
-        // }
+            //debugRole = enemyTaowu;
+        }
 
         osDelay(controlDelayTime);
     }
