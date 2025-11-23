@@ -11,7 +11,7 @@
 #include "font.h"
 
 GameEntityManager g_entityManager;
-LeadingRole      *pLeadingRole = new LeadingRole();
+LeadingRole      *pLeadingRole = nullptr; // 全局主角指针
 
 uint8_t controlDelayTime = 10; // 控制线程延时，单位ms
 
@@ -32,8 +32,9 @@ void oledTaskThread(void *argument) {
         //显示角色信息
         char infoStr[32];
         sprintf(
-            infoStr, "HP:(%d/%d) Lv:%d", pLeadingRole->getData()->healthData.currentHealth,
-            pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level
+            infoStr, "HP:%d/%d Lv.%d EXP:%d", pLeadingRole->getData()->healthData.currentHealth,
+            pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level,
+            pLeadingRole->experiencePoints
         );
         OLED_PrintString(0, 56, infoStr, &font8x6, OLED_COLOR_NORMAL);
 
@@ -64,18 +65,21 @@ void keyScanThread(void *argument) {
     key.init();
     for (;;) {
         key.scan();
-        if (key.m_keyButton[15] == 1) {
-            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-            pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
-        } else if (key.m_keyButton[11] == 1) {
-            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-            pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
-        } else if (key.m_keyButton[10] == 1) {
-            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-            pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
-        } else if (key.m_keyButton[7] == 1) {
-            pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
-            pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
+        pLeadingRole = (LeadingRole *)g_entityManager.getPlayerRole();
+        if (pLeadingRole != nullptr) {
+            if (key.m_keyButton[15] == 1) {
+                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
+            } else if (key.m_keyButton[11] == 1) {
+                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
+            } else if (key.m_keyButton[10] == 1) {
+                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
+            } else if (key.m_keyButton[7] == 1) {
+                pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
+                pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
+            }
         }
         osDelay(40);
     }

@@ -147,6 +147,7 @@ class DeathData {
 public:
     bool     isDead     = false;
     uint16_t deathTimer = 500; //死亡动画时间计时器，单位ms
+    uint16_t dropExperiencePoints = 0;
 };
 
 class RoleData {
@@ -154,7 +155,7 @@ public:
     //初始化位置
     InitData initData;
 
-    //身份信息
+    //基本信息
     RoleIdentity identity;
     bool         isActive = false;
 
@@ -227,6 +228,7 @@ public:
         //死亡状态信息初始化
         deathData.deathTimer = 500;
         deathData.isDead     = false;
+        deathData.dropExperiencePoints = 0;
 
         //图片信息初始化
         img = nullptr;

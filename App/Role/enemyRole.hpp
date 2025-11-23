@@ -34,7 +34,7 @@ public:
     static const uint16_t feilianEnemyDeadTime = 500; // 死亡动画时间，单位ms
 public:
     FeilianEnemy(
-        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1 , uint16_t dropExp = 0
     );
     ~FeilianEnemy() = default;
 
@@ -60,7 +60,7 @@ public:
 
 public:
     GudiaoEnemy(
-        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1 , uint16_t dropExp = 0
     );
     ~GudiaoEnemy() = default;
 
@@ -84,7 +84,7 @@ class ChiMeiEnemy : public IRole {
 
 public:
     ChiMeiEnemy(
-        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1 , uint16_t dropExp = 0
     );
     ~ChiMeiEnemy() = default;
 
@@ -135,7 +135,7 @@ public:
 
 public:
     TaotieEnemy(
-        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1 , uint16_t dropExp = 0
     );
     ~TaotieEnemy() = default;
 
@@ -188,7 +188,7 @@ class TaowuEnemy : public IRole {
 
 public:
     TaowuEnemy(
-        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1 , uint16_t dropExp = 0
     );
     ;
     ~TaowuEnemy() = default;
@@ -232,7 +232,7 @@ public:
 
 public:
     XiangliuEnemy(
-        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1 , uint16_t dropExp = 0
     );
     ~XiangliuEnemy() = default;
 

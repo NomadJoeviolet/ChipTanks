@@ -3,6 +3,8 @@
 
 #include "math.h"
 #include "role.hpp"
+#include "leadingRole.hpp"
+#include "enemyRole.hpp"
 #include "etl/vector.h"
 
 #include "FreeRTOS.h"
@@ -12,7 +14,7 @@ class GameEntityManager {
 public:
     etl::vector<IRole *, 20>    m_roles;   //角色池，存放所有角色指针
     etl::vector<IBullet *, 100> m_bullets; //子弹池，存放所有子弹指针
-
+    bool                       isGameOver = false;
 public:
     GameEntityManager() = default;
     ~GameEntityManager() {
@@ -102,6 +104,14 @@ public:
         while (it != m_roles.end()) {
             IRole *rolePtr = *it;
             if (rolePtr != nullptr && !rolePtr->isActive() && rolePtr->getData()->identity != RoleIdentity::Player) {
+                if(rolePtr->getData()->identity == RoleIdentity::ENEMY) {
+                    //获取掉落经验值
+                    gainDropExperiencePoints(rolePtr->getData()->deathData.dropExperiencePoints);
+                }
+                else if(rolePtr->getData()->identity == RoleIdentity::Player) {
+                    //可能是召唤物，获取掉落经验值
+                    isGameOver = true;
+                }
                 it = m_roles.erase(it);
                 delete rolePtr;
                 rolePtr = nullptr;
@@ -374,6 +384,16 @@ private:
             if (bulletPtr != nullptr) delete bulletPtr;
         }
         m_bullets.clear();
+    }
+    /********************************************************************/
+
+    //玩家角色获取经验值
+    /********************************************************************/
+    void gainDropExperiencePoints(uint16_t points) {
+        LeadingRole* playerRole = (LeadingRole*)getPlayerRole();
+        if (playerRole != nullptr) {
+            playerRole->experiencePoints += points;
+        }
     }
     /********************************************************************/
 };

@@ -86,7 +86,7 @@ LeadingRole::LeadingRole()
     m_pdata->attackData.bulletRange = 10; //只对火球弹生效
     m_pdata->attackData.bulletDamageMultiplier = 1.5f; //只对闪电链弹生效
 
-    m_pdata->attackData.collisionPower = 20;
+    m_pdata->attackData.collisionPower = 30;
 
     //热量信息
     m_pdata->heatData.maxHeat          = 100;
@@ -257,6 +257,39 @@ void LeadingRole::drawRole() {
         OLED_DrawImage(
             m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
         );
+    }
+}
+
+void LeadingRole::levelUp() {
+    if(experiencePoints >= experienceToLevelUp[m_pdata->level]) {
+       experiencePoints -= experienceToLevelUp[m_pdata->level];
+        m_pdata->level++;
+
+        // Increase max health by 20
+        m_pdata->healthData.maxHealth += 20;
+        m_pdata->healthData.currentHealth = m_pdata->healthData.maxHealth; // Heal to full on level up
+
+        // Increase attack power by 1
+        m_pdata->attackData.attackPower += 1;
+
+        // Increase heat max by 5
+        m_pdata->heatData.maxHeat += 5;
+
+        // Increase heal value by 1
+        m_pdata->healthData.healValue += 1;
+
+        // Every 2 levels, increase heat cool down rate by 1 and decrease heat per shot by 1
+        if (m_pdata->level % 2 == 0) {
+            m_pdata->heatData.heatCoolDownRate += 1;
+            if (m_pdata->heatData.heatPerShot > 1) {
+                m_pdata->heatData.heatPerShot -= 1;
+            }
+        }
+
+        // Every 5 levels, increase shoot cooldown speed by 1
+        if (m_pdata->level % 5 == 0) {
+            m_pdata->attackData.shootCooldownSpeed += 1;
+        }
     }
 }
 
