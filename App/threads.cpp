@@ -82,6 +82,7 @@ void keyScanThread(void *argument) {
             g_perkCardManager.triggerPerkSelection();
         }
         if (!g_perkCardManager.m_isSelecting) {
+            scanDelayTime = 40; // 非选卡时恢复正常扫描频率
             pLeadingRole = (LeadingRole *)g_entityManager.getPlayerRole();
             if (pLeadingRole != nullptr) {
                 if (key.m_keyButton[15] == 1) {

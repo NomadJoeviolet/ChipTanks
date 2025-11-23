@@ -69,7 +69,7 @@ LeadingRole::LeadingRole()
     m_pdata->spatialData.refPosY        = 16;
     m_pdata->spatialData.sizeX          = m_pdata->img->w; // Width of the role
     m_pdata->spatialData.sizeY          = m_pdata->img->h; // Height of the role
-    m_pdata->spatialData.moveSpeed      = 1;               // Movement speed
+    m_pdata->spatialData.moveSpeed      = 1 ;               // Movement speed
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
     //初始化位置
