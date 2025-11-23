@@ -11,11 +11,14 @@
 #include "Role/leadingRole.hpp"
 #include "Role/enemyRole.hpp"
 
-#include "gamePerkCardManager.hpp"
+
 #include "gameEntityManager.hpp"
+#include "gamePerkCardManager.hpp"
+#include "gameProgressManager.hpp"
 
 GameEntityManager   g_entityManager;
 GamePerkCardManager g_perkCardManager;
+GameProgressManager g_progressManager;
 LeadingRole        *pLeadingRole = nullptr; // 全局主角指针
 
 uint8_t controlDelayTime = 10; // 控制线程延时，单位ms
@@ -83,7 +86,7 @@ void keyScanThread(void *argument) {
         }
         if (!g_perkCardManager.m_isSelecting) {
             scanDelayTime = 40; // 非选卡时恢复正常扫描频率
-            pLeadingRole = (LeadingRole *)g_entityManager.getPlayerRole();
+            pLeadingRole  = (LeadingRole *)g_entityManager.getPlayerRole();
             if (pLeadingRole != nullptr) {
                 if (key.m_keyButton[15] == 1) {
                     pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
@@ -101,6 +104,9 @@ void keyScanThread(void *argument) {
             }
         } else {
             scanDelayTime = 100; // 选卡时降低扫描频率，节省资源
+            g_perkCardManager.m_selectedIndex =
+                etl::min((uint8_t)(g_perkCardManager.m_selectedIndex), (uint8_t)(g_perkCardManager.m_selectedSize - 1));
+            g_perkCardManager.m_selectedIndex = etl::max((int16_t)(g_perkCardManager.m_selectedIndex), (int16_t)0);
             if (key.m_keyButton[11] == 1)
                 g_perkCardManager.m_selectedIndex = etl::min(
                     (uint8_t)(g_perkCardManager.m_selectedIndex + 1), (uint8_t)(g_perkCardManager.m_selectedSize - 1)
@@ -108,7 +114,7 @@ void keyScanThread(void *argument) {
             if (key.m_keyButton[10] == 1)
                 g_perkCardManager.m_selectedIndex =
                     etl::max((int16_t)(g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
-            if(key.m_keyButton[3] == 1) {
+            if (key.m_keyButton[3] == 1) {
                 g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
             }
         }
@@ -126,18 +132,18 @@ void keyScanThread(void *argument) {
 #include "enemyRole.hpp"
 #include "leadingRole.hpp"
 
-uint8_t debugCurrentPosX = 0;
-uint8_t debugCurrentPosY = 0;
+// uint8_t debugCurrentPosX = 0;
+// uint8_t debugCurrentPosY = 0;
 
-uint8_t debugEnemyPosX[9] = {};
-uint8_t debugEnemyPosY[9] = {};
-IRole  *debugRole         = nullptr;
+// uint8_t debugEnemyPosX[9] = {};
+// uint8_t debugEnemyPosY[9] = {};
+// IRole  *debugRole         = nullptr;
 
-TaowuEnemy   *enemyTaotu   = new TaowuEnemy;
-TaotieEnemy  *enemyTaotie  = new TaotieEnemy;
-FeilianEnemy *enemyFeilian = new FeilianEnemy;
-GudiaoEnemy  *enemyGudiao  = new GudiaoEnemy;
-ChiMeiEnemy  *enemyChiMei  = new ChiMeiEnemy;
+// TaowuEnemy   *enemyTaotu   = new TaowuEnemy;
+// TaotieEnemy  *enemyTaotie  = new TaotieEnemy;
+// FeilianEnemy *enemyFeilian = new FeilianEnemy;
+// GudiaoEnemy  *enemyGudiao  = new GudiaoEnemy;
+// ChiMeiEnemy  *enemyChiMei  = new ChiMeiEnemy;
 
 /********************************************************************/
 #ifdef __cplusplus
@@ -145,15 +151,11 @@ extern "C" {
 #endif
 
 void gameControlThread(void *argument) {
-    // 创建主角角色
-    pLeadingRole = new LeadingRole();
-    g_entityManager.addRole(pLeadingRole);
 
-    // 初始化Perk卡片管理器
-    g_perkCardManager.initWarehouse();
-
-    // 添加一些敌人角色进行测试
+    
     for (;;) {
+
+        // 添加一些敌人角色进行测试
         if (g_entityManager.m_roles.size() == 1) {
             // 全部敌人被消灭，重新添加敌人
 
@@ -176,11 +178,11 @@ void gameControlThread(void *argument) {
             //     delete enemyGudiao ;
             // }
 
-            // BOSS饕餮测试
-            IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
-            if (!g_entityManager.addRole(enemyTaotie)) {
-                delete enemyTaotie;
-            }
+            // // BOSS饕餮测试
+            // IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
+            // if (!g_entityManager.addRole(enemyTaotie)) {
+            //     delete enemyTaotie;
+            // }
 
             // //BOSS梼杌测试
             // IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
@@ -204,17 +206,6 @@ void gameControlThread(void *argument) {
         g_entityManager.cleanupInvalidRoles();
         g_entityManager.cleanupInvalidBullets();
 
-        if (debugRole != nullptr) {
-            debugCurrentPosX = debugRole->getData()->spatialData.currentPosX;
-            debugCurrentPosY = debugRole->getData()->spatialData.currentPosY;
-        }
-
-        // debugCurrentPosX = pLeadingRole->getData()->spatialData.currentPosX ;
-        // debugCurrentPosY = pLeadingRole->getData()->spatialData.currentPosY;
-        // for(int i=0; i<9; i++) {
-        //     debugEnemyPosX[i] = enemyFeilian[i]->getData()->spatialData.currentPosX ;
-        //     debugEnemyPosY[i] = enemyFeilian[i]->getData()->spatialData.currentPosY ;
-        // }
 
         osDelay(controlDelayTime);
     }
