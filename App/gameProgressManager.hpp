@@ -124,10 +124,10 @@ public:
 
                 // 重置波次数据
                 if (currentChapter <= 3) {
-                    currentWave            = 0;
+                    currentWave            = 1;
                     currentChapterMaxWaves = 8 + rand() % 4; // 随机生成当前关卡波次，8~11波
                 } else {
-                    currentWave            = 0;
+                    currentWave            = 1;
                     currentChapterMaxWaves = 1;
                 }
             }
