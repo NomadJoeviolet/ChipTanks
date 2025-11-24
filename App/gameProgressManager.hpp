@@ -381,7 +381,7 @@ public:
             
         if(chatpter4Warning) {
             OLED_PrintString(10, 28, "WARNING!", &font8x6, OLED_COLOR_NORMAL);
-            OLED_PrintString(1, 40, "FINAL CHALLENGE", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(1, 40, "CHALLENGE", &font8x6, OLED_COLOR_NORMAL);
             return;
         }
 
