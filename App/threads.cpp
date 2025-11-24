@@ -103,9 +103,9 @@ void keyScanThread(void *argument) {
             // 游戏进行中才响应按键
 
             //测试触发选卡
-            // if (key.m_keyButton[14] == 1) {
-            //     g_perkCardManager.triggerPerkSelection();
-            // }
+            if (key.m_keyButton[14] == 1) {
+                g_perkCardManager.triggerPerkSelection();
+            }
 
             if (!g_perkCardManager.m_isSelecting) {
                 scanDelayTime = 40; // 非选卡时恢复正常扫描频率
@@ -138,7 +138,7 @@ void keyScanThread(void *argument) {
                     );
                 if (key.m_keyButton[10] == 1)
                     g_perkCardManager.m_selectedIndex =
-                        etl::max((int16_t)(g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
+                        etl::max((int16_t)((int16_t)g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
                 if (key.m_keyButton[3] == 1) {
                     g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
                 }

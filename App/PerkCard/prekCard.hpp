@@ -28,6 +28,8 @@ public:
 public:
     PerkCard(PerkCardType _type, const char _name[30], uint8_t _param) {
 
+        type  = _type;
+        
         if (_name != nullptr) {
             // 拷贝最多 sizeof(name)-1 字节，然后保证结尾终止
             strncpy(name, _name, sizeof(name) - 1);
@@ -46,7 +48,7 @@ constexpr struct PerkCardConfig {
     char         name[30];
     uint8_t      param; // 整数参数直接填，倍率参数×10填（如1.5→15）
     uint8_t      count; // 卡片数量（你的设计：大部分2张，解锁类1张）
-} PERK_CARD_CONFIGS[12] = {
+} PERK_CARD_CONFIGS[] = {
     {PerkCardType::HEAL_SPEED_UP,           "Heal Speed +2",     2,   2},
     {PerkCardType::HEAL_AMOUNT_UP,          "Heal Amount +5",    5,   2},
     {PerkCardType::HEALTH_UP,               "Health +100",       100, 2},
