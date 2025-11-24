@@ -27,18 +27,20 @@ public:
 
 public:
     PerkCard(PerkCardType _type, const char _name[30], uint8_t _param) {
-        type          = _type;
-        size_t srcLen = strlen(_name);
-        // 2. 拷贝长度 = 最小值（目标剩余容量，源字符串长度）
-        size_t copyLen = etl::min(static_cast<size_t>(sizeof(name) - 1), srcLen);
-        // 3. 拷贝+强制补\0
-        strncpy(name, _name, copyLen);
-        name[sizeof(name) - 1] = '\0'; // 最终保险，避免任何情况的字符串未终止
-        param                  = _param;
+
+        if (_name != nullptr) {
+            // 拷贝最多 sizeof(name)-1 字节，然后保证结尾终止
+            strncpy(name, _name, sizeof(name) - 1);
+            //name[sizeof(name) - 1] = '\0';
+        } else {
+            name[0] = '\0';
+        }
+        param = _param;
+
+
     }
 };
 
-// 卡片配置表：统一管理“类型+名称+描述+参数+数量+是否消耗”（你的设计完全对齐）
 constexpr struct PerkCardConfig {
     PerkCardType type;
     char         name[30];
@@ -55,7 +57,7 @@ constexpr struct PerkCardConfig {
     {PerkCardType::UNLOCK_FIREBALL,         "Unlock Fireball",   0,   1},
     {PerkCardType::UNLOCK_LIGHTNING,        "Unlock Lightning",  0,   1},
     {PerkCardType::FIREBALL_RANGE_UP,       "Fireball Range +5", 5,   2},
-    {PerkCardType::LIGHTNING_MULTIPLIER_UP, "Lightning +1.5",    15,  2}, // 15=1.5×10
+    {PerkCardType::LIGHTNING_MULTIPLIER_UP, "LightningDamage+1.5",    15,  2}, // 15=1.5×10
     {PerkCardType::MOVE_SPEED_UP,           "Move Speed +1",     1,   1},
 };
 
