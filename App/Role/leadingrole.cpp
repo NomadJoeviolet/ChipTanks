@@ -182,13 +182,15 @@ void LeadingRole::doAction() {
 }
 
 void LeadingRole::die() {
-    // m_pdata->deathData.isDead         = true;
-    // m_pdata->isActive                = false;
-    // m_pdata->deathData.deathTimer     = 500;
+    m_pdata->deathData.isDead         = true;
+    m_pdata->isActive                = false;
+    m_pdata->deathData.deathTimer     = 500;
 
-    m_pdata->deathData.isDead     = false;
-    m_pdata->isActive             = true;
-    m_pdata->healthData.currentHealth = m_pdata->healthData.maxHealth;
+
+    // 无敌模式，暂不实现死亡，测试用
+    // m_pdata->deathData.isDead     = false;
+    // m_pdata->isActive             = true;
+    // m_pdata->healthData.currentHealth = m_pdata->healthData.maxHealth;
 }
 
 void LeadingRole::think() {
