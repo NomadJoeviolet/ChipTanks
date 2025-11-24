@@ -61,8 +61,8 @@ FeilianEnemy::FeilianEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uin
     m_pdata->level = level;
 
     //血量信息
-    m_pdata->healthData.currentHealth = 30 + level * 30;
-    m_pdata->healthData.maxHealth     = 30 + level * 30;
+    m_pdata->healthData.currentHealth = 10 + level * 20;
+    m_pdata->healthData.maxHealth     = 10 + level * 20;
 
     //回血信息
     m_pdata->healthData.healValue       = 0;
@@ -86,7 +86,7 @@ FeilianEnemy::FeilianEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uin
     m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 3 + level * 1;
+    m_pdata->attackData.attackPower            = 2 + level * 1;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 4000;
@@ -334,8 +334,8 @@ GudiaoEnemy::GudiaoEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8
     m_pdata->level = level;
 
     //血量信息
-    m_pdata->healthData.currentHealth = 330 + level * 100;
-    m_pdata->healthData.maxHealth     = 330 + level * 100;
+    m_pdata->healthData.currentHealth = 60 + level * 100;
+    m_pdata->healthData.maxHealth     = 60 + level * 100;
 
     //回血信息
     m_pdata->healthData.healValue       = 20;
@@ -931,7 +931,7 @@ TaotieEnemy::TaotieEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8
     m_pdata->attackData.bulletRange            = 10;   //只对火球弹生效
     m_pdata->attackData.bulletDamageMultiplier = 1.5f; //只对闪电链弹生效
 
-    m_pdata->attackData.collisionPower = 20 + level * 5;
+    m_pdata->attackData.collisionPower = 20 + level * 10;
 
     //热量信息
     m_pdata->heatData.maxHeat          = 200;

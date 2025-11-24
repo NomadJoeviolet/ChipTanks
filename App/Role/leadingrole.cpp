@@ -1,11 +1,13 @@
 #include "leadingRole.hpp"
 #include "../gameEntityManager.hpp"
+#include "../gamePerkCardManager.hpp"
 #include "../Peripheral/OLED/oled.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 
 extern GameEntityManager g_entityManager;
+extern GamePerkCardManager g_perkCardManager;
 
 //controlDelayTime 由 threads.cpp 控制线程定义
 //controlDelayTime = 10
@@ -180,9 +182,13 @@ void LeadingRole::doAction() {
 }
 
 void LeadingRole::die() {
-    m_pdata->deathData.isDead         = true;
-    m_pdata->isActive                = false;
-    m_pdata->deathData.deathTimer     = 500;
+    // m_pdata->deathData.isDead         = true;
+    // m_pdata->isActive                = false;
+    // m_pdata->deathData.deathTimer     = 500;
+
+    m_pdata->deathData.isDead     = false;
+    m_pdata->isActive             = true;
+    m_pdata->healthData.currentHealth = m_pdata->healthData.maxHealth;
 }
 
 void LeadingRole::think() {
@@ -264,6 +270,10 @@ void LeadingRole::drawRole() {
 }
 
 void LeadingRole::levelUp() {
+    if( m_pdata->level >= 10 ) {
+        return; // 已经达到最高等级
+    }
+
     if(experiencePoints >= experienceToLevelUp[m_pdata->level]) {
        experiencePoints -= experienceToLevelUp[m_pdata->level];
         m_pdata->level++;
@@ -287,12 +297,16 @@ void LeadingRole::levelUp() {
             if (m_pdata->heatData.heatPerShot > 1) {
                 m_pdata->heatData.heatPerShot -= 1;
             }
+
+            //触发选卡机制
+            g_perkCardManager.triggerPerkSelection();
         }
 
         // Every 5 levels, increase shoot cooldown speed by 1
         if (m_pdata->level % 5 == 0) {
             m_pdata->attackData.shootCooldownSpeed += 2;
         }
+
     }
 }
 

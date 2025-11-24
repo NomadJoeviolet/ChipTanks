@@ -49,11 +49,11 @@ public:
     uint16_t              experiencePoints      = 0;
     
     //满级为 10 级
-    uint16_t experienceToLevelUp[11] = {0, 100, 120, 145 , 180 , 220 , 265 , 320 ,  380 , 500 , 999}; // 每级所需经验值
+    uint16_t experienceToLevelUp[11] = {0, 40 , 100 , 125 , 180 , 220 , 265 , 320 ,  380 , 500 , 999}; // 每级所需经验值
 
 
 public:
-    BulletTypeOwned bulletTypeOwned = BulletTypeOwned(1,1,1); // 默认只拥有普通子弹
+    BulletTypeOwned bulletTypeOwned = BulletTypeOwned(1,0,0); // 默认只拥有普通子弹
 public:
     LeadingRole();
     ~LeadingRole() override = default;

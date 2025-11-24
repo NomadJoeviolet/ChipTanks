@@ -401,7 +401,7 @@ private:
     /********************************************************************/
     void gainDropExperiencePoints(uint16_t points) {
         LeadingRole* playerRole = (LeadingRole*)getPlayerRole();
-        if (playerRole != nullptr) {
+        if (playerRole != nullptr && playerRole->getData()->level < 10) {
             playerRole->experiencePoints += points;
         }
     }
