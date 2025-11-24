@@ -61,9 +61,9 @@ void oledTaskThread(void *argument) {
                 char infoStr[32];
                 if (pLeadingRole != nullptr) {
                     sprintf(
-                        infoStr, "HP:%d/%d Lv.%d EXP:%d", pLeadingRole->getData()->healthData.currentHealth,
-                        pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level,
-                        pLeadingRole->experiencePoints
+                        infoStr, "HP:%d/%d Lv.%d", pLeadingRole->getData()->healthData.currentHealth,
+                        pLeadingRole->getData()->healthData.maxHealth, pLeadingRole->getData()->level
+
                     );
                     OLED_PrintString(0, 56, infoStr, &font8x6, OLED_COLOR_NORMAL);
                 }
@@ -98,13 +98,14 @@ void keyScanThread(void *argument) {
     for (;;) {
         key.scan();
 
-        if (!g_entityManager.isGameOver && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss && !g_progressManager.isPlayingClearCG)  {
+        if (!g_entityManager.isGameOver && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss
+            && !g_progressManager.isPlayingClearCG) {
             // 游戏进行中才响应按键
 
             //测试触发选卡
-            // if (key.m_keyButton[14] == 1) {
-            //     g_perkCardManager.triggerPerkSelection();
-            // }
+            if (key.m_keyButton[14] == 1) {
+                g_perkCardManager.triggerPerkSelection();
+            }
 
             if (!g_perkCardManager.m_isSelecting) {
                 scanDelayTime = 40; // 非选卡时恢复正常扫描频率
@@ -156,6 +157,8 @@ void keyScanThread(void *argument) {
 #include "enemyRole.hpp"
 #include "leadingRole.hpp"
 
+/***********/
+//测试用代码
 // uint8_t debugCurrentPosX = 0;
 // uint8_t debugCurrentPosY = 0;
 
@@ -168,6 +171,7 @@ void keyScanThread(void *argument) {
 // FeilianEnemy *enemyFeilian = new FeilianEnemy;
 // GudiaoEnemy  *enemyGudiao  = new GudiaoEnemy;
 // ChiMeiEnemy  *enemyChiMei  = new ChiMeiEnemy;
+/***********/
 
 /********************************************************************/
 #ifdef __cplusplus
@@ -184,8 +188,8 @@ void gameControlThread(void *argument) {
             g_progressManager.resetGameProgress();
         } else {
             //游戏进行中
-            if (!g_perkCardManager.m_isSelecting && !g_progressManager.isPlayingOpeningCG
-                && !g_progressManager.showBoss && !g_progressManager.isPlayingClearCG ) {
+            if (!g_perkCardManager.m_isSelecting && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss
+                && !g_progressManager.isPlayingClearCG) {
                 // 非选卡状态且非开场动画且非展示Boss海报，更新游戏逻辑
                 // 更新游戏进度
                 g_progressManager.updateGameProgress();
