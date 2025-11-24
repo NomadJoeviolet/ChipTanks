@@ -11,7 +11,7 @@
 //火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
 //两次伤害均为 attackPower +10 点伤害
 
-//闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
+//闪电链弹一束条的范围穿透伤害，mul*attackPower+30 点伤害
 
 IBullet *IRole::createBullet(uint8_t x, uint8_t y, BulletType type) {
 
@@ -44,7 +44,7 @@ IBullet *IRole::createBullet(uint8_t x, uint8_t y, BulletType type) {
             IBullet *newBullet = new LightningLineBullet(
                 0 , x, y,
                 0,                                    // Range
-                m_pdata->attackData.attackPower * m_pdata->attackData.bulletDamageMultiplier , // Lightning Line does even more damage
+                m_pdata->attackData.attackPower * m_pdata->attackData.bulletDamageMultiplier+30 , // Lightning Line does even more damage
                 m_pdata->identity
             );
             return newBullet;

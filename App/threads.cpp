@@ -38,14 +38,12 @@ void oledTaskThread(void *argument) {
         if (!g_entityManager.isGameOver) {
             if (g_progressManager.isPlayingOpeningCG) {
                 // 播放开场动画
-                OLED_DrawCircle(64, 32, 30 - (g_progressManager.openingCGTimer / 100), OLED_COLOR_NORMAL);
-                if (g_progressManager.openingCGTimer > 2 * controlDelayTime)
-                    g_progressManager.openingCGTimer -= controlDelayTime * 2;
-                else
-                    g_progressManager.isPlayingOpeningCG = false;
+                g_progressManager.drawOpeningCG();
+            }
 
-                
-                // g_progressManager.drawOpeningCG();
+            else if (g_progressManager.isPlayingClearCG) {
+                // 播放通关动画
+                g_progressManager.drawClearCG();
             }
 
             else if (g_progressManager.showBoss) {
@@ -100,7 +98,7 @@ void keyScanThread(void *argument) {
     for (;;) {
         key.scan();
 
-        if (!g_entityManager.isGameOver && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss ) {
+        if (!g_entityManager.isGameOver && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss && !g_progressManager.isPlayingClearCG)  {
             // 游戏进行中才响应按键
 
             //测试触发选卡
@@ -187,7 +185,7 @@ void gameControlThread(void *argument) {
         } else {
             //游戏进行中
             if (!g_perkCardManager.m_isSelecting && !g_progressManager.isPlayingOpeningCG
-                && !g_progressManager.showBoss) {
+                && !g_progressManager.showBoss && !g_progressManager.isPlayingClearCG ) {
                 // 非选卡状态且非开场动画且非展示Boss海报，更新游戏逻辑
                 // 更新游戏进度
                 g_progressManager.updateGameProgress();

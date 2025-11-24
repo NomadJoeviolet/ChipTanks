@@ -24,7 +24,7 @@ extern GamePerkCardManager g_perkCardManager;
 //火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
 //两次伤害均为 attackPower +10 点伤害
 
-//闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
+//闪电链弹一束条的范围穿透伤害，mul*attackPower+30 点伤害
 
 
 /*********************************************************************/
@@ -79,7 +79,7 @@ LeadingRole::LeadingRole()
     m_pdata->initData.posY = 16;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 10;
+    m_pdata->attackData.attackPower            = 15 ;
 
     //初始值为4，最大值16
     m_pdata->attackData.shootCooldownSpeed     = 4 ; //每controlDelayTime减少5*controlDelayTime 点冷却时间

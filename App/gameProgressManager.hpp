@@ -76,7 +76,7 @@ public:
 
         // 重置开场动画状态
         isPlayingOpeningCG = true;
-        openingCGTimer     = 1000; // 1秒开场动画
+        openingCGTimer     = 2000; // 1秒开场动画
 
         // 通关动画
         isPlayingClearCG = false;
@@ -88,8 +88,15 @@ public:
 
         // 重置游戏进度数据
         currentChapter         = 1;
-        currentWave            = 1;
-        currentChapterMaxWaves = 10 + rand() % 6; // 随机生成当前关卡波次，10~15波
+
+        //测试用
+        // currentChapter         = 4; // 测试时直接从第4关开始
+
+        currentWave            = 0;
+        currentChapterMaxWaves = 8 + rand() % 4; // 随机生成当前关卡波次，8~11波
+
+        //测试用
+        //currentChapterMaxWaves = 1; // 测试时每关只1波
 
         // 添加初始角色
         LeadingRole *player = new LeadingRole();
@@ -117,10 +124,10 @@ public:
 
                 // 重置波次数据
                 if (currentChapter <= 3) {
-                    currentWave            = 1;
+                    currentWave            = 0;
                     currentChapterMaxWaves = 8 + rand() % 4; // 随机生成当前关卡波次，8~11波
                 } else {
-                    currentWave            = 1;
+                    currentWave            = 0;
                     currentChapterMaxWaves = 1;
                 }
             }
@@ -138,7 +145,7 @@ public:
         // 根据当前关卡和波次，生成不同类型和数量的敌人
         if (currentChapter == 1 && currentWave == currentChapterMaxWaves) {
             // 第一关最后一波，添加Boss饕餮
-            IRole *enemyTaotie = new TaotieEnemy(156, 32, 100, 26, currentChapter, 100 + rand() % 21);
+            IRole *enemyTaotie = new TaotieEnemy(156, 1 , 100, 1 , currentChapter, 100 + rand() % 21);
             g_entityManager.addRole(enemyTaotie);
 
             // 标记展示Boss海报
@@ -149,7 +156,7 @@ public:
         }
         if (currentChapter == 2 && currentWave == currentChapterMaxWaves) {
             // 第二关最后一波，添加Boss相柳
-            IRole *enemyXiangliu = new XiangliuEnemy(156, 32, 100, 26, currentChapter, 130 + rand() % 21);
+            IRole *enemyXiangliu = new XiangliuEnemy(156, 1 , 100, 1 , currentChapter, 130 + rand() % 21);
             g_entityManager.addRole(enemyXiangliu);
 
             // 标记展示Boss海报
@@ -160,7 +167,7 @@ public:
         }
         if (currentChapter == 3 && currentWave == currentChapterMaxWaves) {
             // 第三关最后一波，添加Boss梼杌
-            IRole *enemyTaowu = new TaowuEnemy(156, 32, 100, 26, currentChapter, 160 + rand() % 21);
+            IRole *enemyTaowu = new TaowuEnemy(156, 1 , 100, 1 , currentChapter, 160 + rand() % 21);
             g_entityManager.addRole(enemyTaowu);
 
             // 标记展示Boss海报
@@ -175,7 +182,7 @@ public:
             switch (bossType) {
             case BOSS_TYPE::TAO_TIE:
                 {
-                    IRole *enemyTaotie = new TaotieEnemy(156, 32, 100, 26, currentChapter + 1, 200 + rand() % 51);
+                    IRole *enemyTaotie = new TaotieEnemy(156, 1 , 100,1 , currentChapter + 1, 200 + rand() % 51);
                     g_entityManager.addRole(enemyTaotie);
 
                     // 标记展示Boss海报
@@ -186,7 +193,7 @@ public:
                 }
             case BOSS_TYPE::XIANG_LIU:
                 {
-                    IRole *enemyXiangliu = new XiangliuEnemy(156, 32, 100, 26, currentChapter, 230 + rand() % 51);
+                    IRole *enemyXiangliu = new XiangliuEnemy(156, 1, 100, 1, currentChapter, 230 + rand() % 51);
                     g_entityManager.addRole(enemyXiangliu);
 
                     // 标记展示Boss海报
@@ -197,7 +204,7 @@ public:
                 }
             case BOSS_TYPE::TAO_WU:
                 {
-                    IRole *enemyTaowu = new TaowuEnemy(156, 32, 100, 26, currentChapter + 1, 260 + rand() % 51);
+                    IRole *enemyTaowu = new TaowuEnemy(156, 1 , 100, 1 , currentChapter + 1, 260 + rand() % 51);
                     g_entityManager.addRole(enemyTaowu);
 
                     // 标记展示Boss海报
@@ -229,10 +236,10 @@ public:
         case WaveType::CHIMEI_LINE:
             // 添加魑魅直线阵
             for (int i = 0; i < 6; ++i) {
-                IRole *enemyChiMei1 = new ChiMeiEnemy(124, i * 10 + 1, 90, i * 10 + 1, currentChapter, 2 + rand() % 3);
+                IRole *enemyChiMei1 = new ChiMeiEnemy(124, i * 10 + 1, 90, i * 10 + 1, currentChapter, 6 + rand() % 3);
                 g_entityManager.addRole(enemyChiMei1);
                 IRole *enemyChiMei2 =
-                    new ChiMeiEnemy(124 + 20, i * 10 + 1, 90, i * 10 + 1, currentChapter, 2 + rand() % 3);
+                    new ChiMeiEnemy(124 + 20, i * 10 + 1, 90, i * 10 + 1, currentChapter, 6 + rand() % 3);
                 g_entityManager.addRole(enemyChiMei2);
             }
             break;
@@ -241,7 +248,7 @@ public:
             for (int i = 0; i < 6; ++i) {
                 IRole *enemyChiMei = new ChiMeiEnemy(
                     124 + (i / 5) * 20, (i % 5) * 12 + 1, 90 + (i / 5) * 10, (i % 5) * 12 + 1, currentChapter,
-                    2 + rand() % 3
+                    6 + rand() % 3
                 );
                 g_entityManager.addRole(enemyChiMei);
             }
@@ -249,7 +256,7 @@ public:
         case WaveType::THREE_Feilian:
             // 添加三飞廉阵
             for (int i = 0; i < 3; ++i) {
-                IRole *enemyFeilian = new FeilianEnemy(140, i * 20 + 1, 90, i * 20 + 1, currentChapter, 7 + rand() % 6);
+                IRole *enemyFeilian = new FeilianEnemy(140, i * 20 + 1, 90, i * 20 + 1, currentChapter, 15 + rand() % 6);
                 g_entityManager.addRole(enemyFeilian);
             }
             break;
@@ -258,7 +265,7 @@ public:
             for (int i = 0; i < 6 + rand() % 7; ++i) {
                 IRole *enemyFeilian = new FeilianEnemy(
                     140 + (i / 5) * 20, (i % 5) * 12 + 1, 90 + (i / 5) * 10, (i % 5) * 12 + 1, currentChapter,
-                    7 + rand() % 6
+                    15 + rand() % 6
                 );
                 g_entityManager.addRole(enemyFeilian);
             }
@@ -266,7 +273,7 @@ public:
         case WaveType::GUDIAO_SINGLE:
             // 添加单个古雕
             {
-                IRole *enemyGudiao = new GudiaoEnemy(156, 32, 100, 26, currentChapter, 30 + rand() % 11);
+                IRole *enemyGudiao = new GudiaoEnemy(156, 32, 100, 26, currentChapter, 35 + rand() % 11);
                 g_entityManager.addRole(enemyGudiao);
             }
             break;
@@ -274,7 +281,7 @@ public:
             // 添加双古雕
             for (int i = 0; i < 2; ++i) {
                 IRole *enemyGudiao =
-                    new GudiaoEnemy(156, i * 40 + 1, 100, i * 40 + 1, currentChapter, 30 + rand() % 11);
+                    new GudiaoEnemy(156, i * 40 + 1, 100, i * 40 + 1, currentChapter, 35 + rand() % 11);
                 g_entityManager.addRole(enemyGudiao);
             }
             break;
@@ -283,7 +290,7 @@ public:
             for (int i = 0; i < 4; ++i) {
                 IRole *enemyGudiao = new GudiaoEnemy(
                     156 + (i / 2) * 20, (i % 2) * 40 + 1, 100 + (i / 2) * 10, (i % 2) * 40 + 1, currentChapter,
-                    30 + rand() % 11
+                    35 + rand() % 11
                 );
                 g_entityManager.addRole(enemyGudiao);
             }
@@ -341,11 +348,10 @@ public:
         else
             isPlayingOpeningCG = false;
 
-        time_count += 2 * controlDelayTime;
-        if (time_count < 200) return;
-        time_count = 0;
-
         // 绘制动态圆圈效果
+        OLED_DrawCircle(64, 32, 30 - (openingCGTimer / 100)+10, OLED_COLOR_NORMAL);
+        OLED_DrawCircle(64, 32, 20 - (openingCGTimer / 150)+30 , OLED_COLOR_NORMAL);
+        OLED_PrintString(30, 28, "CHIP TANKS", &font8x6, OLED_COLOR_NORMAL);
     }
 
     void drawClearCG() {
@@ -355,10 +361,6 @@ public:
             isPlayingClearCG           = false;
             g_entityManager.isGameOver = true; // 游戏结束
         }
-
-        time_count += 2 * controlDelayTime;
-        if (time_count < 200) return;
-        time_count = 0;
 
         // 致谢
         OLED_PrintString(1, 28, "THANK YOU FOR", &font8x6, OLED_COLOR_NORMAL);
