@@ -2007,10 +2007,10 @@ XiangliuEnemy::XiangliuEnemy(
     m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 7 + level * 3;
+    m_pdata->attackData.attackPower            = 2 + level * 3;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
+    m_pdata->attackData.shootCooldownResetTime = 8000; //8000 ms
     m_pdata->attackData.bulletSpeed            = 1;
     //攻击速度 15000 ms
 

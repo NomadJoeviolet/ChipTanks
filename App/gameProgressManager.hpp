@@ -51,6 +51,7 @@ public:
     bool     isPlayingClearCG = false; // 是否播放通关动画
     uint16_t clearCGTimer     = 0;     // 通关动画计时器
 
+    bool chatpter4Warning = false; // 第四章警告标记
     BOSS_TYPE showWhichBoss = BOSS_TYPE::NONE; // 展示Boss类型
     bool      showBoss      = false;           // 是否 展示Boss海报
     uint16_t  showBossTimer = 0;               // 展示Boss海报计时器
@@ -145,7 +146,7 @@ public:
         // 根据当前关卡和波次，生成不同类型和数量的敌人
         if (currentChapter == 1 && currentWave == currentChapterMaxWaves) {
             // 第一关最后一波，添加Boss饕餮
-            IRole *enemyTaotie = new TaotieEnemy(156, 1 , 100, 1 , currentChapter, 100 + rand() % 21);
+            IRole *enemyTaotie = new TaotieEnemy(156, 1 , 64 , 1 , currentChapter, 100 + rand() % 21);
             g_entityManager.addRole(enemyTaotie);
 
             // 标记展示Boss海报
@@ -156,7 +157,7 @@ public:
         }
         if (currentChapter == 2 && currentWave == currentChapterMaxWaves) {
             // 第二关最后一波，添加Boss相柳
-            IRole *enemyXiangliu = new XiangliuEnemy(156, 1 , 100, 1 , currentChapter, 130 + rand() % 21);
+            IRole *enemyXiangliu = new XiangliuEnemy(156, 1 , 64, 1 , currentChapter, 130 + rand() % 21);
             g_entityManager.addRole(enemyXiangliu);
 
             // 标记展示Boss海报
@@ -167,7 +168,7 @@ public:
         }
         if (currentChapter == 3 && currentWave == currentChapterMaxWaves) {
             // 第三关最后一波，添加Boss梼杌
-            IRole *enemyTaowu = new TaowuEnemy(156, 1 , 100, 1 , currentChapter, 160 + rand() % 21);
+            IRole *enemyTaowu = new TaowuEnemy(156, 1 , 64, 1 , currentChapter, 160 + rand() % 21);
             g_entityManager.addRole(enemyTaowu);
 
             // 标记展示Boss海报
@@ -177,12 +178,13 @@ public:
             return;
         }
         if (currentChapter == 4) {
+            chatpter4Warning = true;
             // 第四关，挑战关卡，随意一个高数值BOSS
             BOSS_TYPE bossType = static_cast<BOSS_TYPE>(rand() % 3 + 1);
             switch (bossType) {
             case BOSS_TYPE::TAO_TIE:
                 {
-                    IRole *enemyTaotie = new TaotieEnemy(156, 1 , 100,1 , currentChapter + 1, 200 + rand() % 51);
+                    IRole *enemyTaotie = new TaotieEnemy(156, 1 , 64,1 , currentChapter + 2 , 200 + rand() % 51);
                     g_entityManager.addRole(enemyTaotie);
 
                     // 标记展示Boss海报
@@ -193,7 +195,7 @@ public:
                 }
             case BOSS_TYPE::XIANG_LIU:
                 {
-                    IRole *enemyXiangliu = new XiangliuEnemy(156, 1, 100, 1, currentChapter, 230 + rand() % 51);
+                    IRole *enemyXiangliu = new XiangliuEnemy(156, 1, 64, 1, currentChapter + 2 , 230 + rand() % 51);
                     g_entityManager.addRole(enemyXiangliu);
 
                     // 标记展示Boss海报
@@ -204,7 +206,7 @@ public:
                 }
             case BOSS_TYPE::TAO_WU:
                 {
-                    IRole *enemyTaowu = new TaowuEnemy(156, 1 , 100, 1 , currentChapter + 1, 260 + rand() % 51);
+                    IRole *enemyTaowu = new TaowuEnemy(156, 1 , 64, 1 , currentChapter + 2 , 260 + rand() % 51);
                     g_entityManager.addRole(enemyTaowu);
 
                     // 标记展示Boss海报
@@ -371,8 +373,17 @@ public:
     void drawShowBoss() {
         if (showBossTimer >= 2 * controlDelayTime)
             showBossTimer -= 2 * controlDelayTime;
-        else
-            showBoss = false;
+        else {
+             showBoss = false;
+             chatpter4Warning = false;
+             return;
+        }
+            
+        if(chatpter4Warning) {
+            OLED_PrintString(10, 28, "WARNING!", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(1, 40, "FINAL CHALLENGE", &font8x6, OLED_COLOR_NORMAL);
+            return;
+        }
 
         switch (showWhichBoss) {
         case BOSS_TYPE::XIANG_LIU:
