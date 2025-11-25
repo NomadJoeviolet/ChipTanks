@@ -124,6 +124,10 @@ void LeadingRole::doAction() {
         return;
     }
 
+    if( m_pdata->deathData.isDead ) {
+        return; // 死亡状态下不执行动作
+    }
+
     // Implement action logic for the leading role
 
     switch (m_pdata->actionData.currentState) {
@@ -182,9 +186,13 @@ void LeadingRole::doAction() {
 }
 
 void LeadingRole::die() {
-    m_pdata->deathData.isDead         = true;
+   if (m_pdata->deathData.deathTimer > 0) {
+        m_pdata->deathData.deathTimer -= controlDelayTime;
+        m_pdata->deathData.deathTimer = etl::max(m_pdata->deathData.deathTimer, uint16_t(0));
+        return;
+    }
+
     m_pdata->isActive                = false;
-    m_pdata->deathData.deathTimer     = 500;
 
 
     // 无敌模式，暂不实现死亡，测试用
@@ -268,6 +276,10 @@ void LeadingRole::drawRole() {
         OLED_DrawImage(
             m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
         );
+    }
+    if( m_pdata->deathData.isDead ) {
+        // 绘制死亡提示
+        OLED_PrintString(40, 28, "YOU DIED", &font8x6, OLED_COLOR_NORMAL);
     }
 }
 

@@ -174,6 +174,7 @@ void FeilianEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     }
 }
 
+//update中实现
 void FeilianEnemy::init() {
     m_pdata->initData.init_count += controlDelayTime;
     // Initialize enemy role specifics
@@ -241,7 +242,6 @@ void FeilianEnemy::doAction() {
 
     // Implement enemy action logic
     if (m_pdata->deathData.isDead) {
-        die();
         return;
     }
     switch (m_pdata->actionData.currentState) {
@@ -520,7 +520,6 @@ void GudiaoEnemy::doAction() {
 
     // Implement enemy action logic
     if (m_pdata->deathData.isDead) {
-        die();
         return;
     }
     switch (m_pdata->actionData.currentState) {
@@ -800,7 +799,6 @@ void ChiMeiEnemy::doAction() {
 
     // Implement enemy action logic
     if (m_pdata->deathData.isDead) {
-        die();
         return;
     }
     switch (m_pdata->actionData.currentState) {
@@ -1137,9 +1135,9 @@ void TaotieEnemy::doAction() {
 
     // Implement enemy action logic
     if (m_pdata->deathData.isDead) {
-        die();
         return;
     }
+
     switch (m_pdata->actionData.currentState) {
     case ActionState::IDLE:
         // Do nothing
@@ -1694,7 +1692,7 @@ void TaowuEnemy::doAction() {
 
     // Implement enemy action logic
     if (m_pdata->deathData.isDead) {
-        die();
+        
         return;
     }
     switch (m_pdata->actionData.currentState) {
@@ -2218,7 +2216,6 @@ void XiangliuEnemy::doAction() {
 
     // Implement enemy action logic
     if (m_pdata->deathData.isDead) {
-        die();
         return;
     }
     switch (m_pdata->actionData.currentState) {

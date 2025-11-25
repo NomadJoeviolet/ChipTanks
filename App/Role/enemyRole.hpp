@@ -31,7 +31,7 @@ uint8_t const boundary_deadzone = 5; // 左侧边界
 class FeilianEnemy : public IRole {
 public:
     uint16_t              think_count          = 0;
-    static const uint16_t feilianEnemyDeadTime = 500; // 死亡动画时间，单位ms
+    static const uint16_t feilianEnemyDeadTime = 250; // 死亡动画时间，单位ms
 public:
     FeilianEnemy(
         uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1 , uint16_t dropExp = 0
@@ -56,7 +56,7 @@ public:
 class GudiaoEnemy : public IRole {
 public:
     uint16_t              think_count         = 0;
-    static const uint16_t gudiaoEnemyDeadTime = 500; // 死亡动画时间，单位ms
+    static const uint16_t gudiaoEnemyDeadTime = 250; // 死亡动画时间，单位ms
 
 public:
     GudiaoEnemy(
@@ -80,7 +80,7 @@ public:
 
 class ChiMeiEnemy : public IRole {
     uint16_t              think_count         = 0;
-    static const uint16_t chimeiEnemyDeadTime = 300; // 死亡动画时间，单位ms
+    static const uint16_t chimeiEnemyDeadTime = 250; // 死亡动画时间，单位ms
 
 public:
     ChiMeiEnemy(
@@ -111,7 +111,7 @@ public:
 class TaotieEnemy : public IRole {
 public:
     uint16_t              think_count         = 0;
-    static const uint16_t TaotieEnemyDeadTime = 700; // 死亡动画时间，单位ms
+    static const uint16_t TaotieEnemyDeadTime = 500; // 死亡动画时间，单位ms
 
     uint16_t action_timer   = 0; //倒计时
     uint16_t action_MaxTime = 0; //记录动作最大持续时间
@@ -168,7 +168,7 @@ public:
 
 class TaowuEnemy : public IRole {
     uint16_t              think_count        = 0;
-    static const uint16_t TaowuEnemyDeadTime = 700; // 死亡动画时间，单位ms
+    static const uint16_t TaowuEnemyDeadTime = 500; // 死亡动画时间，单位ms
 
     uint16_t action_timer   = 0; //倒计时
     uint16_t action_MaxTime = 0; //记录动作最大持续时间
@@ -223,7 +223,7 @@ public:
 class XiangliuEnemy : public IRole {
 public:
     uint16_t              think_count           = 0;
-    static const uint16_t XiangliuEnemyDeadTime = 700; // 死亡动画时间，单位ms
+    static const uint16_t XiangliuEnemyDeadTime = 500; // 死亡动画时间，单位ms
 
     uint16_t action_timer   = 0; //倒计时
     uint16_t action_MaxTime = 0; //记录动作最大持续时间
