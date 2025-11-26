@@ -100,7 +100,7 @@ LeadingRole::LeadingRole()
     m_pdata->heatData.heatCoolDownRate = 4 ; //每次冷却4点热量，每次冷却时间间隔由200ms
 
     //死亡状态信息
-    m_pdata->deathData.deathTimer = 500;
+    m_pdata->deathData.deathTimer = 2000;
     m_pdata->deathData.isDead     = false;
 }
 
