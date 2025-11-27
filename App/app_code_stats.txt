@@ -1,0 +1,44 @@
+﻿ChipTanks App Code Stats
+Time: 2025-11-27 10:39:53
+Directory: C:\IncludeAll\WorkSpace\Codes\STM32CubeMX_projects\ChipTanks\App
+
+Per-file:
+Bullet\bullet.cpp                                       Raw=   305 NonEmpty=   247 Code=   210
+Bullet\bullet.hpp                                       Raw=    73 NonEmpty=    57 Code=    56
+Data\basicData.hpp                                      Raw=   301 NonEmpty=   252 Code=   186
+gameEntityManager.hpp                                   Raw=   412 NonEmpty=   362 Code=   300
+gamePerkCardManager.hpp                                 Raw=   171 NonEmpty=   145 Code=   128
+gameProgressManager.hpp                                 Raw=   410 NonEmpty=   359 Code=   307
+Peripheral\KEY\key.cpp                                  Raw=    18 NonEmpty=    14 Code=    14
+Peripheral\KEY\key.hpp                                  Raw=    50 NonEmpty=    41 Code=    37
+Peripheral\OLED\font.c                                  Raw=   665 NonEmpty=   628 Code=   313
+Peripheral\OLED\font.h                                  Raw=    71 NonEmpty=    57 Code=    48
+Peripheral\OLED\oled.c                                  Raw=   777 NonEmpty=   721 Code=   459
+Peripheral\OLED\oled.h                                  Raw=    43 NonEmpty=    34 Code=    34
+PerkCard\prekCard.hpp                                   Raw=    67 NonEmpty=    56 Code=    54
+reload_new_delete.cpp                                   Raw=    61 NonEmpty=    52 Code=    33
+Role\enemyRole.cpp                                      Raw=  2423 NonEmpty=  2122 Code=  1784
+Role\enemyRole.hpp                                      Raw=   257 NonEmpty=   214 Code=   138
+Role\leadingrole.cpp                                    Raw=   329 NonEmpty=   273 Code=   219
+Role\leadingRole.hpp                                    Raw=    72 NonEmpty=    56 Code=    36
+Role\role.cpp                                           Raw=   181 NonEmpty=   159 Code=   136
+Role\role.hpp                                           Raw=    52 NonEmpty=    41 Code=    36
+threads.cpp                                             Raw=   259 NonEmpty=   219 Code=   140
+
+Top-level groups:
+Bullet          Raw=   378 NonEmpty=   304 Code=   266
+Data            Raw=   301 NonEmpty=   252 Code=   186
+gameEntityManager.hpp Raw=   412 NonEmpty=   362 Code=   300
+gamePerkCardManager.hpp Raw=   171 NonEmpty=   145 Code=   128
+gameProgressManager.hpp Raw=   410 NonEmpty=   359 Code=   307
+Peripheral      Raw=  1624 NonEmpty=  1495 Code=   905
+PerkCard        Raw=    67 NonEmpty=    56 Code=    54
+reload_new_delete.cpp Raw=    61 NonEmpty=    52 Code=    33
+Role            Raw=  3314 NonEmpty=  2865 Code=  2349
+threads.cpp     Raw=   259 NonEmpty=   219 Code=   140
+
+Totals: RawLines=6997  NonEmptyLines=6109  CodeLines=4668
+
+Note: CodeLines is an estimate (ignores block comments and // lines).
+Improvements: parse multi-line comments, exclude generated files, export CSV, incremental analysis.
+
