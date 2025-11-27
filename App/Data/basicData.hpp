@@ -257,7 +257,6 @@ public:
 
 public:
     BulletData() = default;
-    ;
 
     BulletData(int8_t speed, uint8_t currentPosX, uint8_t currentPosY, uint8_t dmg, uint8_t rg, BulletType type , float dmgMultiplier = 1.0f) {
         //根据类型进行初始化
