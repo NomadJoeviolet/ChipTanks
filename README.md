@@ -2,6 +2,8 @@
 
 STM32F103 上的 128×64 OLED 迷你射击游戏。C/C++ 混编，FreeRTOS 驱动，使用 ETL（Embedded Template Library）以适配嵌入式资源约束。
 
+项目总结博客：[ChipTanks-基于C&C++混编的STM32OLED迷你游戏掌机个人项目开发](https://nomadjoeviolet.github.io/p/chiptanks-%E5%9F%BA%E4%BA%8Ecc-%E6%B7%B7%E7%BC%96%E7%9A%84stm32oled%E8%BF%B7%E4%BD%A0%E6%B8%B8%E6%88%8F%E6%8E%8C%E6%9C%BA%E4%B8%AA%E4%BA%BA%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91/)
+
 ## 特性概览
 - Roguelike 构筑：关卡/波次推进，中场与过关选卡，增益直接作用玩家数据。
 - 实体系统：角色与子弹分层，统一管理器调度（行动 → 状态 → 清理 → 渲染）。
