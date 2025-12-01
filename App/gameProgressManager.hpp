@@ -93,11 +93,12 @@ public:
         //测试用
         // currentChapter         = 4; // 测试时直接从第4关开始
 
+        // 重置当前波次
         currentWave            = 0;
         currentChapterMaxWaves = 8 + rand() % 4; // 随机生成当前关卡波次，8~11波
 
         //测试用
-        //currentChapterMaxWaves = 1; // 测试时每关只1波
+        // currentChapterMaxWaves = 1; // 测试时每关只1波
 
         // 添加初始角色
         LeadingRole *player = new LeadingRole();
@@ -380,23 +381,22 @@ public:
         }
             
         if(chatpter4Warning) {
-            OLED_PrintString(10, 28, "WARNING!", &font8x6, OLED_COLOR_NORMAL);
-            OLED_PrintString(1, 40, "CHALLENGE", &font8x6, OLED_COLOR_NORMAL);
-            return;
+            OLED_PrintString(1, 40, "WARNING!", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(1, 52, "CHALLENGE!", &font8x6, OLED_COLOR_NORMAL);
         }
 
         switch (showWhichBoss) {
         case BOSS_TYPE::XIANG_LIU:
-            OLED_PrintString(1, 28, "XIANG_LIU", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(1, 20, "XIANG_LIU", &font8x6, OLED_COLOR_NORMAL);
             OLED_DrawImage(64, 1, &XiangliuImg, OLED_COLOR_NORMAL);
             break;
         case BOSS_TYPE::TAO_TIE:
-            OLED_PrintString(1, 28, "TAO_TIE", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(1, 20, "TAO_TIE", &font8x6, OLED_COLOR_NORMAL);
             OLED_DrawImage(64, 1, &TaotieImg, OLED_COLOR_NORMAL);
             break;
 
         case BOSS_TYPE::TAO_WU:
-            OLED_PrintString(1, 28, "TAO_WU", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(1, 20, "TAO_WU", &font8x6, OLED_COLOR_NORMAL);
             OLED_DrawImage(64, 1, &TaowuImg, OLED_COLOR_NORMAL);
             break;
 
