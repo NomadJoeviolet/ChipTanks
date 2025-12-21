@@ -54,7 +54,7 @@ constexpr struct PerkCardConfig {
     {PerkCardType::HEALTH_UP,               "Health +100",       100, 2},
     {PerkCardType::ATTACK_UP,               "Attack +5",         5,   2},
     {PerkCardType::ATTACK_SPEED_UP,         "Attack Speed +3",   3,   2},
-    {PerkCardType::HEAT_CAPACITY_UP,        "Heat Capacity +25", 25,  2},
+    {PerkCardType::HEAT_CAPACITY_UP,        "Heat Capacity +95", 95,  2},
     {PerkCardType::HEAT_COOL_DOWN_UP,       "Heat Cool Down +2", 2,   2},
     {PerkCardType::UNLOCK_FIREBALL,         "Unlock Fireball",   0,   1},
     {PerkCardType::UNLOCK_LIGHTNING,        "Unlock Lightning",  0,   1},

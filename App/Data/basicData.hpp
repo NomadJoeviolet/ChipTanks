@@ -20,7 +20,7 @@ public:
     uint8_t currentHeat{};
     uint8_t maxHeat{};
     uint8_t heatCoolDownRate{};
-    uint8_t heatCoolDownTimer{};
+    uint16_t heatCoolDownTimer{};
     uint8_t heatPerShot{};
 
 public:

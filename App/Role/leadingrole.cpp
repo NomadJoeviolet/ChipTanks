@@ -96,7 +96,7 @@ LeadingRole::LeadingRole()
     //热量信息
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
-    m_pdata->heatData.heatPerShot      =  0 ;//初始15
+    m_pdata->heatData.heatPerShot      =  15 ;//初始15
     m_pdata->heatData.heatCoolDownRate = 4 ; //每次冷却4点热量，每次冷却时间间隔由200ms
 
     //死亡状态信息
@@ -212,10 +212,14 @@ void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
     switch (type) {
     case BulletType::BASIC:
         {
-            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
+            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat) {
+                taskEXIT_CRITICAL();
                 return; // 超过最大热量，无法射击
-             if (m_pdata->attackData.shootCooldownTimer > 0)
+            }
+            if (m_pdata->attackData.shootCooldownTimer > 0) {
+                taskEXIT_CRITICAL();
                 return; // 冷却中，无法射击
+            }
                 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
             if (newBullet != nullptr) {
@@ -231,10 +235,14 @@ void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
         break;
     case BulletType::FIRE_BALL:
         {
-            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot*2 > m_pdata->heatData.maxHeat)
+            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot*2 > m_pdata->heatData.maxHeat) {
+                taskEXIT_CRITICAL();
                 return; // 超过最大热量，无法射击
-             if (m_pdata->attackData.shootCooldownTimer > 0)
+            }
+            if (m_pdata->attackData.shootCooldownTimer > 0) {
+                taskEXIT_CRITICAL();
                 return; // 冷却中，无法射击
+            }
                 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
             if (newBullet != nullptr) {
@@ -250,10 +258,14 @@ void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
         break;
     case BulletType::LIGHTNING_LINE:
         {
-            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot*1.5 > m_pdata->heatData.maxHeat)
+            if(m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot*1.5 > m_pdata->heatData.maxHeat) {
+                taskEXIT_CRITICAL();
                 return; // 超过最大热量，无法射击
-             if (m_pdata->attackData.shootCooldownTimer > 0)
+            }
+            if (m_pdata->attackData.shootCooldownTimer > 0) {
+                taskEXIT_CRITICAL();
                 return; // 冷却中，无法射击
+            }
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
             if (newBullet != nullptr) {
@@ -266,6 +278,7 @@ void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
                 }
             }
         }
+        break;
     }
 
     taskEXIT_CRITICAL();

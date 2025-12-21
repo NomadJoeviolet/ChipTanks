@@ -139,13 +139,15 @@ void IRole::update(CollisionResult collisionResult) {
 
     //热量冷却处理
     if (m_pdata->heatData.currentHeat > 0) {
-        m_pdata->heatData.heatCoolDownTimer += controlDelayTime;
-        if (m_pdata->heatData.heatCoolDownTimer >= 200) //每200ms降温一次
+        m_pdata->heatData.heatCoolDownTimer += controlDelayTime ;
+        //每2000ms热量会降低heatCoolDownRate*10点
+        if (m_pdata->heatData.heatCoolDownTimer >= 2000)
         {
-            if (m_pdata->heatData.currentHeat <= m_pdata->heatData.heatCoolDownRate)
+            uint8_t coolAmount = m_pdata->heatData.heatCoolDownRate * 10;
+            if (m_pdata->heatData.currentHeat <= coolAmount)
                 m_pdata->heatData.currentHeat = 0;
             else
-                m_pdata->heatData.currentHeat -= m_pdata->heatData.heatCoolDownRate;
+                m_pdata->heatData.currentHeat -= coolAmount;
             m_pdata->heatData.heatCoolDownTimer = 0;
         }
     }
