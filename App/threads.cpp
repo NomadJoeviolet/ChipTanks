@@ -41,6 +41,11 @@ void oledTaskThread(void *argument) {
                 g_progressManager.drawOpeningCG();
             }
 
+            else if (g_progressManager.isWaitingStartKey) {
+                // 等待按键开始游戏
+                g_progressManager.drawWaitingStart();
+            }
+
             else if (g_progressManager.isPlayingClearCG) {
                 // 播放通关动画
                 g_progressManager.drawClearCG();
@@ -54,7 +59,49 @@ void oledTaskThread(void *argument) {
             else if (g_perkCardManager.m_isSelecting && g_perkCardManager.isInited) {
                 // 处于选卡状态，显示选卡界面
                 g_perkCardManager.drawSelectionUI();
-            } else {
+            }
+            else if(g_progressManager.PauseGame) {
+                // 游戏暂停状态，显示详细玩家属性界面
+                char pauseInfoStr[40];
+                OLED_PrintString(44, 0, "PAUSED", &font8x6, OLED_COLOR_NORMAL);
+                
+                if (pLeadingRole != nullptr) {
+                    RoleData* data = pLeadingRole->getData();
+                    
+                    // 第1行: HP 和 等级
+                    sprintf(pauseInfoStr, "HP:%d/%d Lv.%d", 
+                        data->healthData.currentHealth, 
+                        data->healthData.maxHealth,
+                        data->level);
+                    OLED_PrintString(0, 10, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
+                    
+                    // 第2行: 攻击力 和 攻击速度
+                    sprintf(pauseInfoStr, "ATK:%d SPD:%d", 
+                        data->attackData.attackPower,
+                        data->attackData.shootCooldownSpeed);
+                    OLED_PrintString(0, 20, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
+                    
+                    // 第3行: 回血速度 和 回血量
+                    sprintf(pauseInfoStr, "HEAL:VAL:%d SPD:%d", 
+                        data->healthData.healValue,
+                        data->healthData.healSpeed);
+                    OLED_PrintString(0, 30, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
+                    
+                    // 第4行: 热量上限 和 散热速率
+                    sprintf(pauseInfoStr, "HEAT:%d/%d CD:%d", 
+                        data->heatData.currentHeat,
+                        data->heatData.maxHeat,
+                        data->heatData.heatCoolDownRate);
+                    OLED_PrintString(0, 40, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
+                    
+                    // 第5行: 解锁的子弹类型
+                    sprintf(pauseInfoStr, "BulletType: B%s%s", 
+                        pLeadingRole->bulletTypeOwned.fireBallBulletOwed ? " F" : "",
+                        pLeadingRole->bulletTypeOwned.lightningLineBulletOwed ? " L" : "");
+                    OLED_PrintString(0, 50, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
+                }
+            }
+            else {
                 // 非选卡状态，显示游戏界面
 
                 //显示角色信息
@@ -98,8 +145,23 @@ void keyScanThread(void *argument) {
     for (;;) {
         key.scan();
 
+        // 等待按键开始游戏的处理
+        if (g_progressManager.isWaitingStartKey) {
+            // 检测任意按键按下
+            bool anyKeyPressed = false;
+            for (uint8_t i = 0; i < 4; ++i) {
+                if (key.m_leftKeyButton[i] == 1 || key.m_rightKeyButton[i] == 1) {
+                    anyKeyPressed = true;
+                    break;
+                }
+            }
+            if (anyKeyPressed) {
+                g_progressManager.isWaitingStartKey = false; // 开始游戏
+            }
+        }
+
         if (!g_entityManager.isGameOver && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss
-            && !g_progressManager.isPlayingClearCG) {
+            && !g_progressManager.isPlayingClearCG && !g_progressManager.isWaitingStartKey) {
             // 游戏进行中才响应按键
 
             //测试触发选卡
@@ -111,19 +173,36 @@ void keyScanThread(void *argument) {
                 scanDelayTime = 40; // 非选卡时恢复正常扫描频率
                 pLeadingRole  = (LeadingRole *)g_entityManager.getPlayerRole();
                 if (pLeadingRole != nullptr) {
+                    //MOVING
                     if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_LEFT)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
-                    } else if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_DOWN)] == 1) {
+                    }
+                    if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_DOWN)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
-                    } else if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_UP)] == 1) {
+                    }
+                    if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_UP)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
-                    } else if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_RIGHT)] == 1) {
+                    }
+                    if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_RIGHT)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
                     }
+
+                    //PAUSE
+                    if (key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_DOWN)] == 1 ||
+                        key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_UP)] == 1 ||
+                        key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_LEFT)] == 1 ||
+                        key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_RIGHT)] == 1) {
+                        g_progressManager.PauseTimer += scanDelayTime;
+                        if (g_progressManager.PauseTimer >= 500) {
+                            g_progressManager.PauseGame = !g_progressManager.PauseGame;
+                            g_progressManager.PauseTimer = 0;
+                        }
+                    }
+                    
                 }
             } else {
                 scanDelayTime                     = 100; // 选卡时降低扫描频率，节省资源
@@ -195,7 +274,7 @@ void gameControlThread(void *argument) {
         } else {
             //游戏进行中
             if (!g_perkCardManager.m_isSelecting && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss
-                && !g_progressManager.isPlayingClearCG) {
+                && !g_progressManager.isPlayingClearCG && !g_progressManager.PauseGame && !g_progressManager.isWaitingStartKey ) {
                 // 非选卡状态且非开场动画且非展示Boss海报，更新游戏逻辑
                 // 更新游戏进度
                 g_progressManager.updateGameProgress();

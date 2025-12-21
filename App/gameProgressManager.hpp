@@ -57,7 +57,11 @@ public:
     uint16_t  showBossTimer = 0;               // 展示Boss海报计时器
     //播放3秒Boss海报
 
+    uint16_t PauseTimer = 0;
     bool PauseGame = false; // 暂停游戏标记
+
+    bool isWaitingStartKey = false; // 等待按键开始游戏
+
 public:
     GameProgressManager()  = default;
     ~GameProgressManager() = default;
@@ -77,7 +81,8 @@ public:
 
         // 重置开场动画状态
         isPlayingOpeningCG = true;
-        openingCGTimer     = 2000; // 1秒开场动画
+        openingCGTimer     = 2000; // 2秒开场动画
+        isWaitingStartKey  = false; // 动画播放完后会设为true
 
         // 通关动画
         isPlayingClearCG = false;
@@ -120,7 +125,7 @@ public:
                 if (currentChapter > lastChapter) {
                     // 已完成所有关卡，游戏胜利，重置游戏
                     isPlayingClearCG = true; // 播放通关动画
-                    clearCGTimer     = 1000; // 通关动画持续时间
+                    clearCGTimer     = 2000; // 通关动画持续时间
                     return;
                 }
 
@@ -344,19 +349,113 @@ public:
     }
 
     // 绘图展示功能
-    // 绘制开场动画
+    // 绘制开场动画 - 增强版
     void drawOpeningCG() {
         if (openingCGTimer >= 2 * controlDelayTime)
             openingCGTimer -= 2 * controlDelayTime;
-        else
+        else {
+            // 动画播放完毕，进入等待按键状态
             isPlayingOpeningCG = false;
+            isWaitingStartKey  = true;
+        }
 
-        // 绘制动态圆圈效果
-        OLED_DrawCircle(64, 32, 30 - (openingCGTimer / 100)+10, OLED_COLOR_NORMAL);
-        OLED_DrawCircle(64, 32, 20 - (openingCGTimer / 150)+30 , OLED_COLOR_NORMAL);
-        OLED_PrintString(30, 28, "CHIP TANKS", &font8x6, OLED_COLOR_NORMAL);
+        uint16_t elapsed = 2000 - openingCGTimer; // 已经过的时间
+        uint8_t phase = elapsed / 400; // 分为5个阶段 (0-4)
+
+        // 阶段0-1: 多层同心圆从中心向外扩散
+        if (phase <= 1) {
+            uint8_t r1 = elapsed / 25;      // 最快的圆
+            uint8_t r2 = elapsed / 35;      // 中速圆
+            uint8_t r3 = elapsed / 50;      // 慢速圆
+            
+            if (r1 > 0 && r1 < 60) OLED_DrawCircle(64, 32, r1, OLED_COLOR_NORMAL);
+            if (r2 > 0 && r2 < 50) OLED_DrawCircle(64, 32, r2, OLED_COLOR_NORMAL);
+            if (r3 > 0 && r3 < 40) OLED_DrawCircle(64, 32, r3, OLED_COLOR_NORMAL);
+        }
+        
+        // 阶段2: 圆圈收缩 + 四角装饰线出现
+        if (phase == 2) {
+            uint8_t shrink = (elapsed - 800) / 10;
+            uint8_t r = (shrink < 40) ? (40 - shrink) : 0;
+            if (r > 5) OLED_DrawCircle(64, 32, r, OLED_COLOR_NORMAL);
+            
+            // 四角装饰线渐入
+            uint8_t lineLen = shrink / 2;
+            if (lineLen > 15) lineLen = 15;
+            OLED_DrawLine(0, 0, lineLen, 0, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 0, 0, lineLen, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 0, 127 - lineLen, 0, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 0, 127, lineLen, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 63, lineLen, 63, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 63, 0, 63 - lineLen, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 63, 127 - lineLen, 63, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 63, 127, 63 - lineLen, OLED_COLOR_NORMAL);
+        }
+        
+        // 阶段3-4: 标题显示 + 闪烁边框 + 装饰元素
+        if (phase >= 3) {
+            // 四角装饰线保持
+            OLED_DrawLine(0, 0, 15, 0, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 0, 0, 15, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 0, 112, 0, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 0, 127, 15, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 63, 15, 63, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 63, 0, 48, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 63, 112, 63, OLED_COLOR_NORMAL);
+            OLED_DrawLine(127, 63, 127, 48, OLED_COLOR_NORMAL);
+            
+            // 标题上下装饰线
+            OLED_DrawLine(20, 24, 107, 24, OLED_COLOR_NORMAL);
+            OLED_DrawLine(20, 40, 107, 40, OLED_COLOR_NORMAL);
+            
+            // 标题文字 "CHIP TANKS"
+            OLED_PrintString(30, 28, "CHIP TANKS", &font8x6, OLED_COLOR_NORMAL);
+            
+            // 闪烁的小坦克装饰 (交替显示)
+            if ((openingCGTimer / 100) % 2 == 0) {
+                OLED_DrawFilledRectangle(10, 30, 6, 4, OLED_COLOR_NORMAL);  // 左侧小方块
+                OLED_DrawFilledRectangle(111, 30, 6, 4, OLED_COLOR_NORMAL); // 右侧小方块
+            }
+            
+            // 底部提示文字闪烁
+            if (phase == 4 && (openingCGTimer / 150) % 2 == 0) {
+                OLED_PrintString(28, 52, "PRESS TO START", &font8x6, OLED_COLOR_NORMAL);
+            }
+        }
     }
 
+    // 绘制等待开始界面
+    void drawWaitingStart() {
+        // 四角装饰线保持
+        OLED_DrawLine(0, 0, 15, 0, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 0, 0, 15, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 0, 112, 0, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 0, 127, 15, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 63, 15, 63, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 63, 0, 48, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 63, 112, 63, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 63, 127, 48, OLED_COLOR_NORMAL);
+        
+        // 标题上下装饰线
+        OLED_DrawLine(20, 24, 107, 24, OLED_COLOR_NORMAL);
+        OLED_DrawLine(20, 40, 107, 40, OLED_COLOR_NORMAL);
+        
+        // 标题文字
+        OLED_PrintString(30, 28, "CHIP TANKS", &font8x6, OLED_COLOR_NORMAL);
+        
+        // 左右装饰方块
+        OLED_DrawFilledRectangle(10, 30, 6, 4, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(111, 30, 6, 4, OLED_COLOR_NORMAL);
+        
+        // 底部闪烁提示文字
+        static uint8_t blinkCounter = 0;
+        blinkCounter++;
+        if ((blinkCounter / 10) % 2 == 0) {
+            OLED_PrintString(28, 52, "PRESS TO START", &font8x6, OLED_COLOR_NORMAL);
+        }
+    }
+
+    // 绘制通关动画 - 增强版
     void drawClearCG() {
         if (clearCGTimer >= 2 * controlDelayTime)
             clearCGTimer -= 2 * controlDelayTime;
@@ -365,9 +464,74 @@ public:
             g_entityManager.isGameOver = true; // 游戏结束
         }
 
-        // 致谢
-        OLED_PrintString(1, 28, "THANK YOU FOR", &font8x6, OLED_COLOR_NORMAL);
-        OLED_PrintString(1, 40, "PLAYING MY GAME", &font8x6, OLED_COLOR_NORMAL);
+        uint16_t elapsed = 2000 - clearCGTimer; // 已经过的时间
+        uint8_t phase = elapsed / 500; // 分为4个阶段 (0-3)
+        
+        // 阶段0: 胜利光芒从中心扩散
+        if (phase == 0) {
+            uint8_t rayLen = elapsed / 10;
+            // 八方向射线扩散
+            if (rayLen > 2) {
+                OLED_DrawLine(64, 32, 64 + rayLen, 32, OLED_COLOR_NORMAL);           // 右
+                OLED_DrawLine(64, 32, 64 - rayLen, 32, OLED_COLOR_NORMAL);           // 左
+                OLED_DrawLine(64, 32, 64, 32 + rayLen/2, OLED_COLOR_NORMAL);         // 下
+                OLED_DrawLine(64, 32, 64, 32 - rayLen/2, OLED_COLOR_NORMAL);         // 上
+                OLED_DrawLine(64, 32, 64 + rayLen*7/10, 32 + rayLen*7/20, OLED_COLOR_NORMAL);  // 右下
+                OLED_DrawLine(64, 32, 64 - rayLen*7/10, 32 + rayLen*7/20, OLED_COLOR_NORMAL);  // 左下
+                OLED_DrawLine(64, 32, 64 + rayLen*7/10, 32 - rayLen*7/20, OLED_COLOR_NORMAL);  // 右上
+                OLED_DrawLine(64, 32, 64 - rayLen*7/10, 32 - rayLen*7/20, OLED_COLOR_NORMAL);  // 左上
+            }
+        }
+        
+        // 阶段1: VICTORY 文字 + 星星装饰
+        if (phase >= 1) {
+            // 顶部大标题
+            OLED_PrintString(34, 8, "VICTORY!", &font8x6, OLED_COLOR_NORMAL);
+            
+            // 闪烁星星效果 (用小十字表示)
+            if ((clearCGTimer / 80) % 2 == 0) {
+                // 左侧星星
+                OLED_DrawLine(15, 10, 15, 14, OLED_COLOR_NORMAL);
+                OLED_DrawLine(13, 12, 17, 12, OLED_COLOR_NORMAL);
+                // 右侧星星
+                OLED_DrawLine(112, 10, 112, 14, OLED_COLOR_NORMAL);
+                OLED_DrawLine(110, 12, 114, 12, OLED_COLOR_NORMAL);
+            }
+            if ((clearCGTimer / 80) % 2 == 1) {
+                // 交替显示另一组星星
+                OLED_DrawLine(25, 5, 25, 9, OLED_COLOR_NORMAL);
+                OLED_DrawLine(23, 7, 27, 7, OLED_COLOR_NORMAL);
+                OLED_DrawLine(102, 5, 102, 9, OLED_COLOR_NORMAL);
+                OLED_DrawLine(100, 7, 104, 7, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // 阶段2-3: 感谢文字 + 持续星星动画
+        if (phase >= 2) {
+            // 分隔线
+            OLED_DrawLine(10, 22, 117, 22, OLED_COLOR_NORMAL);
+            
+            // 致谢文字
+            OLED_PrintString(16, 28, "THANK YOU FOR", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(10, 40, "PLAYING MY GAME!", &font8x6, OLED_COLOR_NORMAL);
+            
+            // 底部装饰线
+            OLED_DrawLine(10, 52, 117, 52, OLED_COLOR_NORMAL);
+        }
+        
+        // 阶段3: 额外的庆祝装饰
+        if (phase >= 3) {
+            // 底部闪烁三角形装饰
+            if ((clearCGTimer / 100) % 2 == 0) {
+                OLED_DrawTriangle(20, 60, 25, 55, 30, 60, OLED_COLOR_NORMAL);
+                OLED_DrawTriangle(97, 60, 102, 55, 107, 60, OLED_COLOR_NORMAL);
+            }
+            // 四角小方块装饰
+            OLED_DrawFilledRectangle(2, 2, 4, 4, OLED_COLOR_NORMAL);
+            OLED_DrawFilledRectangle(121, 2, 4, 4, OLED_COLOR_NORMAL);
+            OLED_DrawFilledRectangle(2, 57, 4, 4, OLED_COLOR_NORMAL);
+            OLED_DrawFilledRectangle(121, 57, 4, 4, OLED_COLOR_NORMAL);
+        }
     }
 
     // 绘制展示Boss海报

@@ -902,8 +902,8 @@ TaotieEnemy::TaotieEnemy(
     m_pdata->level = level;
 
     //血量信息
-    m_pdata->healthData.currentHealth = 1450 + level * 400;
-    m_pdata->healthData.maxHealth     = 1450 + level * 400;
+    m_pdata->healthData.currentHealth = 350 + level * 1100;
+    m_pdata->healthData.maxHealth     = 350 + level * 1100;
 
     //回血信息
     m_pdata->healthData.healValue       = 20;
@@ -927,7 +927,7 @@ TaotieEnemy::TaotieEnemy(
     m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 5 + level * 2;
+    m_pdata->attackData.attackPower            = 2 + level * 4;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
@@ -936,7 +936,7 @@ TaotieEnemy::TaotieEnemy(
     m_pdata->attackData.bulletRange            = 10;   //只对火球弹生效
     m_pdata->attackData.bulletDamageMultiplier = 1.5f; //只对闪电链弹生效
 
-    m_pdata->attackData.collisionPower = 20 + level * 10;
+    m_pdata->attackData.collisionPower = 10 + level * 10;
 
     //热量信息
     m_pdata->heatData.maxHeat          = 200;
@@ -1443,8 +1443,8 @@ TaowuEnemy::TaowuEnemy(
 
     //血量信息
     //血量较低，但攻击力高，移动速度快
-    m_pdata->healthData.currentHealth = 830 + level * 300;
-    m_pdata->healthData.maxHealth     = 830 + level * 300;
+    m_pdata->healthData.currentHealth = 130 + level * 800;
+    m_pdata->healthData.maxHealth     = 130 + level * 800;
 
     //回血信息
     m_pdata->healthData.healValue       = 30;
@@ -1468,7 +1468,7 @@ TaowuEnemy::TaowuEnemy(
     m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 10 + level * 2;
+    m_pdata->attackData.attackPower            = 10 + level * 5;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
@@ -1477,7 +1477,7 @@ TaowuEnemy::TaowuEnemy(
     m_pdata->attackData.bulletRange            = 10;   //只对火球弹生效
     m_pdata->attackData.bulletDamageMultiplier = 1.5f; //只对闪电链弹生效
 
-    m_pdata->attackData.collisionPower = 7 + level * 3;
+    m_pdata->attackData.collisionPower = 7 + level * 5;
 
     //热量信息
     m_pdata->heatData.maxHeat          = 250;
@@ -1980,8 +1980,8 @@ XiangliuEnemy::XiangliuEnemy(
 
     //血量信息
     //血量较低，但攻击力高，移动速度快
-    m_pdata->healthData.currentHealth = 830 + level * 400;
-    m_pdata->healthData.maxHealth     = 830 + level * 400;
+    m_pdata->healthData.currentHealth = 30 + level * 900;
+    m_pdata->healthData.maxHealth     = 30 + level * 900;
 
     //回血信息
     m_pdata->healthData.healValue       = 30;
@@ -2005,7 +2005,7 @@ XiangliuEnemy::XiangliuEnemy(
     m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 2 + level * 3;
+    m_pdata->attackData.attackPower            = 3 + level * 5 ;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 8000; //8000 ms
