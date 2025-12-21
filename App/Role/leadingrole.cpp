@@ -249,7 +249,7 @@ void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
                 if (g_entityManager.addBullet(newBullet)) {
                     // Successfully added bullet
                     m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
-                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot*2 ;
                 } else {
                     delete[] newBullet; // Clean up if not added
                 }
@@ -272,7 +272,7 @@ void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
                 if (g_entityManager.addBullet(newBullet)) {
                     // Successfully added bullet
                     m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
-                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot*2 ;
                 } else {
                     delete[] newBullet; // Clean up if not added
                 }

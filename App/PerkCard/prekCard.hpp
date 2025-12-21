@@ -59,7 +59,7 @@ constexpr struct PerkCardConfig {
     {PerkCardType::UNLOCK_FIREBALL,         "Unlock Fireball",   0,   1},
     {PerkCardType::UNLOCK_LIGHTNING,        "Unlock Lightning",  0,   1},
     {PerkCardType::FIREBALL_RANGE_UP,       "Fireball Range +5", 5,   2},
-    {PerkCardType::LIGHTNING_MULTIPLIER_UP, "LightningDamage+1.5",    15,  2}, // 15=1.5×10
+    {PerkCardType::LIGHTNING_MULTIPLIER_UP, "LightingDamage+1.5",    15,  2}, // 15=1.5×10
     {PerkCardType::MOVE_SPEED_UP,           "Move Speed +1",     1,   1},
 };
 
