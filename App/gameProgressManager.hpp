@@ -349,6 +349,127 @@ public:
     }
 
     // 绘图展示功能
+    
+    // 绘制暂停界面 - 科技风格
+    void drawPauseUI() {
+        // ===== 科技风HUD四角装饰 =====
+        // 左上角
+        OLED_DrawLine(0, 0, 22, 0, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 0, 0, 18, OLED_COLOR_NORMAL);
+        OLED_DrawLine(22, 0, 16, 6, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 18, 6, 12, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(2, 2, 4, 4, OLED_COLOR_NORMAL);
+        
+        // 右上角
+        OLED_DrawLine(127, 0, 105, 0, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 0, 127, 18, OLED_COLOR_NORMAL);
+        OLED_DrawLine(105, 0, 111, 6, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 18, 121, 12, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(121, 2, 4, 4, OLED_COLOR_NORMAL);
+        
+        // 左下角
+        OLED_DrawLine(0, 63, 22, 63, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 63, 0, 45, OLED_COLOR_NORMAL);
+        OLED_DrawLine(22, 63, 16, 57, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 45, 6, 51, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(2, 57, 4, 4, OLED_COLOR_NORMAL);
+        
+        // 右下角
+        OLED_DrawLine(127, 63, 105, 63, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 63, 127, 45, OLED_COLOR_NORMAL);
+        OLED_DrawLine(105, 63, 111, 57, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 45, 121, 51, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(121, 57, 4, 4, OLED_COLOR_NORMAL);
+        
+        // ===== 顶部标题栏 =====
+        OLED_DrawLine(25, 1, 102, 1, OLED_COLOR_NORMAL);
+        OLED_DrawLine(25, 9, 102, 9, OLED_COLOR_NORMAL);
+        // 标题两侧三角装饰
+        OLED_DrawFilledTriangle(26, 5, 30, 2, 30, 8, OLED_COLOR_NORMAL);
+        OLED_DrawFilledTriangle(101, 5, 97, 2, 97, 8, OLED_COLOR_NORMAL);
+        
+        // 闪烁的PAUSED标题
+        static uint8_t pauseBlinkCounter = 0;
+        pauseBlinkCounter++;
+        if ((pauseBlinkCounter / 8) % 2 == 0) {
+            OLED_PrintString(42, 2, "PAUSED", &font8x6, OLED_COLOR_NORMAL);
+        } else {
+            OLED_PrintString(40, 2, "> PAUSED <", &font8x6, OLED_COLOR_NORMAL);
+        }
+        
+        // ===== 左侧数据面板 =====
+        OLED_DrawLine(8, 12, 8, 55, OLED_COLOR_NORMAL);  // 左侧竖线
+        
+        // 获取玩家数据
+        LeadingRole *player = (LeadingRole *)g_entityManager.getPlayerRole();
+        if (player != nullptr) {
+            RoleData* data = player->getData();
+            char infoStr[32];
+            
+            // HP条可视化 + 等级
+            uint8_t hpBarLen = (data->healthData.currentHealth * 40) / data->healthData.maxHealth;
+            OLED_DrawRectangle(12, 12, 42, 7, OLED_COLOR_NORMAL);
+            OLED_DrawFilledRectangle(13, 13, hpBarLen, 5, OLED_COLOR_NORMAL);
+            sprintf(infoStr, "Lv.%d", data->level);
+            OLED_PrintString(58, 13, infoStr, &font8x6, OLED_COLOR_NORMAL);
+            
+            // HP数值
+            sprintf(infoStr, "HP:%d/%d", data->healthData.currentHealth, data->healthData.maxHealth);
+            OLED_PrintString(12, 21, infoStr, &font8x6, OLED_COLOR_NORMAL);
+            
+            // 攻击数据
+            sprintf(infoStr, "ATK:%d SPD:%d", data->attackData.attackPower, data->attackData.shootCooldownSpeed);
+            OLED_PrintString(12, 29, infoStr, &font8x6, OLED_COLOR_NORMAL);
+            
+            // 回血数据
+            sprintf(infoStr, "HEAL:%d/SPD:%d", data->healthData.healValue, data->healthData.healSpeed);
+            OLED_PrintString(12, 37, infoStr, &font8x6, OLED_COLOR_NORMAL);
+            
+            // 热量数据
+            sprintf(infoStr, "HEAT:%d/%d", data->heatData.currentHeat, data->heatData.maxHeat);
+            OLED_PrintString(12, 45, infoStr, &font8x6, OLED_COLOR_NORMAL);
+            
+            // ===== 右侧子弹类型面板 =====
+            OLED_DrawLine(95, 12, 95, 40, OLED_COLOR_NORMAL);  // 右侧竖线
+            OLED_PrintString(100, 13, "ARMS", &font8x6, OLED_COLOR_NORMAL);
+            
+            // 子弹类型图标
+            // 基础子弹 (B) - 始终解锁
+            OLED_DrawFilledRectangle(100, 22, 6, 4, OLED_COLOR_NORMAL);
+            OLED_PrintString(108, 22, "B", &font8x6, OLED_COLOR_NORMAL);
+            
+            // 火球 (F)
+            if (player->bulletTypeOwned.fireBallBulletOwed) {
+                OLED_DrawFilledCircle(103, 32, 3, OLED_COLOR_NORMAL);
+                OLED_PrintString(108, 30, "F", &font8x6, OLED_COLOR_NORMAL);
+            } else {
+                OLED_DrawCircle(103, 32, 3, OLED_COLOR_NORMAL);
+                OLED_PrintString(108, 30, "-", &font8x6, OLED_COLOR_NORMAL);
+            }
+            
+            // 闪电 (L)
+            if (player->bulletTypeOwned.lightningLineBulletOwed) {
+                OLED_DrawLine(100, 38, 103, 42, OLED_COLOR_NORMAL);
+                OLED_DrawLine(103, 42, 106, 38, OLED_COLOR_NORMAL);
+                OLED_PrintString(108, 38, "L", &font8x6, OLED_COLOR_NORMAL);
+            } else {
+                OLED_DrawLine(100, 40, 106, 40, OLED_COLOR_NORMAL);
+                OLED_PrintString(108, 38, "-", &font8x6, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // ===== 底部状态栏 =====
+        OLED_DrawLine(25, 54, 102, 54, OLED_COLOR_NORMAL);
+        
+        // 扫描线动画效果
+        static uint8_t scanLineX = 0;
+        scanLineX = (scanLineX + 2) % 80;
+        OLED_DrawLine(25 + scanLineX, 55, 28 + scanLineX, 55, OLED_COLOR_NORMAL);
+        
+        // 底部提示
+        OLED_PrintString(30, 56, "HOLD TO RESUME", &font8x6, OLED_COLOR_NORMAL);
+    }
+
     // 绘制开场动画 - 增强版
     void drawOpeningCG() {
         if (openingCGTimer >= 2 * controlDelayTime)

@@ -158,12 +158,78 @@ public:
         if (!m_isSelecting) {
             return; // 非选卡状态，无需绘制
         }
-        // 绘制选卡槽UI（简化示例，实际根据UI框架实现）
+        
+        // ===== 科幻风格四角装饰 =====
+        // 左上角 - 科幻HUD边角
+        OLED_DrawLine(0, 0, 20, 0, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 0, 0, 15, OLED_COLOR_NORMAL);
+        OLED_DrawLine(20, 0, 15, 5, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 15, 5, 10, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(2, 2, 3, 3, OLED_COLOR_NORMAL);
+        
+        // 右上角 - 科幻HUD边角
+        OLED_DrawLine(127, 0, 107, 0, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 0, 127, 15, OLED_COLOR_NORMAL);
+        OLED_DrawLine(107, 0, 112, 5, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 15, 122, 10, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(122, 2, 3, 3, OLED_COLOR_NORMAL);
+        
+        // 左下角 - 科幻HUD边角
+        OLED_DrawLine(0, 63, 20, 63, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 63, 0, 48, OLED_COLOR_NORMAL);
+        OLED_DrawLine(20, 63, 15, 58, OLED_COLOR_NORMAL);
+        OLED_DrawLine(0, 48, 5, 53, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(2, 58, 3, 3, OLED_COLOR_NORMAL);
+        
+        // 右下角 - 科幻HUD边角
+        OLED_DrawLine(127, 63, 107, 63, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 63, 127, 48, OLED_COLOR_NORMAL);
+        OLED_DrawLine(107, 63, 112, 58, OLED_COLOR_NORMAL);
+        OLED_DrawLine(127, 48, 122, 53, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(122, 58, 3, 3, OLED_COLOR_NORMAL);
+        
+        // ===== 顶部标题区域 =====
+        OLED_DrawLine(25, 3, 102, 3, OLED_COLOR_NORMAL);
+        OLED_PrintString(32, 5, "SELECT PERK", &font8x6, OLED_COLOR_NORMAL);
+        OLED_DrawLine(25, 14, 102, 14, OLED_COLOR_NORMAL);
+        
+        // 标题两侧装饰三角
+        OLED_DrawTriangle(26, 8, 30, 5, 30, 11, OLED_COLOR_NORMAL);
+        OLED_DrawTriangle(101, 8, 97, 5, 97, 11, OLED_COLOR_NORMAL);
+        
+        // ===== 卡片选项区域 =====
+        uint8_t startY = 18;
+        uint8_t cardHeight = 14;
+        
         for (uint8_t i = 0; i < m_selectionSlots.size(); ++i) {
-            OLED_PrintString(10, 10 + (i * 20), m_selectionSlots[i].name, &font8x6, OLED_COLOR_NORMAL);
+            uint8_t cardY = startY + (i * cardHeight);
+            
+            // 选中状态 - 高亮边框
+            if (i == m_selectedIndex) {
+                // 选中卡片的科幻边框
+                OLED_DrawRectangle(8, cardY, 111, cardHeight - 1, OLED_COLOR_NORMAL);
+                // 左侧选中指示器 - 箭头
+                OLED_DrawFilledTriangle(3, cardY + 2, 3, cardY + cardHeight - 3, 7, cardY + (cardHeight / 2), OLED_COLOR_NORMAL);
+                // 右侧装饰
+                OLED_DrawFilledTriangle(124, cardY + 2, 124, cardY + cardHeight - 3, 120, cardY + (cardHeight / 2), OLED_COLOR_NORMAL);
+            } else {
+                // 非选中卡片 - 简单边线
+                OLED_DrawLine(12, cardY + cardHeight - 2, 115, cardY + cardHeight - 2, OLED_COLOR_NORMAL);
+            }
+            
+            // 卡片名称
+            OLED_PrintString(15, cardY + 3, m_selectionSlots[i].name, &font8x6, OLED_COLOR_NORMAL);
         }
-
-        OLED_DrawCircle(5, 12 + (m_selectedIndex * 20), 2, OLED_COLOR_NORMAL); // 绘制选中指示器
+        
+        // ===== 底部操作提示 =====
+        OLED_DrawLine(25, 60, 102, 60, OLED_COLOR_NORMAL);
+        
+        // 扫描线动画效果（闪烁）
+        static uint8_t scanLinePos = 0;
+        scanLinePos = (scanLinePos + 1) % 20;
+        if (scanLinePos < 10) {
+            OLED_DrawLine(8 + scanLinePos * 5, 17, 8 + scanLinePos * 5 + 3, 17, OLED_COLOR_NORMAL);
+        }
     }
 };
 

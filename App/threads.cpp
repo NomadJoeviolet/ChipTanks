@@ -62,44 +62,7 @@ void oledTaskThread(void *argument) {
             }
             else if(g_progressManager.PauseGame) {
                 // 游戏暂停状态，显示详细玩家属性界面
-                char pauseInfoStr[40];
-                OLED_PrintString(44, 0, "PAUSED", &font8x6, OLED_COLOR_NORMAL);
-                
-                if (pLeadingRole != nullptr) {
-                    RoleData* data = pLeadingRole->getData();
-                    
-                    // 第1行: HP 和 等级
-                    sprintf(pauseInfoStr, "HP:%d/%d Lv.%d", 
-                        data->healthData.currentHealth, 
-                        data->healthData.maxHealth,
-                        data->level);
-                    OLED_PrintString(0, 10, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
-                    
-                    // 第2行: 攻击力 和 攻击速度
-                    sprintf(pauseInfoStr, "ATK:%d SPD:%d", 
-                        data->attackData.attackPower,
-                        data->attackData.shootCooldownSpeed);
-                    OLED_PrintString(0, 20, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
-                    
-                    // 第3行: 回血速度 和 回血量
-                    sprintf(pauseInfoStr, "HEAL:VAL:%d SPD:%d", 
-                        data->healthData.healValue,
-                        data->healthData.healSpeed);
-                    OLED_PrintString(0, 30, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
-                    
-                    // 第4行: 热量上限 和 散热速率
-                    sprintf(pauseInfoStr, "HEAT:%d/%d CD:%d", 
-                        data->heatData.currentHeat,
-                        data->heatData.maxHeat,
-                        data->heatData.heatCoolDownRate);
-                    OLED_PrintString(0, 40, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
-                    
-                    // 第5行: 解锁的子弹类型
-                    sprintf(pauseInfoStr, "BulletType: B%s%s", 
-                        pLeadingRole->bulletTypeOwned.fireBallBulletOwed ? " F" : "",
-                        pLeadingRole->bulletTypeOwned.lightningLineBulletOwed ? " L" : "");
-                    OLED_PrintString(0, 50, pauseInfoStr, &font8x6, OLED_COLOR_NORMAL);
-                }
+                g_progressManager.drawPauseUI();
             }
             else {
                 // 非选卡状态，显示游戏界面
