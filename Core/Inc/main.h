@@ -73,8 +73,6 @@ void Error_Handler(void);
 #define KEY_C3_GPIO_Port GPIOA
 #define KEY_C4_Pin GPIO_PIN_7
 #define KEY_C4_GPIO_Port GPIOA
-#define TEST_LED_Pin GPIO_PIN_5
-#define TEST_LED_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

@@ -111,16 +111,16 @@ void keyScanThread(void *argument) {
                 scanDelayTime = 40; // 非选卡时恢复正常扫描频率
                 pLeadingRole  = (LeadingRole *)g_entityManager.getPlayerRole();
                 if (pLeadingRole != nullptr) {
-                    if (key.m_keyButton[15] == 1) {
+                    if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_LEFT)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::LEFT; // Move left
-                    } else if (key.m_keyButton[11] == 1) {
+                    } else if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_DOWN)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::DOWN; // Move down
-                    } else if (key.m_keyButton[10] == 1) {
+                    } else if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_UP)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::UP; // Move up
-                    } else if (key.m_keyButton[7] == 1) {
+                    } else if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_RIGHT)] == 1) {
                         pLeadingRole->getData()->actionData.currentState = ActionState::MOVING;
                         pLeadingRole->getData()->actionData.moveMode     = MoveMode::RIGHT; // Move right
                     }
@@ -131,15 +131,21 @@ void keyScanThread(void *argument) {
                     (uint8_t)(g_perkCardManager.m_selectedIndex), (uint8_t)(g_perkCardManager.m_selectedSize - 1)
                 );
                 g_perkCardManager.m_selectedIndex = etl::max((int16_t)(g_perkCardManager.m_selectedIndex), (int16_t)0);
-                if (key.m_keyButton[11] == 1)
+                
+                if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_DOWN)] == 1)
                     g_perkCardManager.m_selectedIndex = etl::min(
                         (uint8_t)(g_perkCardManager.m_selectedIndex + 1),
                         (uint8_t)(g_perkCardManager.m_selectedSize - 1)
                     );
-                if (key.m_keyButton[10] == 1)
+                if (key.m_leftKeyButton[static_cast<uint8_t>(LeftKeyState::KEY_UP)] == 1)
                     g_perkCardManager.m_selectedIndex =
                         etl::max((int16_t)((int16_t)g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
-                if (key.m_keyButton[3] == 1) {
+
+                if (key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_RIGHT)] == 1 ||
+                    key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_LEFT)] == 1 ||
+                    //key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_DOWN)] == 1 //||
+                    key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_UP)] == 1
+                ) {
                     g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
                 }
             }

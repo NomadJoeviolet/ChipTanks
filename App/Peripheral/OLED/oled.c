@@ -177,7 +177,9 @@ void OLED_ShowFrame()
   for (uint8_t i = 0; i < OLED_PAGE; i++)
   {
     OLED_SendCmd(0xB0 + i); // 设置页地址
-    OLED_SendCmd(0x00);     // 设置列地址低4位
+    //OLED_SendCmd(0x00);     // 设置列地址低4位
+    //新买的SSD1306需要左移2位设置列地址
+    OLED_SendCmd(0x02);     // 设置列地址低4位
     OLED_SendCmd(0x10);     // 设置列地址高4位
     memcpy(sendBuffer + 1, OLED_GRAM[i], OLED_COLUMN);
     OLED_Send(sendBuffer, OLED_COLUMN + 1);
@@ -192,6 +194,8 @@ void OLED_ShowFrame()
  */
 void OLED_SetPixel(uint8_t x, uint8_t y, OLED_ColorMode color)
 {
+  x = 128-1-x;
+  y=64-1-y;
   if (x >= OLED_COLUMN || y >= OLED_ROW)
     return;
   if (!color)
@@ -218,20 +222,21 @@ void OLED_SetPixel(uint8_t x, uint8_t y, OLED_ColorMode color)
  */
 void OLED_SetByte_Fine(uint8_t page, uint8_t column, uint8_t data, uint8_t start, uint8_t end, OLED_ColorMode color)
 {
-  static uint8_t temp;
-  if (page >= OLED_PAGE || column >= OLED_COLUMN)
-    return;
-  if (color)
-    data = ~data;
+  // static uint8_t temp;
+  // if (page >= OLED_PAGE || column >= OLED_COLUMN)
+  //   return;
+  // if (color)
+  //   data = ~data;
 
-  temp = data | (0xff << (end + 1)) | (0xff >> (8 - start));
-  OLED_GRAM[page][column] &= temp;
-  temp = data & ~(0xff << (end + 1)) & ~(0xff >> (8 - start));
-  OLED_GRAM[page][column] |= temp;
+  // temp = data | (0xff << (end + 1)) | (0xff >> (8 - start));
+  // OLED_GRAM[page][column] &= temp;
+  // temp = data & ~(0xff << (end + 1)) & ~(0xff >> (8 - start));
+  // OLED_GRAM[page][column] |= temp;
+
   // 使用OLED_SetPixel实现
-  // for (uint8_t i = start; i <= end; i++) {
-  //   OLED_SetPixel(column, page * 8 + i, !((data >> i) & 0x01));
-  // }
+  for (uint8_t i = start; i <= end; i++) {
+    OLED_SetPixel(column, page * 8 + i, !((data >> i) & 0x01));
+  }
 }
 
 /**
@@ -264,21 +269,21 @@ void OLED_SetByte(uint8_t page, uint8_t column, uint8_t data, OLED_ColorMode col
  */
 void OLED_SetBits_Fine(uint8_t x, uint8_t y, uint8_t data, uint8_t len, OLED_ColorMode color)
 {
-  uint8_t page = y / 8;
-  uint8_t bit = y % 8;
-  if (bit + len > 8)
-  {
-    OLED_SetByte_Fine(page, x, data << bit, bit, 7, color);
-    OLED_SetByte_Fine(page + 1, x, data >> (8 - bit), 0, len + bit - 1 - 8, color);
-  }
-  else
-  {
-    OLED_SetByte_Fine(page, x, data << bit, bit, bit + len - 1, color);
-  }
-  // 使用OLED_SetPixel实现
-  // for (uint8_t i = 0; i < len; i++) {
-  //   OLED_SetPixel(x, y + i, !((data >> i) & 0x01));
+  // uint8_t page = y / 8;
+  // uint8_t bit = y % 8;
+  // if (bit + len > 8)
+  // {
+  //   OLED_SetByte_Fine(page, x, data << bit, bit, 7, color);
+  //   OLED_SetByte_Fine(page + 1, x, data >> (8 - bit), 0, len + bit - 1 - 8, color);
   // }
+  // else
+  // {
+  //   OLED_SetByte_Fine(page, x, data << bit, bit, bit + len - 1, color);
+  // }
+  // 使用OLED_SetPixel实现
+  for (uint8_t i = 0; i < len; i++) {
+    OLED_SetPixel(x, y + i, !((data >> i) & 0x01));
+  }
 }
 
 /**
@@ -332,14 +337,14 @@ void OLED_SetBlock(uint8_t x, uint8_t y, const uint8_t *data, uint8_t w, uint8_t
     }
   }
   // 使用OLED_SetPixel实现
-  // for (uint8_t i = 0; i < w; i++) {
-  //   for (uint8_t j = 0; j < h; j++) {
-  //     for (uint8_t k = 0; k < 8; k++) {
-  //       if (j * 8 + k >= h) break; // 防止越界(不完整的字节
-  //       OLED_SetPixel(x + i, y + j * 8 + k, !((data[i + j * w] >> k) & 0x01));
-  //     }
-  //   }
-  // }
+  for (uint8_t i = 0; i < w; i++) {
+    for (uint8_t j = 0; j < h; j++) {
+      for (uint8_t k = 0; k < 8; k++) {
+        if (j * 8 + k >= h) break; // 防止越界(不完整的字节
+        OLED_SetPixel(x + i, y + j * 8 + k, !((data[i + j * w] >> k) & 0x01));
+      }
+    }
+  }
 }
 
 // ========================== 图形绘制函数 ==========================
