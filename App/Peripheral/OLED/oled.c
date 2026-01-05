@@ -26,6 +26,8 @@
 #include <math.h>
 #include <stdlib.h>
 
+#include "cmsis_os.h"
+
 // OLED器件地址
 #define OLED_ADDRESS 0x78
 
@@ -66,57 +68,75 @@ void OLED_SendCmd(uint8_t cmd)
 /**
  * @brief 初始化OLED (SSD1306)
  * @note 此函数是移植本驱动时的重要函数 将本驱动库移植到其他驱动芯片时应根据实际情况修改此函数
+ * @note 增强版初始化：解决快速上下电导致显示翻转的问题
  */
 void OLED_Init()
 {
-  OLED_SendCmd(0xAE); /*关闭显示 display off*/
-
-  OLED_SendCmd(0x20);
-  OLED_SendCmd(0x10);
-
-  OLED_SendCmd(0xB0);
-
-  OLED_SendCmd(0xC8);
-
-  OLED_SendCmd(0x00);
-  OLED_SendCmd(0x10);
-
-  OLED_SendCmd(0x40);
-
-  OLED_SendCmd(0x81);
-
-  OLED_SendCmd(0xDF);
-  OLED_SendCmd(0xA1);
-
-  OLED_SendCmd(0xA6);
-  OLED_SendCmd(0xA8);
-
-  OLED_SendCmd(0x3F);
-
-  OLED_SendCmd(0xA4);
-
-  OLED_SendCmd(0xD3);
-  OLED_SendCmd(0x00);
-
-  OLED_SendCmd(0xD5);
-  OLED_SendCmd(0xF0);
-
-  OLED_SendCmd(0xD9);
-  OLED_SendCmd(0x22);
-
-  OLED_SendCmd(0xDA);
-  OLED_SendCmd(0x12);
-
-  OLED_SendCmd(0xDB);
-  OLED_SendCmd(0x20);
-
-  OLED_SendCmd(0x8D);
-  OLED_SendCmd(0x14);
-
+  // ========== 阶段1: 确保SSD1306完全就绪 ==========
+  // 等待电源稳定和内部复位完成（数据手册建议至少100ms）
+  osDelay(900);
+  
+  // ========== 阶段2: 关闭显示，进入配置模式 ==========
+  OLED_SendCmd(0xAE); // 关闭显示 Display OFF
+  
+  // ========== 阶段3: 时钟与基础配置 ==========
+  OLED_SendCmd(0xD5); // 设置显示时钟分频比/振荡器频率
+  OLED_SendCmd(0x80); // 默认值：分频比=1，振荡器频率=8
+  
+  OLED_SendCmd(0xA8); // 设置多路复用率
+  OLED_SendCmd(0x3F); // 64MUX (64行)
+  
+  OLED_SendCmd(0xD3); // 设置显示偏移
+  OLED_SendCmd(0x00); // 无偏移
+  
+  OLED_SendCmd(0x40); // 设置显示起始行 = 0
+  
+  // ========== 阶段4: 显示方向配置（关键！防止翻转） ==========
+  // 先发送默认方向命令，再发送目标方向命令，确保状态确定
+  OLED_SendCmd(0xA0); // 段重映射：先设为默认（column 0 -> SEG0）
+  OLED_SendCmd(0xA1); // 段重映射：再设为翻转（column 127 -> SEG0）
+  
+  OLED_SendCmd(0xC0); // COM扫描方向：先设为默认（COM0 -> COM[N-1]）
+  OLED_SendCmd(0xC8); // COM扫描方向：再设为翻转（COM[N-1] -> COM0）
+  
+  // ========== 阶段5: COM引脚配置 ==========
+  OLED_SendCmd(0xDA); // 设置COM引脚硬件配置
+  OLED_SendCmd(0x12); // 交替COM引脚配置，禁用左右重映射
+  
+  // ========== 阶段6: 对比度与显示模式 ==========
+  OLED_SendCmd(0x81); // 设置对比度
+  OLED_SendCmd(0xCF); // 对比度值（可根据实际调整，0x00-0xFF）
+  
+  OLED_SendCmd(0xA4); // 全屏点亮OFF（显示RAM内容）
+  OLED_SendCmd(0xA6); // 正常显示（非反色）
+  
+  // ========== 阶段7: 寻址模式 ==========
+  OLED_SendCmd(0x20); // 设置内存寻址模式
+  OLED_SendCmd(0x10); // 页寻址模式
+  
+  OLED_SendCmd(0xB0); // 设置页起始地址为第0页
+  OLED_SendCmd(0x00); // 设置列起始地址低4位
+  OLED_SendCmd(0x10); // 设置列起始地址高4位
+  
+  // ========== 阶段8: 预充电与电荷泵 ==========
+  OLED_SendCmd(0xD9); // 设置预充电周期
+  OLED_SendCmd(0xF1); // Phase1=15 DCLK, Phase2=1 DCLK（内部DC-DC）
+  
+  OLED_SendCmd(0xDB); // 设置VCOMH反压级别
+  OLED_SendCmd(0x40); // ~0.77 x VCC
+  
+  OLED_SendCmd(0x8D); // 电荷泵设置
+  OLED_SendCmd(0x14); // 启用电荷泵
+  
+  // ========== 阶段9: 刷新显存并开启显示 ==========
   OLED_NewFrame();
   OLED_ShowFrame();
-
-  OLED_SendCmd(0xAF); /*开启显示 display ON*/
+  
+  // 等待电荷泵稳定
+  // osDelay(10);
+  osDelay(100);
+  
+  OLED_SendCmd(0xAF); // 开启显示 Display ON
 }
 
 /**

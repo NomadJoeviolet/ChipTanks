@@ -28,7 +28,6 @@ Totals: RawLines=6997  NonEmptyLines=6109  CodeLines=4668
 ## 硬件选型
 使用的OLED屏的显示驱动为SSD1306
 主控板为stm32f103c8t6
-使用4 * 4 矩阵键盘
 
 ## 开发工具链
 使用 VSCode+Intellisence+CubeMX+CMake+Ninja+arm-none-eabi+Ozone+Jlink的高自定义开发工具链
@@ -1470,3 +1469,142 @@ delay(controlDelayTime)
 
 **核心作用**：**解耦时间进程和行为**，计时器只管理时间进程，不直接耦合行为；行为在触发点读取状态执行。
 
+
+## Bug 记录与解决方案
+
+### 1. 热量系统临界区死锁
+
+**问题现象**：当玩家热量达到上限后，游戏完全冻结，所有角色停止更新，画面不再刷新。
+
+**问题分析**：
+在 `LeadingRole::shoot()` 函数中，代码在函数开头调用了 `taskENTER_CRITICAL()` 进入 FreeRTOS 临界区，但在热量检查失败的早期 `return` 语句中**没有调用 `taskEXIT_CRITICAL()` 就直接返回**。
+
+```cpp
+// 问题代码
+void LeadingRole::shoot(uint8_t x, uint8_t y, BulletType type) {
+    taskENTER_CRITICAL();  // 进入临界区
+    
+    if(m_pdata->heatData.currentHeat + ... > m_pdata->heatData.maxHeat)
+        return; // BUG! 没有退出临界区就返回  调度器永久锁死
+    ...
+}
+```
+
+当热量超限时，函数直接返回，导致调度器被永久禁用，所有 FreeRTOS 任务都无法运行。
+
+**解决方案**：
+为所有早期返回点添加 `taskEXIT_CRITICAL()` 调用：
+
+```cpp
+// 修复后
+if(m_pdata->heatData.currentHeat + ... > m_pdata->heatData.maxHeat) {
+    taskEXIT_CRITICAL();  // 先退出临界区
+    return;
+}
+```
+
+---
+
+### 2. 热量冷却无符号下溢
+
+**问题现象**：玩家热量值会莫名其妙突然变得非常大（如从10点突然变成240多点）。
+
+**问题分析**：
+在 `IRole::update()` 的热量冷却逻辑中，条件检查与实际减少量不匹配：
+
+```cpp
+// 问题代码
+if (m_pdata->heatData.currentHeat <= m_pdata->heatData.heatCoolDownRate)  // 检查 4
+    m_pdata->heatData.currentHeat = 0;
+else
+    m_pdata->heatData.currentHeat -= m_pdata->heatData.heatCoolDownRate * 5; // 减 20
+```
+
+当 `currentHeat` 在 5~19 之间时：
+- 条件 `<= 4` 不满足，进入 else 分支
+- 执行 `currentHeat -= 20`，由于 `currentHeat` 是 `uint8_t`（无符号），发生下溢
+- 例如：`10 - 20 = -10`  无符号表示为 `246`
+
+**解决方案**：
+统一条件检查与减少量：
+
+```cpp
+// 修复后
+uint8_t coolAmount = m_pdata->heatData.heatCoolDownRate * 5;
+if (m_pdata->heatData.currentHeat <= coolAmount)
+    m_pdata->heatData.currentHeat = 0;
+else
+    m_pdata->heatData.currentHeat -= coolAmount;
+```
+
+---
+
+### 3. 快速上下电导致OLED显示翻转
+
+**问题现象**：使用独立电源快速上下电时，OLED 屏幕显示内容发生翻转，有时是180度全屏翻转，有时是部分内容翻转。
+
+**问题分析**：
+
+根据 SSD1306 数据手册，显示方向由两个关键命令控制：
+- `0xA0`/`0xA1`：段重映射（Segment Re-map），控制水平方向
+- `0xC0`/`0xC8`：COM 输出扫描方向，控制垂直方向
+
+快速上下电时出现翻转的原因：
+
+1. **SSD1306 内部状态不确定**：快速上下电时，SSD1306 的内部寄存器可能没有完全复位到默认值，保留了上次的配置状态
+2. **初始化等待时间不足**：原代码只等待 30ms，不足以让电源和 SSD1306 内部电路稳定
+3. **I2C 通信可能失败**：上电瞬间 I2C 总线可能不稳定，部分初始化命令丢失
+4. **方向配置命令未重复确认**：若单次发送方向命令时恰好传输失败，就会导致显示翻转
+
+**解决方案**：
+
+**1. 增强 `OLED_Init()` 初始化序列**：
+
+```c
+void OLED_Init()
+{
+  // 阶段1: 确保SSD1306完全就绪
+  osDelay(100);  // 等待电源稳定和内部复位完成
+  
+  OLED_SendCmd(0xAE); // 关闭显示
+  
+  // ... 其他配置 ...
+  
+  // 阶段4: 显示方向配置（关键！防止翻转）
+  // 先发送默认方向命令，再发送目标方向命令，确保状态确定
+  OLED_SendCmd(0xA0); // 段重映射：先设为默认
+  OLED_SendCmd(0xA1); // 段重映射：再设为翻转
+  
+  OLED_SendCmd(0xC0); // COM扫描方向：先设为默认
+  OLED_SendCmd(0xC8); // COM扫描方向：再设为翻转
+  
+  // ... 其他配置 ...
+  
+  osDelay(10);      // 等待电荷泵稳定
+  OLED_SendCmd(0xAF); // 开启显示
+}
+```
+
+**2. 调整线程初始化延时**：
+
+```cpp
+void oledTaskThread(void *argument) {
+    osDelay(50); // 增加等待时间（加上OLED_Init内部的100ms，共约150ms）
+    OLED_Init();
+    // ...
+}
+```
+
+**改进要点总结**：
+
+| 改进项 | 说明 |
+|--------|------|
+| 增加初始化前延时 | 等待 100ms 让电源和 SSD1306 内部复位完成 |
+| 双重方向配置 | 先发默认方向命令，再发目标方向命令，确保状态确定 |
+| 规范化命令顺序 | 按 SSD1306 手册推荐顺序重新组织初始化命令 |
+| 增加电荷泵稳定延时 | 开启显示前等待 10ms |
+
+**硬件层面补充措施**（若软件修复后问题仍存在）：
+1. 在 OLED 模块的 RES 引脚接 GPIO，初始化时先拉低 10ms 再拉高进行硬复位
+2. 在 OLED 电源入口增加 100μF 电解电容 + 100nF 陶瓷电容进行滤波
+3. 确保 I2C 的 SDA/SCL 有合适的上拉电阻（通常 4.7kΩ）

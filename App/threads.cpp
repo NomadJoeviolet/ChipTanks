@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 void oledTaskThread(void *argument) {
-    osDelay(30); // OLED 初始化需要等待一段时间后
+    osDelay(50); // OLED 初始化需要等待电源稳定（OLED_Init内部还会再等100ms）
     OLED_Init(); // 初始化OLED
 
     for (;;) {
@@ -225,6 +225,7 @@ void keyScanThread(void *argument) {
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 void gameControlThread(void *argument) {
     //初始是Game Over状态
