@@ -52,6 +52,11 @@ public:
     }
 
     bool triggerPerkSelection() {
+        if( g_entityManager.isGameOver || !isInited || g_entityManager.getPlayerRole()->getData()->deathData.isDead ) {
+            return false; // 游戏结束状态拒绝触发
+        }
+
+
         if (m_isSelecting || m_cardWarehouse.empty()) {
             return false; // 已在选卡中或无卡片可选，拒绝触发
         }

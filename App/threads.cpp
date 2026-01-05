@@ -167,7 +167,7 @@ void keyScanThread(void *argument) {
                     }
                     
                 }
-            } else {
+            } else {// 处于选卡状态，响应选卡按键
                 scanDelayTime                     = 100; // 选卡时降低扫描频率，节省资源
                 g_perkCardManager.m_selectedIndex = etl::min(
                     (uint8_t)(g_perkCardManager.m_selectedIndex), (uint8_t)(g_perkCardManager.m_selectedSize - 1)

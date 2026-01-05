@@ -297,6 +297,8 @@ void LeadingRole::drawRole() {
 }
 
 void LeadingRole::levelUp() {
+    if(m_pdata->deathData.isDead)
+        return ;
     if( m_pdata->level >= 10 ) {
         return; // 已经达到最高等级
     }
