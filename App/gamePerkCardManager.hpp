@@ -29,18 +29,22 @@ private:
     etl::vector<PerkCard, SELECTION_SLOT_COUNT> m_selectionSlots; // 选卡槽（临时存3张待选）
 
 public:
-    bool    isInited        = false; // 是否已初始化
-    bool    m_isSelecting   = false; // 选卡状态（标记是否处于“选卡中”，避免重复触发）
-    uint8_t m_selectedIndex = 0;     // 选中卡片索引（选卡槽内索引）
-    uint8_t m_selectedSize  = 0;     // 选中卡片数量（选卡槽内数量）
+    bool    isInited           = false; // 是否已初始化
+    bool    m_isSelecting      = false; // 选卡状态（标记是否处于"选卡中"，避免重复触发）
+    uint8_t m_selectedIndex    = 0;     // 选中卡片索引（选卡槽内索引）
+    uint8_t m_selectedSize     = 0;     // 选中卡片数量（选卡槽内数量）
+    uint8_t m_pendingSelections = 0;    // 待处理的选卡次数（解决多事件同时触发时跳过问题）
+    uint16_t m_selectionCooldown = 0;   // 选卡冷却计时器（避免连续选卡）
 
 public:
     // 初始化卡片仓库
     void initWarehouse() {
         m_cardWarehouse.clear();
         m_selectionSlots.clear();
-        m_isSelecting = false;
-        isInited      = true;
+        m_isSelecting       = false;
+        m_pendingSelections = 0;
+        m_selectionCooldown = 0;
+        isInited            = true;
 
         // 遍历配置表，按数量创建卡片并加入仓库
         for (const auto &config : PERK_CARD_CONFIGS) {
@@ -56,9 +60,14 @@ public:
             return false; // 游戏结束状态拒绝触发
         }
 
+        if (m_cardWarehouse.empty()) {
+            return false; // 无卡片可选，拒绝触发
+        }
 
-        if (m_isSelecting || m_cardWarehouse.empty()) {
-            return false; // 已在选卡中或无卡片可选，拒绝触发
+        // 如果当前已在选卡中，累加待选次数，等当前选卡完成后再触发
+        if (m_isSelecting) {
+            m_pendingSelections++;
+            return true; // 已记录待选，返回成功
         }
 
         m_selectionSlots.clear();
@@ -166,7 +175,31 @@ public:
         returnUnselectedCards();
 
         m_isSelecting = false;
+        m_selectionCooldown = 200; // 设置200ms冷却，避免连续选卡
+
+        // 检查是否有待处理的选卡次数，如果有则立即触发下一次选卡
+        if (m_pendingSelections > 0) {
+            m_pendingSelections--;
+            triggerPerkSelection(); // 递归触发下一次选卡
+        }
+
         return true;
+    }
+
+    // 更新选卡冷却计时器（需要在游戏主循环中调用）
+    void updateCooldown(uint16_t deltaTime) {
+        if (m_selectionCooldown > 0) {
+            if (m_selectionCooldown > deltaTime) {
+                m_selectionCooldown -= deltaTime;
+            } else {
+                m_selectionCooldown = 0;
+            }
+        }
+    }
+
+    // 检查是否在冷却中
+    bool isInCooldown() const {
+        return m_selectionCooldown > 0;
     }
 
     // 辅助接口：未选中的卡片回库

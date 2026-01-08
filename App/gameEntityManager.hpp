@@ -296,6 +296,7 @@ public:
                 if(rolePtr->getData()->identity == RoleIdentity::Player) {
                     LeadingRole* playerRole = (LeadingRole*)rolePtr;
                     playerRole->levelUp(); //检查升级
+                    playerRole->updateWingmans();
                 }
             }
         }
@@ -401,7 +402,7 @@ private:
     /********************************************************************/
     void gainDropExperiencePoints(uint16_t points) {
         LeadingRole* playerRole = (LeadingRole*)getPlayerRole();
-        if (playerRole != nullptr && playerRole->getData()->level < 10) {
+        if (playerRole != nullptr && playerRole->getData()->level < 15) {
             playerRole->experiencePoints += points;
         }
     }

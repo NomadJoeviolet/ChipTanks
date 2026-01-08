@@ -49,7 +49,7 @@ public:
     uint16_t              experiencePoints      = 0;
     
     //满级为 15 级
-    uint16_t experienceToLevelUp[16] = {0, 40 , 100 , 125 , 180 , 220 , 265 , 320 ,  380 , 500 , 550 , 570 , 590 , 6000 , 600 , 999}; // 每级所需经验值
+    uint16_t experienceToLevelUp[16] = {0, 40 , 100 , 125 , 180 , 220 , 265 , 320 ,  330 , 340 , 345 , 350 , 355 , 360 , 360 , 999}; // 每级所需经验值
 
     // ===== 僚机系统 =====
     bool phoenixWingmanOwned = false;   // 是否拥有凤凰僚机

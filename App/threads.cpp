@@ -65,6 +65,8 @@ void oledTaskThread(void *argument) {
 
             else if (g_perkCardManager.m_isSelecting && g_perkCardManager.isInited) {
                 // 处于选卡状态，显示选卡界面
+                // 更新选卡冷却计时器
+                g_perkCardManager.updateCooldown(controlDelayTime * 2);
                 g_perkCardManager.drawSelectionUI();
             }
             else if(g_progressManager.PauseGame) {
@@ -194,12 +196,25 @@ void keyScanThread(void *argument) {
                     g_perkCardManager.m_selectedIndex =
                         etl::max((int16_t)((int16_t)g_perkCardManager.m_selectedIndex - 1), (int16_t)0);
 
-                if (key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_RIGHT)] == 1 ||
+                // 长按确认选卡（0.07秒），冷却期间不响应
+                static uint16_t selectConfirmTimer = 0;
+                bool confirmKeyPressed = (
+                    key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_RIGHT)] == 1 ||
                     key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_LEFT)] == 1 ||
-                    //key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_DOWN)] == 1 //||
                     key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_UP)] == 1
-                ) {
-                    g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
+                );
+                
+                // 冷却期间不响应确认键，只重置计时器
+                if (g_perkCardManager.isInCooldown()) {
+                    selectConfirmTimer = 0;
+                } else if (confirmKeyPressed) {
+                    selectConfirmTimer += scanDelayTime;
+                    if (selectConfirmTimer >= 70) { // 长按0.07秒确认
+                        g_perkCardManager.selectCard(g_perkCardManager.m_selectedIndex);
+                        selectConfirmTimer = 0; // 重置计时器
+                    }
+                } else {
+                    selectConfirmTimer = 0; // 松开按键重置计时器
                 }
             }
         }
@@ -375,11 +390,7 @@ void gameControlThread(void *argument) {
                 g_entityManager.cleanupInvalidRoles();
                 g_entityManager.cleanupInvalidBullets();
                 
-                // 更新玩家僚机系统
-                LeadingRole* player = (LeadingRole*)g_entityManager.getPlayerRole();
-                if (player != nullptr ) {
-                    player->updateWingmans();
-                }
+                
             }
         }
 

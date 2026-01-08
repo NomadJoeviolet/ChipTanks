@@ -556,7 +556,7 @@ public:
                 
                 // 2个古雕 - 右侧
                 for (int i = 0; i < 2; ++i) {
-                    IRole *enemyGudiao = new GudiaoEnemy(142, i * 45 + 10, 105, i * 35 + 10, currentChapter, 45 + rand() % 12);
+                    IRole *enemyGudiao = new GudiaoEnemy(142, i * 35 + 10, 105, i * 35 + 10, currentChapter, 45 + rand() % 12);
                     g_entityManager.addRole(enemyGudiao);
                 }
             }
