@@ -1,4 +1,4 @@
-#include "enemyRole.hpp"
+ï»¿#include "enemyRole.hpp"
 #include "bullet.hpp"
 
 #include "etl/algorithm.h"
@@ -10,69 +10,68 @@
 
 extern GameEntityManager g_entityManager;
 
-//ÊýÖµ¹æ·¶
-//»ù´¡ÑªÁ¿: 30£¨µÍÑªÁ¿£©£¬100£¨ÖÐÑªÁ¿£©£¬200£¨¸ßÑªÁ¿£©
-//»ù´¡¹¥»÷Á¦: 1-5 £¨µÍ¹¥»÷£©£¬5-15£¨ÖÐ¹¥»÷£©£¬15+£¨¸ß¹¥»÷£©
-//»ù´¡ÒÆ¶¯ËÙ¶È: 1£¨µÍËÙ£©£¬2£¨ÖÐËÙ£©£¬3£¨¸ßËÙ£©
+//ï¿½ï¿½Öµï¿½æ·¶
+//ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½: 30ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½100ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: 1-5 ï¿½ï¿½ï¿½Í¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½5-15ï¿½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½15+ï¿½ï¿½ï¿½ß¹ï¿½ï¿½ï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½Ù¶ï¿½: 1ï¿½ï¿½ï¿½ï¿½ï¿½Ù£ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½Ù£ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½Ù£ï¿½
 
-//controlDelayTime ÓÉ threads.cpp ¿ØÖÆÏß³Ì¶¨Òå
+//controlDelayTime ï¿½ï¿½ threads.cpp ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì¶ï¿½ï¿½ï¿½
 //controlDelayTime = 10
-//Éè¼ÆÀäÈ´ºÍÈÈÁ¿»úÖÆ²é¿´role.cpp
-//Éä»÷ÀäÈ´Ê±¼ä=resetTime/ (Speed) ms
-//ÈÈÁ¿ÀäÈ´ËÙÂÊ= heatCoolDownRate Ã¿´ÎÀäÈ´Ê±¼ä¼ä¸ôÓÉ200ms
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ²é¿´role.cpp
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½=resetTime/ (Speed) ms
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½ï¿½ï¿½ï¿½= heatCoolDownRate Ã¿ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200ms
 
-//ÆÕÍ¨×Óµ¯ÈÈÁ¿ÏûºÄ±¶ÂÊ 1
-//»ðÇòµ¯ÈÈÁ¿ÏûºÄ±¶ÂÊ 2
-//ÉÁµçÁ´µ¯ÈÈÁ¿ÏûºÄ±¶ÂÊ 1.5
+//ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ 1
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ 2
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ 1.5
 
-//role.cppÖÐµÄcreateBullet¾ö¶¨·¢Éä×Óµ¯µÄÊýÖµºÍ»úÖÆ
-//ÆÕÍ¨×Óµ¯»÷ÖÐµÐÈËºóÔì³ÉÉËº¦£¬ attackPower µãÉËº¦
-//»ðÇòµ¯»÷ÖÐµÐÈËºó¶Ô»÷ÖÐµÄµÐÈËÔì³ÉÒ»´ÎÉËº¦£¬²¢ÔÚÒ»¶¨·¶Î§ÄÚÔì³É·¶Î§ÉËº¦£¨»÷ÖÐµÄµÐÈËÒ²»áÊÜµ½·¶Î§ÉËº¦£©
-//Á½´ÎÉËº¦¾ùÎª attackPower +10 µãÉËº¦
+//role.cppï¿½Ðµï¿½createBulletï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½Í»ï¿½ï¿½ï¿½
+//ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ attackPower ï¿½ï¿½ï¿½Ëºï¿½
+//ï¿½ï¿½ï¿½òµ¯»ï¿½ï¿½Ðµï¿½ï¿½Ëºï¿½ï¿½Ô»ï¿½ï¿½ÐµÄµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½ï¿½É·ï¿½Î§ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄµï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½Î§ï¿½Ëºï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½Îª attackPower +10 ï¿½ï¿½ï¿½Ëºï¿½
 
-//ÉÁµçÁ´µ¯Ò»ÊøÌõµÄ·¶Î§´©Í¸ÉËº¦£¬multiplier*attackPower+30 µãÉËº¦
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½Î§ï¿½ï¿½Í¸ï¿½Ëºï¿½ï¿½ï¿½multiplier*attackPower+30 ï¿½ï¿½ï¿½Ëºï¿½
 
 /*******************************************************************/
 /**
  * @brief FeilianEnemy class
- * @note  ÖÐÎÄ£º·ÉÁ® £ü Ó¢ÎÄ£ºFeilian,Éñ»°µä¹Ê£ºÖÐ¹ú¹Å´úÉñ»°ÖÐµÄ·çÉñ£¬ÐÎÈçÂ¹¡¢Í·Éú½Ç¡¢ÓÐÒí£¬ÐÐ×ßÈç·É£¬¸ºÔðÕÆ¹Ü°ËÃæÀ´·ç¡£
- * @note  ¸ßËÙÒÆ¶¯µÄÐ¡ÐÍµÐÈË£¬ÌåÐÍÐ¡ÇÉ£¨12x12 ÏñËØ£©£¬ÒÆ¶¯¹ì¼£Æ®ºö£¨ºôÓ¦ ¡°·ç¡± µÄÌØÐÔ£©£¬µ¥´Î¹¥»÷ÉËº¦µÍ£¬µ«³ÉÈº³öÏÖÊ±Ñ¹ÆÈ¸ÐÇ¿¡£
- * @note  Ö»»á·¢ÉäÆÕÍ¨×Óµ¯£¬µ«ÐÐ¶¯·½Ê½Æ®ºö²»¶¨¡£
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Feilian,ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½Ð¹ï¿½ï¿½Å´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â¹ï¿½ï¿½Í·ï¿½ï¿½ï¿½Ç¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¹Ü°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ç¡£
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ð¡ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½É£ï¿½12x12 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ì¼£Æ®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ ï¿½ï¿½ï¿½ç¡± ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¹ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½Èºï¿½ï¿½ï¿½ï¿½Ê±Ñ¹ï¿½È¸ï¿½Ç¿ï¿½ï¿½
+ * @note  Ö»ï¿½á·¢ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ï¿½Ê½Æ®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 
-//ÊýÖµÉè¶¨²Î¿¼
-//ÑªÁ¿£º30 + level * 1
-//¹¥»÷Á¦£º1 + level * 1
-//ÒÆ¶¯ËÙ¶È£º3£¨¸ßËÙ£©
-//Éä»÷ÀäÈ´Ê±¼ä£º4000/5 ms
-//ÈÈÁ¿»úÖÆ£ºÃ¿´ÎÉä»÷Ôö¼Ó20µãÈÈÁ¿£¬×î´óÈÈÁ¿100µã£¬ÀäÈ´ËÙÂÊ10µã/200ms
+//ï¿½ï¿½Öµï¿½è¶¨ï¿½Î¿ï¿½
+//Ñªï¿½ï¿½ï¿½ï¿½30 + level * 1
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1 + level * 1
+//ï¿½Æ¶ï¿½ï¿½Ù¶È£ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½Ù£ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£º4000/5 ms
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½20ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½100ï¿½ã£¬ï¿½ï¿½È´ï¿½ï¿½ï¿½ï¿½10ï¿½ï¿½/200ms
 
 FeilianEnemy::FeilianEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &feilianImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->healthData.currentHealth = 10 + level * 20;
     m_pdata->healthData.maxHealth     = 10 + level * 20;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 0;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 15000;
     m_pdata->healthData.healSpeed       = 0;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
     m_pdata->spatialData.canCrossBorder            = false;
     m_pdata->spatialData.currentPosX               = startX; // Starting X position
     m_pdata->spatialData.currentPosY               = startY; // Starting Y position
@@ -83,29 +82,27 @@ FeilianEnemy::FeilianEnemy(
     m_pdata->spatialData.moveSpeed                 = 3; // Set movement speed
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
+
     m_pdata->attackData.attackPower            = 2 + level * 1;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 4000;
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 0; //Ö»¶Ô»ðÇòµ¯ÉúÐ§
+    m_pdata->attackData.bulletRange            = 0; 
     m_pdata->attackData.bulletDamageMultiplier = 1.5f;
 
     m_pdata->attackData.collisionPower = 4 + level * 1;
 
-    //ÈÈÁ¿ÐÅÏ¢
+
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 20;
-    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿´ÎÀäÈ´10µãÈÈÁ¿£¬Ã¿´ÎÀäÈ´Ê±¼ä¼ä¸ôÓÉ200ms
+    m_pdata->heatData.heatCoolDownRate = 10; 
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
     m_pdata->deathData.deathTimer           = feilianEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
@@ -121,8 +118,8 @@ void FeilianEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::BASIC:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
             if (newBullet != nullptr) {
@@ -139,8 +136,8 @@ void FeilianEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::FIRE_BALL:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                            
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; 
 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
             if (newBullet != nullptr) {
@@ -157,8 +154,8 @@ void FeilianEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::LIGHTNING_LINE:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
             if (newBullet != nullptr) {
@@ -174,18 +171,18 @@ void FeilianEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     }
 }
 
-//updateÖÐÊµÏÖ
+//updateï¿½ï¿½Êµï¿½ï¿½
 void FeilianEnemy::init() {
     m_pdata->initData.init_count += controlDelayTime;
     // Initialize enemy role specifics
 
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 30) { // Ã¿30msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 30) { // Ã¿30msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX -= 1;
             m_pdata->initData.init_count = 0;
         }
     } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 30) { // Ã¿30msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 30) { // Ã¿30msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX += 1;
             m_pdata->initData.init_count = 0;
         }
@@ -200,7 +197,7 @@ void FeilianEnemy::init() {
 void FeilianEnemy::think() {
     // Implement enemy AI logic
     think_count += controlDelayTime;
-    if (think_count < 100) // Ã¿100ms¾ö¶¨Ò»´ÎÐÐ¶¯
+    if (think_count < 100) // Ã¿100msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½
         return;
 
     think_count = 0;
@@ -208,7 +205,7 @@ void FeilianEnemy::think() {
     uint8_t randomAction = rand() % 6;
     // Random action: 0 - move left, 1 - move right, 2 - move down, 3 - move up, 4 - stay still, 5 - shoot
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        //ÒÆ¶¯
+        //ï¿½Æ¶ï¿½
         if (randomAction == 0) {
             m_pdata->actionData.moveMode     = MoveMode::LEFT;
             m_pdata->actionData.currentState = ActionState::MOVING;
@@ -227,7 +224,7 @@ void FeilianEnemy::think() {
             m_pdata->actionData.currentState = ActionState::MOVING;
         }
 
-        //Éä»÷
+        //ï¿½ï¿½ï¿½ï¿½
         else if (randomAction == 5) {
             m_pdata->actionData.attackMode   = AttackMode::MODE_1;
             m_pdata->actionData.currentState = ActionState::ATTACKING;
@@ -294,11 +291,11 @@ void FeilianEnemy::drawRole() {
 
     if (m_pdata->deathData.isDead) {
         // Draw death animation or effect
-        // »æÖÆËÀÍö¶¯»­£¨ÀýÈçÒ»¸ö¼òµ¥µÄÔ²È¦±íÊ¾ÏûÊ§Ð§¹û£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½òµ¥µï¿½Ô²È¦ï¿½ï¿½Ê¾ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-        uint8_t radius  = (feilianEnemyDeadTime - m_pdata->deathData.deathTimer) / 100; // ´Ó0Ôö³¤µ½×î´óÖµ5
-        radius          = etl::max(radius, uint8_t(1));                                 // ×îÐ¡°ë¾¶ÏÞÖÆ
+        uint8_t radius  = (feilianEnemyDeadTime - m_pdata->deathData.deathTimer) / 100; // ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ5
+        radius          = etl::max(radius, uint8_t(1));                                 // ï¿½ï¿½Ð¡ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½
 
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
     }
@@ -318,36 +315,36 @@ void FeilianEnemy::die() {
 /*******************************************************************/
 /**
  * @brief GudiaoEnemy class
- * @note  ÖÐÎÄ£º¹Æµñ £ü Ó¢ÎÄ£ºGudiao,Éñ»°µä¹Ê£ºÉ½º£¾­ÖÐ´óÐÍÃÍÇÝÐ×ÊÞ£¬ÒÔ¿ÞÉùÓÕ²¶ÈËÀà£¬ÉÃ³¤·ÉÐÐ²¶ÁÔ£¬ÊÇÉ½ÖÐÊ³ÈË¶ñÊÞµÄ´ú±í¡£
- * @note  ÖÐËÙ·ÉÐÐµÄÖÐÐÍµÐÈË£¬ÌåÐÍ¾ÓÖÐ£¨15x15 ÏñËØ£©£¬¹¥»÷Á¦½Ï¸ß£¬ÊÊºÏ·ü»÷Íæ¼Ò¡£
- * @note  ¹¥»÷·½Ê½Îª·¢Éä¸ßÉËº¦ÆÕÍ¨×Óµ¯£¬Ã¿´Î´ÓÉíÌåÁ½²à·¢Éä¡£
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½Æµï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Gudiao,ï¿½ñ»°µï¿½ï¿½Ê£ï¿½É½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ£ï¿½ï¿½Ô¿ï¿½ï¿½ï¿½ï¿½Õ²ï¿½ï¿½ï¿½ï¿½à£¬ï¿½Ã³ï¿½ï¿½ï¿½ï¿½Ð²ï¿½ï¿½Ô£ï¿½ï¿½ï¿½É½ï¿½ï¿½Ê³ï¿½Ë¶ï¿½ï¿½ÞµÄ´ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½Ù·ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½Í¾ï¿½ï¿½Ð£ï¿½15x15 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ß£ï¿½ï¿½ÊºÏ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¡ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½Ã¿ï¿½Î´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à·¢ï¿½ä¡£
  */
 GudiaoEnemy::GudiaoEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &GudiaoImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->healthData.currentHealth = 60 + level * 100;
     m_pdata->healthData.maxHealth     = 60 + level * 100;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 5;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 15000;
     m_pdata->healthData.healSpeed       = 5;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = false;
     m_pdata->spatialData.currentPosX               = startX; // Starting X position
     m_pdata->spatialData.currentPosY               = startY; // Starting Y position
@@ -358,29 +355,29 @@ GudiaoEnemy::GudiaoEnemy(
     m_pdata->spatialData.moveSpeed                 = 1; // Set movement speed
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->attackData.attackPower            = 8 + level * 2;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 16000; //32000 ms
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 10; //Ö»¶Ô»ðÇòµ¯ÉúÐ§
+    m_pdata->attackData.bulletRange            = 10; //Ö»ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
     m_pdata->attackData.bulletDamageMultiplier = 1.5f;
 
     m_pdata->attackData.collisionPower = 4 + level * 1;
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 150;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 20;
-    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿´ÎÀäÈ´10µãÈÈÁ¿£¬Ã¿´ÎÀäÈ´Ê±¼ä¼ä¸ôÓÉ200ms
+    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿ï¿½ï¿½ï¿½ï¿½È´10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200ms
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = gudiaoEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
@@ -395,8 +392,8 @@ void GudiaoEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::BASIC:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
             if (newBullet != nullptr) {
@@ -413,8 +410,8 @@ void GudiaoEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::FIRE_BALL:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
             if (newBullet != nullptr) {
@@ -431,8 +428,8 @@ void GudiaoEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::LIGHTNING_LINE:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
             if (newBullet != nullptr) {
@@ -451,7 +448,7 @@ void GudiaoEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
 void GudiaoEnemy::init() {
     m_pdata->initData.init_count += controlDelayTime;
     // Initialize enemy role specifics
-    if (m_pdata->initData.init_count < 30) { // Ã¿30msÒÆ¶¯Ò»´Î
+    if (m_pdata->initData.init_count < 30) { // Ã¿30msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
         return;
     }
     m_pdata->initData.init_count = 0;
@@ -471,7 +468,7 @@ void GudiaoEnemy::init() {
 void GudiaoEnemy::think() {
     // Implement enemy AI logic
     think_count += controlDelayTime;
-    if (think_count < 200) // Ã¿200ms¾ö¶¨Ò»´ÎÐÐ¶¯
+    if (think_count < 200) // Ã¿200msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½
         return;
 
     think_count = 0;
@@ -479,7 +476,7 @@ void GudiaoEnemy::think() {
     uint8_t randomAction = rand() % 6;
     // Random action: 0 - move left, 1 - move right, 2 - move down, 3 - move up, 4 - stay still, 5 - shoot
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        //ÒÆ¶¯
+        //ï¿½Æ¶ï¿½
         if (randomAction == 0) {
             m_pdata->actionData.moveMode     = MoveMode::LEFT;
             m_pdata->actionData.currentState = ActionState::MOVING;
@@ -498,13 +495,13 @@ void GudiaoEnemy::think() {
             m_pdata->actionData.currentState = ActionState::MOVING;
         }
 
-        //Éä»÷
+        //ï¿½ï¿½ï¿½ï¿½
         else if (randomAction == 5) {
             if (m_pdata->attackData.shootCooldownTimer <= 0) {
                 m_pdata->actionData.attackMode   = AttackMode::MODE_1;
                 m_pdata->actionData.currentState = ActionState::ATTACKING;
             } else {
-                // Èç¹ûÔÚÀäÈ´ÖÐ£¬Ôò²»½øÐÐ¹¥»÷£¬±£³Ö¿ÕÏÐ×´Ì¬
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½ò²»½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿ï¿½ï¿½ï¿½×´Ì¬
                 m_pdata->actionData.moveMode     = MoveMode::NONE;
                 m_pdata->actionData.currentState = ActionState::IDLE;
             }
@@ -548,7 +545,7 @@ void GudiaoEnemy::doAction() {
         break;
     case ActionState::ATTACKING:
 
-        //¼ì²éÀäÈ´Ê±¼ä
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½
         if (m_pdata->attackData.shootCooldownTimer > 0) break;
 
         uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
@@ -561,7 +558,7 @@ void GudiaoEnemy::doAction() {
         switch (m_pdata->actionData.attackMode) {
         case AttackMode::MODE_1:
             shoot(m_x_1, m_y_1, BulletType::BASIC);
-            m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢ÉäµÚ¶þ·¢×Óµ¯
+            m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Óµï¿½
             shoot(m_x_2, m_y_2, BulletType::BASIC);
             break;
         default:
@@ -582,11 +579,11 @@ void GudiaoEnemy::drawRole() {
 
     if (m_pdata->deathData.isDead) {
         // Draw death animation or effect
-        // »æÖÆËÀÍö¶¯»­£¨ÀýÈçÒ»¸ö¼òµ¥µÄÔ²È¦±íÊ¾ÏûÊ§Ð§¹û£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½òµ¥µï¿½Ô²È¦ï¿½ï¿½Ê¾ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-        uint8_t radius  = (gudiaoEnemyDeadTime - m_pdata->deathData.deathTimer) / 100; // ´Ó0Ôö³¤µ½×î´óÖµ5
-        radius          = etl::max(radius, uint8_t(1));                                // ×îÐ¡°ë¾¶ÏÞÖÆ
+        uint8_t radius  = (gudiaoEnemyDeadTime - m_pdata->deathData.deathTimer) / 100; // ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ5
+        radius          = etl::max(radius, uint8_t(1));                                // ï¿½ï¿½Ð¡ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½
 
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
     }
@@ -600,7 +597,7 @@ void GudiaoEnemy::die() {
         return;
     }
 
-    //ÍöÓï£º·¢ÉäÒ»¸ö»ðÇòµ¯
+    //ï¿½ï¿½ï¿½ï£ºï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     IBullet *newBullet = createBullet(
         m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2,
         m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2, BulletType::FIRE_BALL
@@ -618,36 +615,36 @@ void GudiaoEnemy::die() {
 /*******************************************************************/
 /**
  * @brief ChiMeiEnemy class
- * @note  ÖÐÎÄ£º÷Î÷È £ü Ó¢ÎÄ£ºChiMei,Éñ»°µä¹Ê£º´«ËµÖÐÏ¢ÓÚÉ½ÁÖ¼äµÄÑý¹Ö£¬ÉÆÓÚÃÔ»óÈËÐÄ£¬ÒýÓÕÃÔÂ·µÄÂÃÈËÉîÈëÉ½ÁÖ£¬×îÖÕ½«ÆäÍÌÊÉ¡£
- * @note  ¸ßËÙÒÆ¶¯µÄÐ¡ÐÍµÐÈË£¬ÌåÐÍ¼«Ð¡£¨8x8 ÏñËØ£©£¬×ÔÉ±Ê½³å×²¡£
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½ChiMei,ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½ï¿½Ëµï¿½ï¿½Ï¢ï¿½ï¿½É½ï¿½Ö¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½Õ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¡ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ð¡ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½Í¼ï¿½Ð¡ï¿½ï¿½8x8 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½É±Ê½ï¿½ï¿½×²ï¿½ï¿½
  */
 
 ChiMeiEnemy::ChiMeiEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &ChiMeiImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->healthData.currentHealth = 1 + level * 1;
     m_pdata->healthData.maxHealth     = 1 + level * 1;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 0;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 15000;
     m_pdata->healthData.healSpeed       = 0;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = false;
     m_pdata->spatialData.currentPosX               = startX; // Starting X position
     m_pdata->spatialData.currentPosY               = startY; // Starting Y position
@@ -658,29 +655,29 @@ ChiMeiEnemy::ChiMeiEnemy(
     m_pdata->spatialData.moveSpeed                 = 3; // Set movement speed
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->attackData.attackPower            = 1 + level * 1;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 4000;
     m_pdata->attackData.bulletSpeed            = 2;
 
-    m_pdata->attackData.bulletRange            = 0;    //Ö»¶Ô»ðÇòµ¯ÉúÐ§
-    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»¶ÔÉÁµçÁ´µ¯ÉúÐ§
+    m_pdata->attackData.bulletRange            = 0;    //Ö»ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
 
     m_pdata->attackData.collisionPower = 20;
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 20;
-    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿´ÎÀäÈ´10µãÈÈÁ¿£¬Ã¿´ÎÀäÈ´Ê±¼ä¼ä¸ôÓÉ200ms
+    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿ï¿½ï¿½ï¿½ï¿½È´10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200ms
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = chimeiEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
@@ -695,8 +692,8 @@ void ChiMeiEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::BASIC:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
             if (newBullet != nullptr) {
@@ -713,8 +710,8 @@ void ChiMeiEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::FIRE_BALL:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
             if (newBullet != nullptr) {
@@ -731,8 +728,8 @@ void ChiMeiEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::LIGHTNING_LINE:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
             if (newBullet != nullptr) {
@@ -753,12 +750,12 @@ void ChiMeiEnemy::init() {
     // Initialize enemy role specifics
 
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 30) { // Ã¿30msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 30) { // Ã¿30msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX -= 1;
             m_pdata->initData.init_count = 0;
         }
     } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 30) { // Ã¿30msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 30) { // Ã¿30msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX += 1;
             m_pdata->initData.init_count = 0;
         }
@@ -773,14 +770,14 @@ void ChiMeiEnemy::init() {
 void ChiMeiEnemy::think() {
     // Implement enemy AI logic
     think_count += controlDelayTime;
-    if (think_count < 150) // Ã¿150ms¾ö¶¨Ò»´ÎÐÐ¶¯
+    if (think_count < 150) // Ã¿150msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½
         return;
 
     think_count = 0;
 
-    //÷Î÷ÈÖ»»áÏò×óÒÆ¶¯
+    //ï¿½ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        //ÒÆ¶¯
+        //ï¿½Æ¶ï¿½
         m_pdata->actionData.moveMode     = MoveMode::LEFT;
         m_pdata->actionData.currentState = ActionState::MOVING;
     }
@@ -791,7 +788,7 @@ void ChiMeiEnemy::doAction() {
         return;
     }
 
-    //÷Î÷ÈµÄÌØÊâ±ß½çËÀÍö¼ì²é
+    //ï¿½ï¿½ï¿½Èµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (m_pdata->spatialData.currentPosX <= boundary_deadzone) {
         m_pdata->deathData.isDead = true;
     }
@@ -850,11 +847,11 @@ void ChiMeiEnemy::drawRole() {
 
     if (m_pdata->deathData.isDead) {
         // Draw death animation or effect
-        // »æÖÆËÀÍö¶¯»­£¨ÀýÈçÒ»¸ö¼òµ¥µÄÔ²È¦±íÊ¾ÏûÊ§Ð§¹û£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½òµ¥µï¿½Ô²È¦ï¿½ï¿½Ê¾ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-        uint8_t radius  = (chimeiEnemyDeadTime - m_pdata->deathData.deathTimer) / 100; // ´Ó0Ôö³¤µ½×î´óÖµ5
-        radius          = etl::max(radius, uint8_t(1));                                // ×îÐ¡°ë¾¶ÏÞÖÆ
+        uint8_t radius  = (chimeiEnemyDeadTime - m_pdata->deathData.deathTimer) / 100; // ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ5
+        radius          = etl::max(radius, uint8_t(1));                                // ï¿½ï¿½Ð¡ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½
 
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
     }
@@ -874,54 +871,54 @@ void ChiMeiEnemy::die() {
 
 /*******************************************************************/
 /**
- * @brief BoEnemy class - ²µ ¾«Ó¢µÐÈË
- * @note  ÖÐÎÄ£º²µ £ü Ó¢ÎÄ£ºBo
- * @note  Éñ»°µä¹Ê£º¡¶É½º£¾­¡¤Î÷É½¾­¡·¼ÇÔØ£º"ÖÐÇúÖ®É½£¬ÓÐÊÞÑÉ£¬Æä×´ÈçÂí¶ø°×ÉíºÚÎ²£¬Ò»½Ç£¬»¢ÑÀ×¦£¬
- *                ÒôÈç¹ÄÒô£¬ÆäÃûÔ»²µ£¬ÊÇÊ³»¢±ª£¬¿ÉÒÔÓù±ø¡£"
- * @note  ²µÊÇÒ»ÖÖÂíÐÎÉñÊÞ£¬°×ÉíºÚÎ²£¬Í·Éú¶À½Ç£¬ÓÐ»¢ÑÀ»¢×¦£¬½ÐÉùÈç¹Ä£¬ÄÜ²¶Ê³»¢±ª£¬Åå´÷¿ÉÓùµ¶±ø¡£
+ * @brief BoEnemy class - ï¿½ï¿½ ï¿½ï¿½Ó¢ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Bo
+ * @note  ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½ï¿½É½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½"ï¿½ï¿½ï¿½ï¿½Ö®É½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½×´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½Ò»ï¿½Ç£ï¿½ï¿½ï¿½ï¿½ï¿½×¦ï¿½ï¿½
+ *                ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
+ * @note  ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½Ç£ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½×¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½Ü²ï¿½Ê³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  * 
- * @note  ¾«Ó¢¼¶ÖÐÐÍµÐÈË£¬ÌåÐÍÖÐµÈ£¨24x24 ÏñËØ£©£¬ÖÐµÈÑªÁ¿£¬½Ï¸ß¹¥»÷Á¦£¬ÖÐËÙÒÆ¶¯¡£
- * @note  »áÓëÆÕÍ¨µÐÈËÒ»Í¬³öÏÖ£¬¹¥»÷·½Ê½Ö±½ÓÐ×ÃÍ£¬ÎÞË²ÒÆ¼¼ÄÜ¡£
+ * @note  ï¿½ï¿½Ó¢ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÐµÈ£ï¿½24x24 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½Ðµï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ß¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Ò»Í¬ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½Ö±ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½Ë²ï¿½Æ¼ï¿½ï¿½Ü¡ï¿½
  * 
- * @note  === ¹¥»÷·½Ê½ ===
- * @note  MODE_1: ³å·æ¼ùÌ¤ - ÏòÍæ¼Ò·½Ïò¿ìËÙÖ±Ïß³å·æ£¬Ôì³ÉÅö×²ÉËº¦
- *               ³å·æ¾àÀë ChargeDistance=40£¬³å·æ³ÖÐøÊ±¼ä ChargeTime=800ms
- * @note  MODE_2: »¢ÑÀÀû×¦ - ºôÓ¦"»¢ÑÀ×¦"£¬·¢Éä3·¢³ÊÉÈÐÎµÄÆÕÍ¨×Óµ¯
- *               ³ÖÐøÊ±¼ä ClawAttackTime=200ms
- * @note  MODE_3: ¹ÄÒôÕðµ´ - ºôÓ¦"ÒôÈç¹ÄÒô"£¬·¢ÉäÒ»ÅÅºáÏò³å»÷²¨×Óµ¯
- *               ³ÖÐøÊ±¼ä DrumSoundTime=300ms
+ * @note  === ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ ===
+ * @note  MODE_1: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¤ - ï¿½ï¿½ï¿½ï¿½ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ß³ï¿½ï¿½æ£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½Ëºï¿½
+ *               ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ChargeDistance=40ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ChargeTime=800ms
+ * @note  MODE_2: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¦ - ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½×¦"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ClawAttackTime=200ms
+ * @note  MODE_3: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Åºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ DrumSoundTime=300ms
  */
 
-//ÊýÖµÉè¶¨²Î¿¼£¨¾«Ó¢¼¶£¬±ÈÆÕÍ¨µÐÈËÇ¿£¬±ÈBOSSÈõ£©
-//ÑªÁ¿£º80 + level * 80£¨ÖÐµÈÑªÁ¿£©
-//¹¥»÷Á¦£º6 + level * 2£¨½Ï¸ß¹¥»÷Á¦£©
-//ÒÆ¶¯ËÙ¶È£º2£¨ÖÐËÙÒÆ¶¯£©
-//Åö×²ÉËº¦£º10 + level * 3£¨½Ï¸ßÅö×²ÉËº¦£©
+//ï¿½ï¿½Öµï¿½è¶¨ï¿½Î¿ï¿½ï¿½ï¿½ï¿½ï¿½Ó¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½BOSSï¿½ï¿½ï¿½ï¿½
+//Ñªï¿½ï¿½ï¿½ï¿½80 + level * 80ï¿½ï¿½ï¿½Ðµï¿½Ñªï¿½ï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½6 + level * 2ï¿½ï¿½ï¿½Ï¸ß¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//ï¿½Æ¶ï¿½ï¿½Ù¶È£ï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½
+//ï¿½ï¿½×²ï¿½Ëºï¿½ï¿½ï¿½10 + level * 3ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½×²ï¿½Ëºï¿½ï¿½ï¿½
 
 BoEnemy::BoEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp)
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢£¨ÐèÒªÔÚfont.cÖÐÌí¼ÓBoImg£©
+    //Í¼Æ¬ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½font.cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BoImgï¿½ï¿½
     m_pdata->img = &BoImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->healthData.currentHealth = 100 + level * 140;
     m_pdata->healthData.maxHealth     = 100 + level * 140;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 2;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 10000;
     m_pdata->healthData.healSpeed       = 2;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = false;
     m_pdata->spatialData.currentPosX               = startX;
     m_pdata->spatialData.currentPosY               = startY;
@@ -929,37 +926,37 @@ BoEnemy::BoEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initP
     m_pdata->spatialData.refPosY                   = startY;
     m_pdata->spatialData.sizeX                     = m_pdata->img->w;
     m_pdata->spatialData.sizeY                     = m_pdata->img->h;
-    m_pdata->spatialData.moveSpeed                 = 2; // ÖÐËÙÒÆ¶¯
+    m_pdata->spatialData.moveSpeed                 = 2; // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->attackData.attackPower            = 6 + level * 2;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 8000; // 8000/5=1600msÀäÈ´
+    m_pdata->attackData.shootCooldownResetTime = 8000; // 8000/5=1600msï¿½ï¿½È´
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 8; // »ðÇòµ¯·¶Î§
+    m_pdata->attackData.bulletRange            = 8; // ï¿½ï¿½ï¿½òµ¯·ï¿½Î§
     m_pdata->attackData.bulletDamageMultiplier = 1.5f;
 
-    m_pdata->attackData.collisionPower = 10 + level * 3; // ½Ï¸ßÅö×²ÉËº¦
+    m_pdata->attackData.collisionPower = 10 + level * 3; // ï¿½Ï¸ï¿½ï¿½ï¿½×²ï¿½Ëºï¿½
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 120;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 15;
     m_pdata->heatData.heatCoolDownRate = 10;
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = boEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
 
-    // ³õÊ¼»¯¹¥»÷Ä£Ê½×´Ì¬±äÁ¿
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½×´Ì¬ï¿½ï¿½ï¿½ï¿½
     chargeStarted    = false;
     chargeDirectionX = 0;
     chargeDirectionY = 0;
@@ -1018,14 +1015,14 @@ void BoEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
 void BoEnemy::init() {
     m_pdata->initData.init_count += controlDelayTime;
 
-    // ´ÓÓÒ²àÈë³¡£¬ÒÆ¶¯µ½³õÊ¼Î»ÖÃ
+    // ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ë³¡ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 20) { // Ã¿20msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 20) { // Ã¿20msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX -= 1;
             m_pdata->initData.init_count = 0;
         }
     } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 20) { // Ã¿20msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 20) { // Ã¿20msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX += 1;
             m_pdata->initData.init_count = 0;
         }
@@ -1040,20 +1037,20 @@ void BoEnemy::init() {
 
 void BoEnemy::think() {
     think_count += controlDelayTime;
-    if (think_count < 150) // Ã¿150msË¼¿¼Ò»´Î
+    if (think_count < 150) // Ã¿150msË¼ï¿½ï¿½Ò»ï¿½ï¿½
         return;
 
     think_count = 0;
 
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        // »ñÈ¡Íæ¼ÒÎ»ÖÃÓÃÓÚ¾ö²ß
+        // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½Ú¾ï¿½ï¿½ï¿½
         IRole *player = g_entityManager.getPlayerRole();
-        (void)player; // ±ÜÃâÎ´Ê¹ÓÃ¾¯¸æ
+        (void)player; // ï¿½ï¿½ï¿½ï¿½Î´Ê¹ï¿½Ã¾ï¿½ï¿½ï¿½
 
         uint8_t randomAction = rand() % 10;
 
         if (randomAction < 3) {
-            // 30% ¸ÅÂÊÒÆ¶¯
+            // 30% ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
             uint8_t moveDir                  = rand() % 4;
             m_pdata->actionData.currentState = ActionState::MOVING;
             switch (moveDir) {
@@ -1071,17 +1068,17 @@ void BoEnemy::think() {
                 break;
             }
         } else if (randomAction < 5) {
-            // 20% ¸ÅÂÊ´ý»ú
+            // 20% ï¿½ï¿½ï¿½Ê´ï¿½ï¿½ï¿½
             m_pdata->actionData.currentState = ActionState::IDLE;
         } else {
-            // 50% ¸ÅÂÊ¹¥»÷
+            // 50% ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             uint8_t attackChoice = rand() % 6;
             switch (attackChoice) {
             case 0:
             case 1:
-                // MODE_1: ³å·æ¼ùÌ¤ (Ô¼33%)
+                // MODE_1: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¤ (Ô¼33%)
                 action_timer                   = ChargeTime;
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
@@ -1090,7 +1087,7 @@ void BoEnemy::think() {
                 break;
             case 2:
             case 3:
-                // MODE_2: »¢ÑÀÀû×¦ (Ô¼33%)
+                // MODE_2: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¦ (Ô¼33%)
                 action_timer                   = ClawAttackTime;
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
@@ -1098,7 +1095,7 @@ void BoEnemy::think() {
                 break;
             case 4:
             case 5:
-                // MODE_3: ¹ÄÒôÕðµ´ (Ô¼33%)
+                // MODE_3: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (Ô¼33%)
                 action_timer                   = DrumSoundTime;
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
@@ -1144,16 +1141,16 @@ void BoEnemy::doAction() {
         break;
 
     case ActionState::ATTACKING:
-        // ¸üÐÂ¼ÆÊýÆ÷
+        // ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
         action_count += controlDelayTime;
 
-        // ¶¯×÷µ¹¼ÆÊ±
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
         if (action_timer >= controlDelayTime)
             action_timer -= controlDelayTime;
         else
             action_timer = 0;
 
-        // Ö´ÐÐ¶ÔÓ¦¹¥»÷¼¼ÄÜ
+        // Ö´ï¿½Ð¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         switch (m_pdata->actionData.attackMode) {
         case AttackMode::MODE_1:
             chargeTowardsPlayer();
@@ -1168,14 +1165,14 @@ void BoEnemy::doAction() {
             break;
         }
 
-        // ¶¯×÷½áÊø
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (action_timer == 0) {
             m_pdata->actionData.currentState       = ActionState::IDLE;
             m_pdata->actionData.attackMode         = AttackMode::NONE;
             action_count                           = 0;
             m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
 
-            // ÖØÖÃ×´Ì¬±äÁ¿
+            // ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
             chargeStarted = false;
         }
         break;
@@ -1188,11 +1185,11 @@ void BoEnemy::drawRole() {
             m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
         );
 
-        // MODE_1³å·æÊ±»æÖÆ³å·æÌØÐ§£¨ÍÏÎ²ÏßÌõ£©
+        // MODE_1ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (m_pdata->actionData.attackMode == AttackMode::MODE_1 && chargeStarted) {
             uint8_t tailX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX;
             uint8_t tailY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-            // ÔÚÉíºó»æÖÆ¶ÌÏß±íÊ¾³å·æÍÏÎ²
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ß±ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²
             OLED_DrawLine(
                 tailX - chargeDirectionX * 0, tailY - chargeDirectionY * 0, tailX - chargeDirectionX * 8,
                 tailY - chargeDirectionY * 4, OLED_COLOR_NORMAL
@@ -1200,14 +1197,14 @@ void BoEnemy::drawRole() {
         }
     }
 
-    // ËÀÍö¶¯»­
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (m_pdata->deathData.isDead) {
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
         uint8_t radius  = (boEnemyDeadTime - m_pdata->deathData.deathTimer) * 15 / boEnemyDeadTime;
         radius          = etl::max(radius, uint8_t(1));
 
-        // ²µËÀÍöÐ§¹û£ºÀ©É¢Ô²»·
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¢Ô²ï¿½ï¿½
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
     }
 }
@@ -1221,16 +1218,16 @@ void BoEnemy::die() {
     m_pdata->isActive = false;
 }
 
-//=========================== ¹¥»÷¼¼ÄÜÊµÏÖ ===========================
+//=========================== ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ ===========================
 
 /**
- * @brief MODE_1: ³å·æ¼ùÌ¤
- * @note  ÏòÍæ¼Ò·½Ïò¿ìËÙÖ±Ïß³å·æ£¬ºôÓ¦ÂíÐÎÉñÊÞµÄÌØÐÔ
- *        ³å·æ¹ý³ÌÖÐÔì³É¸ßÅö×²ÉËº¦
+ * @brief MODE_1: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¤
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ß³ï¿½ï¿½æ£¬ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þµï¿½ï¿½ï¿½ï¿½ï¿½
+ *        ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¸ï¿½ï¿½ï¿½×²ï¿½Ëºï¿½
  */
 void BoEnemy::chargeTowardsPlayer() {
-    // ³å·æ¿ªÊ¼Ê±¼ÆËã·½Ïò
-    static int16_t safe_dis = 40; // °²È«¾àÀë£¬±ÜÃâ¹ý½ü
+    // ï¿½ï¿½ï¿½æ¿ªÊ¼Ê±ï¿½ï¿½ï¿½ã·½ï¿½ï¿½
+    static int16_t safe_dis = 40; // ï¿½ï¿½È«ï¿½ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (!chargeStarted) {
         chargeStarted = true;
 
@@ -1246,8 +1243,8 @@ void BoEnemy::chargeTowardsPlayer() {
             int16_t deltaX = playerX - myX;
             int16_t deltaY = playerY - myY;
 
-            // ¼ÆËã³å·æ·½Ïò£¨ÏòÍæ¼Ò·½Ïò£©
-            chargeDirectionX = (deltaX > 0) ? 1 : -1; // deltaX > 0 ±íÊ¾Íæ¼ÒÔÚÓÒ±ß£¬ÏòÓÒ³å·æ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ·½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½
+            chargeDirectionX = (deltaX > 0) ? 1 : -1; // deltaX > 0 ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò±ß£ï¿½ï¿½ï¿½ï¿½Ò³ï¿½ï¿½ï¿½
             chargeDirectionY = 0;
             if (deltaY < -5)
                 chargeDirectionY = -1;
@@ -1262,56 +1259,56 @@ void BoEnemy::chargeTowardsPlayer() {
             }
 
         } else {
-            // ÎÞÍæ¼ÒÊ±Ïò×ó³å·æ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             chargeDirectionX = -1;
             chargeDirectionY = 0;
         }
     }
 
-    // Ã¿20msÒÆ¶¯Ò»´Î£¨¿ìËÙ³å·æ£©
+    // Ã¿20msï¿½Æ¶ï¿½Ò»ï¿½Î£ï¿½ï¿½ï¿½ï¿½Ù³ï¿½ï¿½æ£©
     if (action_count >= 30) {
         action_count = 0;
-        // ³å·æÒÆ¶¯£¨ËÙ¶È·­±¶£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½Ù¶È·ï¿½ï¿½ï¿½ï¿½ï¿½
         move(chargeDirectionX * 2, chargeDirectionY, true);
     }
 }
 
 /**
- * @brief MODE_2: »¢ÑÀÀû×¦
- * @note  ·¢Éä3·¢³ÊÉÈÐÎµÄÆÕÍ¨×Óµ¯£¬ºôÓ¦"»¢ÑÀ×¦"
- *        Ò»´ÎÐÔ·¢Éä£¬¸²¸Ç½Ï´ó·¶Î§
+ * @brief MODE_2: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¦
+ * @note  ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½×¦"
+ *        Ò»ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ä£¬ï¿½ï¿½ï¿½Ç½Ï´ï¿½ï¿½ï¿½Î§
  */
 void BoEnemy::tigerClawAttack() {
-    // Ö»ÔÚ¼¼ÄÜ¿ªÊ¼Ê±·¢ÉäÒ»´Î
+    // Ö»ï¿½Ú¼ï¿½ï¿½Ü¿ï¿½Ê¼Ê±ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
     if (action_count < 50) return;
-    if (action_timer < action_MaxTime - 100) return; // Ö»ÔÚ¿ªÊ¼100msÄÚ´¥·¢
+    if (action_timer < action_MaxTime - 100) return; // Ö»ï¿½Ú¿ï¿½Ê¼100msï¿½Ú´ï¿½ï¿½ï¿½
 
     uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    // ·¢Éä3·¢ÉÈÐÎ×Óµ¯£¨ÖÐ¼ä¡¢ÉÏÆ«¡¢ÏÂÆ«£©
+    // ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½Ð¼ä¡¢ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
     m_pdata->attackData.shootCooldownTimer = 0;
-    shoot(centerX, centerY, BulletType::BASIC); // ÖÐ¼ä
+    shoot(centerX, centerY, BulletType::BASIC); // ï¿½Ð¼ï¿½
     m_pdata->attackData.shootCooldownTimer = 0;
-    shoot(centerX, centerY - 3, BulletType::BASIC); // ÉÏÆ«
+    shoot(centerX, centerY - 3, BulletType::BASIC); // ï¿½ï¿½Æ«
     m_pdata->attackData.shootCooldownTimer = 0;
-    shoot(centerX, centerY + 3, BulletType::BASIC); // ÏÂÆ«
+    shoot(centerX, centerY + 3, BulletType::BASIC); // ï¿½ï¿½Æ«
 }
 
 /**
- * @brief MODE_3: ¹ÄÒôÕðµ´
- * @note  ·¢ÉäÒ»ÅÅºáÏò³å»÷²¨×Óµ¯£¬ºôÓ¦"ÒôÈç¹ÄÒô"
- *        ¸²¸Ç½Ï¿íµÄYÖá·¶Î§
+ * @brief MODE_3: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Åºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
+ *        ï¿½ï¿½ï¿½Ç½Ï¿ï¿½ï¿½ï¿½Yï¿½á·¶Î§
  */
 void BoEnemy::drumSoundWave() {
-    // Ö»ÔÚ¼¼ÄÜ¿ªÊ¼Ê±·¢ÉäÒ»´Î
+    // Ö»ï¿½Ú¼ï¿½ï¿½Ü¿ï¿½Ê¼Ê±ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
     if (action_count < 50) return;
-    if (action_timer < action_MaxTime - 150) return; // Ö»ÔÚ¿ªÊ¼150msÄÚ´¥·¢
+    if (action_timer < action_MaxTime - 150) return; // Ö»ï¿½Ú¿ï¿½Ê¼150msï¿½Ú´ï¿½ï¿½ï¿½
 
     uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    // ·¢ÉäÒ»ÅÅ5·¢×Óµ¯£¨ºáÏò³å»÷²¨£©
+    // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½5ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     for (int8_t offset = -10; offset <= 10; offset += 5) {
         m_pdata->attackData.shootCooldownTimer = 0;
         shoot(centerX, centerY + offset, BulletType::BASIC);
@@ -1320,13 +1317,13 @@ void BoEnemy::drumSoundWave() {
 
 /*******************************************************************/
 /**
- * @brief ShengyuEnemy class - Ê¤Óö ¾«Ó¢µÐÈË£¨Ë®µ¯¸ÉÈÅÐÍ£©
- * @note  ÖÐÎÄ£ºÊ¤Óö £ü Ó¢ÎÄ£ºShengyu
- * @note  Éñ»°µä¹Ê£º³àÉ«Ò°¼¦×´Ð×ÊÞ£¬½ÐÉù¶ÀÌØ£¬³öÏÖ¼´Òý·¢ºéË®ÔÖ¶ò¡£
- * @note  ºËÐÄÄÜÁ¦Óë"Ë®"°ó¶¨£¬¼æ¾ßÃÔ»óÐÔÓë·¶Î§Ñ¹ÖÆÁ¦¡£
- * @note  Ë®ÎíÃÖÂþ£ºÉú³É¶à¸öÃÔÎíÇøÓòÕÚµ²ÊÓÏß
- * @note  ºé²¨ÍÆÓ¿£ºÍùÇ°ÍÆ³ö³¤ÌõÃÔÎí£¬´Ó·¢ÉäÎ»ÖÃÒÀ´ÎÏûÉ¢
- * @note  ³àÓðÀ×Ãù£º·¢ÉäÒ»·¢À×µç×Óµ¯
+ * @brief ShengyuEnemy class - Ê¤ï¿½ï¿½ ï¿½ï¿½Ó¢ï¿½ï¿½ï¿½Ë£ï¿½Ë®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½Ê¤ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Shengyu
+ * @note  ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½ï¿½É«Ò°ï¿½ï¿½×´ï¿½ï¿½ï¿½Þ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë®ï¿½Ö¶ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"Ë®"ï¿½ó¶¨£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ë·¶Î§Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  Ë®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½é²¨ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Æ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó·ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¢
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½×µï¿½ï¿½Óµï¿½
  */
 /*******************************************************************/
 
@@ -1334,28 +1331,28 @@ ShengyuEnemy::ShengyuEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢£¨ÐèÒªÔÚfont.cÖÐÌí¼ÓShengyuImg£©
+    //Í¼Æ¬ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½font.cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ShengyuImgï¿½ï¿½
     m_pdata->img = &ShengyuImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢: 50 + level * 50£¨½ÏµÍÑªÁ¿£¬Æ«´àÆ¤£©
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢: 50 + level * 50ï¿½ï¿½ï¿½Ïµï¿½Ñªï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½Æ¤ï¿½ï¿½
     m_pdata->healthData.currentHealth = 50 + level * 150;
     m_pdata->healthData.maxHealth     = 50 + level * 150;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 1;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 12000;
     m_pdata->healthData.healSpeed       = 2;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = false;
     m_pdata->spatialData.currentPosX               = startX;
     m_pdata->spatialData.currentPosY               = startY;
@@ -1363,38 +1360,38 @@ ShengyuEnemy::ShengyuEnemy(
     m_pdata->spatialData.refPosY                   = startY;
     m_pdata->spatialData.sizeX                     = m_pdata->img->w;
     m_pdata->spatialData.sizeY                     = m_pdata->img->h;
-    m_pdata->spatialData.moveSpeed                 = 2; // ÖÐËÙÒÆ¶¯
+    m_pdata->spatialData.moveSpeed                 = 2; // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢: 4 + level * 1£¨½ÏµÍ¹¥»÷Á¦£¬Ö÷Òª¿¿¸ÉÈÅ£©
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢: 4 + level * 1ï¿½ï¿½ï¿½ÏµÍ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½
     m_pdata->attackData.attackPower            = 4 + level * 2;
     m_pdata->attackData.shootCooldownSpeed     = 4;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000/4=1500msÀäÈ´
+    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000/4=1500msï¿½ï¿½È´
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 6;    // »ðÇòµ¯·¶Î§
-    m_pdata->attackData.bulletDamageMultiplier = 1.5f; // ÉÁµçÁ´µ¯ÉËº¦±¶ÂÊ
+    m_pdata->attackData.bulletRange            = 6;    // ï¿½ï¿½ï¿½òµ¯·ï¿½Î§
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
 
-    //Åö×²ÉËº¦: 6 + level * 2£¨½ÏµÍÅö×²ÉËº¦£©
+    //ï¿½ï¿½×²ï¿½Ëºï¿½: 6 + level * 2ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½×²ï¿½Ëºï¿½ï¿½ï¿½
     m_pdata->attackData.collisionPower = 6 + level * 2;
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 80;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 10;
     m_pdata->heatData.heatCoolDownRate = 12;
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = shengyuEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
 
-    // ³õÊ¼»¯¹¥»÷Ä£Ê½×´Ì¬±äÁ¿
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½×´Ì¬ï¿½ï¿½ï¿½ï¿½
     mistGenerated        = false;
     floodWaveLaunched    = false;
     floodWaveCurrentLen  = 0;
@@ -1458,7 +1455,7 @@ void ShengyuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
 void ShengyuEnemy::init() {
     m_pdata->initData.init_count += controlDelayTime;
 
-    // ´ÓÓÒ²àÈë³¡£¬ÒÆ¶¯µ½³õÊ¼Î»ÖÃ
+    // ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ë³¡ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
         if (m_pdata->initData.init_count >= 25) {
             m_pdata->spatialData.currentPosX -= 1;
@@ -1480,14 +1477,14 @@ void ShengyuEnemy::init() {
 
 void ShengyuEnemy::think() {
     think_count += controlDelayTime;
-    if (think_count < 350) return;  // 350msË¼¿¼¼ä¸ô£¨¸ÉÈÅÐÍµÐÈË½Ú×à½ÏÂý£©
+    if (think_count < 350) return;  // 350msË¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ë½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
     think_count = 0;
 
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
         uint8_t randomAction = rand() % 10;
 
-        if (randomAction < 4) {  // 40%¸ÅÂÊÒÆ¶¯
+        if (randomAction < 4) {  // 40%ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
             uint8_t moveDir                  = rand() % 4;
             m_pdata->actionData.currentState = ActionState::MOVING;
             switch (moveDir) {
@@ -1504,26 +1501,26 @@ void ShengyuEnemy::think() {
                 m_pdata->actionData.moveMode = MoveMode::DOWN;
                 break;
             }
-        } else if (randomAction < 6) {  // 20%¸ÅÂÊ´ý»ú
+        } else if (randomAction < 6) {  // 20%ï¿½ï¿½ï¿½Ê´ï¿½ï¿½ï¿½
             m_pdata->actionData.currentState = ActionState::IDLE;
-        } else {  // 40%¸ÅÂÊ¹¥»÷
+        } else {  // 40%ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             uint8_t attackChoice = rand() % 10;
-            if (attackChoice < 4) {  // 40%¸ÅÂÊ MODE_1
+            if (attackChoice < 4) {  // 40%ï¿½ï¿½ï¿½ï¿½ MODE_1
                 action_timer                   = MistCloudTime;
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 mistGenerated                  = false;
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
-            } else if (attackChoice < 7) {  // 30%¸ÅÂÊ MODE_2
+            } else if (attackChoice < 7) {  // 30%ï¿½ï¿½ï¿½ï¿½ MODE_2
                 action_timer                   = FloodWaveTime;
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 floodWaveLaunched              = false;
                 floodWaveCurrentLen            = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_2;
-            } else {  // 30%¸ÅÂÊ MODE_3
+            } else {  // 30%ï¿½ï¿½ï¿½ï¿½ MODE_3
                 action_timer                   = RedThunderTime;
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
@@ -1584,14 +1581,14 @@ void ShengyuEnemy::doAction() {
             break;
         }
 
-        // ¶¯×÷½áÊø
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (action_timer == 0) {
             m_pdata->actionData.currentState       = ActionState::IDLE;
             m_pdata->actionData.attackMode         = AttackMode::NONE;
             action_count                           = 0;
             m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
 
-            // ÖØÖÃ×´Ì¬±äÁ¿
+            // ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
             mistGenerated        = false;
             floodWaveLaunched    = false;
             floodWaveCurrentLen  = 0;
@@ -1609,39 +1606,39 @@ void ShengyuEnemy::drawRole() {
             m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
         );
 
-        // MODE_1 »æÖÆÃÔÎíÇøÓò£¨½üÊµÐÄ20x20¿é + ¶¯Ì¬×°ÊÎ£©
+        // MODE_1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò£¨½ï¿½Êµï¿½ï¿½20x20ï¿½ï¿½ + ï¿½ï¿½Ì¬×°ï¿½Î£ï¿½
         if (m_pdata->actionData.attackMode == AttackMode::MODE_1 && mistGenerated) {
-            uint8_t flickerPhase = (action_count / 120) % 3; // ÉÁË¸ÏàÎ»£¬3µµÇÐ»»
+            uint8_t flickerPhase = (action_count / 120) % 3; // ï¿½ï¿½Ë¸ï¿½ï¿½Î»ï¿½ï¿½3ï¿½ï¿½ï¿½Ð»ï¿½
             
             for (uint8_t i = 0; i < MistCloudCount; i++) {
                 uint8_t px = mistPosX[i];
                 uint8_t py = mistPosY[i];
                 
-                // »æÖÆ½üÊµÐÄÌî³ä£¨ÃÜ¼¯ºáÏß£¬Áô1ÏñËØ¼äÏ¶²úÉúÎÆÀí£©
+                // ï¿½ï¿½ï¿½Æ½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ä£¨ï¿½Ü¼ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½1ï¿½ï¿½ï¿½Ø¼ï¿½Ï¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 for (uint8_t dy = 0; dy < MistSize; dy++) {
-                    // ¸ù¾ÝÉÁË¸ÏàÎ»¾ö¶¨ÄÄÐ©ÐÐ»æÖÆ
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¸ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð©ï¿½Ð»ï¿½ï¿½ï¿½
                     if (dy % 3 != flickerPhase) {
                         OLED_DrawLine(px, py + dy, px + MistSize - 1, py + dy, OLED_COLOR_NORMAL);
                     }
                 }
                 
-                // ËÄ½Ç×°ÊÎ£¨¶¯Ì¬ÉÁË¸µÄ½Ç±ê£¬ÊÊÅä20x20£©
+                // ï¿½Ä½ï¿½×°ï¿½Î£ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½Ë¸ï¿½Ä½Ç±ê£¬ï¿½ï¿½ï¿½ï¿½20x20ï¿½ï¿½
                 if (flickerPhase != 0) {
-                    // ×óÉÏ½Ç
+                    // ï¿½ï¿½ï¿½Ï½ï¿½
                     OLED_DrawLine(px, py, px + 3, py, OLED_COLOR_NORMAL);
                     OLED_DrawLine(px, py, px, py + 3, OLED_COLOR_NORMAL);
-                    // ÓÒÉÏ½Ç
+                    // ï¿½ï¿½ï¿½Ï½ï¿½
                     OLED_DrawLine(px + MistSize - 4, py, px + MistSize - 1, py, OLED_COLOR_NORMAL);
                     OLED_DrawLine(px + MistSize - 1, py, px + MistSize - 1, py + 3, OLED_COLOR_NORMAL);
-                    // ×óÏÂ½Ç
+                    // ï¿½ï¿½ï¿½Â½ï¿½
                     OLED_DrawLine(px, py + MistSize - 1, px + 3, py + MistSize - 1, OLED_COLOR_NORMAL);
                     OLED_DrawLine(px, py + MistSize - 4, px, py + MistSize - 1, OLED_COLOR_NORMAL);
-                    // ÓÒÏÂ½Ç
+                    // ï¿½ï¿½ï¿½Â½ï¿½
                     OLED_DrawLine(px + MistSize - 4, py + MistSize - 1, px + MistSize - 1, py + MistSize - 1, OLED_COLOR_NORMAL);
                     OLED_DrawLine(px + MistSize - 1, py + MistSize - 4, px + MistSize - 1, py + MistSize - 1, OLED_COLOR_NORMAL);
                 }
                 
-                // ÖÐÐÄÊ®×ÖÎÆ£¨Ôö¼ÓÃÔÎíÉñÃØ¸Ð£¬ÊÊÅä20x20£©
+                // ï¿½ï¿½ï¿½ï¿½Ê®ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸Ð£ï¿½ï¿½ï¿½ï¿½ï¿½20x20ï¿½ï¿½
                 if (flickerPhase == 1) {
                     uint8_t cx = px + MistSize / 2;
                     uint8_t cy = py + MistSize / 2;
@@ -1651,37 +1648,37 @@ void ShengyuEnemy::drawRole() {
             }
         }
 
-        // MODE_2 »æÖÆºé²¨³¤ÌõÃÔÎí£¨ÏòÇ°ÍÆ½øÕÚµ²Ð§¹û£¬¶à²ã²¨ÎÆÃÀ»¯£©
+        // MODE_2 ï¿½ï¿½ï¿½Æºé²¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½Æ½ï¿½ï¿½Úµï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã²¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (m_pdata->actionData.attackMode == AttackMode::MODE_2 && floodWaveLaunched) {
             if (floodWaveCurrentLen > 0) {
-                // ´ÓÊ¤ÓöÎ»ÖÃÏò×ó£¨Ç°·½£©ÑÓÉì
+                // ï¿½ï¿½Ê¤ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 uint8_t drawEndX = floodWaveEndX;
                 uint8_t drawStartX = (drawEndX > floodWaveCurrentLen) ? (drawEndX - floodWaveCurrentLen) : 0;
-                uint8_t wavePhase = (action_count / 80) % 4; // ²¨ÀËÏàÎ»
+                uint8_t wavePhase = (action_count / 80) % 4; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»
                 
-                // ÉÏ±ß¿ò²¨ÀËÏß
+                // ï¿½Ï±ß¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 OLED_DrawLine(drawStartX, floodWaveY, drawEndX, floodWaveY, OLED_COLOR_NORMAL);
-                // ÏÂ±ß¿ò²¨ÀËÏß
+                // ï¿½Â±ß¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 OLED_DrawLine(drawStartX, floodWaveY + FloodWaveHeight - 1, drawEndX, floodWaveY + FloodWaveHeight - 1, OLED_COLOR_NORMAL);
                 
-                // ÄÚ²¿¶¯Ì¬Ë®²¨ÎÆ£¨¶à²ã½»Ìæ£©
+                // ï¿½Ú²ï¿½ï¿½ï¿½Ì¬Ë®ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ã½»ï¿½æ£©
                 for (uint8_t dy = 2; dy < FloodWaveHeight - 2; dy++) {
-                    // ¸ù¾ÝÊ±¼äºÍYÎ»ÖÃ²úÉú¶¯Ì¬²¨ÀËÐ§¹û
+                    // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
                     uint8_t lineOffset = ((dy + wavePhase) % 4);
                     if (lineOffset < 2) {
-                        // »æÖÆÖ÷²¨ÎÆÏß£¨ÊµÏß¶Î£©
+                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½Êµï¿½ß¶Î£ï¿½
                         OLED_DrawLine(drawStartX, floodWaveY + dy, drawEndX, floodWaveY + dy, OLED_COLOR_NORMAL);
                     } else if (lineOffset == 2) {
-                        // »æÖÆ´Î²¨ÎÆ£¨¼ä¸ôÐéÏßÐ§¹û£º¶ÌÏß¶Î£©
+                        // ï¿½ï¿½ï¿½Æ´Î²ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¶Î£ï¿½
                         for (uint8_t sx = drawStartX; sx < drawEndX; sx += 6) {
                             uint8_t segEnd = (sx + 3 < drawEndX) ? (sx + 3) : drawEndX;
                             OLED_DrawLine(sx, floodWaveY + dy, segEnd, floodWaveY + dy, OLED_COLOR_NORMAL);
                         }
                     }
-                    // lineOffset == 3 Ê±²»»æÖÆ£¬ÐÎ³É¿ÕÏ¶
+                    // lineOffset == 3 Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½Î³É¿ï¿½Ï¶
                 }
                 
-                // ²¨ÀËÇ°ÑØÊúÏß£¨Ç¿µ÷²¨Í·£©
+                // ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½
                 if (drawStartX > 2) {
                     OLED_DrawLine(drawStartX, floodWaveY + 2, drawStartX, floodWaveY + FloodWaveHeight - 3, OLED_COLOR_NORMAL);
                     OLED_DrawLine(drawStartX + 1, floodWaveY + 1, drawStartX + 1, floodWaveY + FloodWaveHeight - 2, OLED_COLOR_NORMAL);
@@ -1690,7 +1687,7 @@ void ShengyuEnemy::drawRole() {
         }
     }
 
-    // ËÀÍö¶¯»­
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (m_pdata->deathData.isDead) {
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
@@ -1710,63 +1707,63 @@ void ShengyuEnemy::die() {
 }
 
 /**
- * @brief MODE_1: Ë®ÎíÃÖÂþ
- * @note  ºôÓ¦"´óË®"µä¹Ê£¬ÔÚ³¡¾°ÖÐÉú³É¶à¸öÃÔÎíÇøÓòÕÚµ²Íæ¼ÒÊÓÏß
- *        ÃÔÎíÇøÓòÔÚ¼¼ÄÜ³ÖÐøÆÚ¼ä±£³ÖÏÔÊ¾
+ * @brief MODE_1: Ë®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½Ó¦"ï¿½ï¿½Ë®"ï¿½ï¿½ï¿½Ê£ï¿½ï¿½Ú³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ *        ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½Ü³ï¿½ï¿½ï¿½ï¿½Ú¼ä±£ï¿½ï¿½ï¿½ï¿½Ê¾
  */
 void ShengyuEnemy::mistCloud() {
-    // ¼¼ÄÜ¿ªÊ¼50msºóÉú³ÉÃÔÎíÎ»ÖÃ
+    // ï¿½ï¿½ï¿½Ü¿ï¿½Ê¼50msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     if (!mistGenerated && action_count >= 50) {
         mistGenerated = true;
         
-        // ÔÚÆÁÄ»×ó°ë²¿·ÖËæ»úÉú³ÉÃÔÎíÇøÓò£¨Ö÷ÒªÕÚµ²Íæ¼ÒÊÓÒ°ÇøÓò£©
+        // ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ë²¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         for (uint8_t i = 0; i < MistCloudCount; i++) {
-            // ÃÔÎíÎ»ÖÃ£ºXÔÚ10-70Ö®¼ä£¨Íæ¼Ò»î¶¯ÇøÓò£©£¬YÔÚ5-50Ö®¼ä
+            // ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½Xï¿½ï¿½10-70Ö®ï¿½ä£¨ï¿½ï¿½ï¿½Ò»î¶¯ï¿½ï¿½ï¿½ò£©£ï¿½Yï¿½ï¿½5-50Ö®ï¿½ï¿½
             mistPosX[i] = 10 + (rand() % 60);
             mistPosY[i] = 5 + (rand() % 45);
         }
     }
-    // ÃÔÎíÔÚdrawRoleÖÐ»æÖÆ£¬³ÖÐøµ½¼¼ÄÜ½áÊø
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½drawRoleï¿½Ð»ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü½ï¿½ï¿½ï¿½
 }
 
 /**
- * @brief MODE_2: ºé²¨ÍÆÓ¿
- * @note  ÍùÇ°£¨Ïò×ó£©ÍÆ³öÒ»³¤ÌõÃÔÎíÆÁÕÏÕÚµ²ÊÓÏß
- *        ÏÈ¿ìËÙÏòÇ°ÑÓÉì£¬È»ºó´ÓÎ²²¿Öð½¥ÏûÉ¢
+ * @brief MODE_2: ï¿½é²¨ï¿½ï¿½Ó¿
+ * @note  ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ³ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½
+ *        ï¿½È¿ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ì£¬È»ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¢
  */
 void ShengyuEnemy::floodWave() {
-    // ¼¼ÄÜ¿ªÊ¼50msºó·¢Éäºé²¨
+    // ï¿½ï¿½ï¿½Ü¿ï¿½Ê¼50msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é²¨
     if (!floodWaveLaunched && action_count >= 50) {
         floodWaveLaunched = true;
         
-        // ºé²¨ÖÕµã¹Ì¶¨ÔÚÊ¤Óö×ó²à
+        // ï¿½é²¨ï¿½Õµï¿½ï¿½Ì¶ï¿½ï¿½ï¿½Ê¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         floodWaveEndX = m_pdata->spatialData.currentPosX;
-        // ºé²¨YÎ»ÖÃÓëÊ¤ÓöÖÐÐÄ¶ÔÆë
+        // ï¿½é²¨YÎ»ï¿½ï¿½ï¿½ï¿½Ê¤ï¿½ï¿½ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½
         floodWaveY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2 - FloodWaveHeight / 2;
         
-        // È·±£YÎ»ÖÃÔÚÆÁÄ»·¶Î§ÄÚ
+        // È·ï¿½ï¿½YÎ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½Î§ï¿½ï¿½
         if (floodWaveY < 2) floodWaveY = 2;
         if (floodWaveY + FloodWaveHeight > 62) floodWaveY = 62 - FloodWaveHeight;
         floodWaveCurrentLen = 0;
     }
     
     if (floodWaveLaunched) {
-        // Ç°°ë¶Î£º¿ìËÙÏòÇ°ÑÓÉì£¨50-1000ms£©
+        // Ç°ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ì£¨50-1000msï¿½ï¿½
         if (action_count < 1000) {
-            // Ã¿40msÔö¼Ó12ÏñËØ³¤¶È£¬¸üÆ½»¬µÄÑÓÉì
+            // Ã¿40msï¿½ï¿½ï¿½ï¿½12ï¿½ï¿½ï¿½Ø³ï¿½ï¿½È£ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (action_count > 50) {
                 floodWaveCurrentLen = ((action_count - 50) / 40) * 12;
             }
             if (floodWaveCurrentLen > FloodWaveLength) floodWaveCurrentLen = FloodWaveLength;
         }
-        // ÖÐ¼ä¶Î£º±£³Ö×î´ó³¤¶È£¨1000-1800ms£©
+        // ï¿½Ð¼ï¿½ï¿½Î£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó³¤¶È£ï¿½1000-1800msï¿½ï¿½
         else if (action_count < 1800) {
             floodWaveCurrentLen = FloodWaveLength;
         }
-        // ºó°ë¶Î£º´ÓÎ²²¿Öð½¥ÏûÉ¢£¨1800-2800ms£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¢ï¿½ï¿½1800-2800msï¿½ï¿½
         else {
             uint16_t fadeTime = action_count - 1800;
-            uint8_t fadeAmount = (fadeTime / 80) * 11; // Ã¿80msÏûÉ¢11ÏñËØ
+            uint8_t fadeAmount = (fadeTime / 80) * 11; // Ã¿80msï¿½ï¿½É¢11ï¿½ï¿½ï¿½ï¿½
             if (fadeAmount >= FloodWaveLength) {
                 floodWaveCurrentLen = 0;
             } else {
@@ -1777,32 +1774,32 @@ void ShengyuEnemy::floodWave() {
 }
 
 /**
- * @brief MODE_3: ³àÓðÀ×Ãù
- * @note  ºôÓ¦"³à"É«ºÍ"ÒôÈçÂ¼"ÌØÕ÷£¬ÔÚ×ÔÉíÖÐÑëÁ¬Ðø·¢ÉäÒ»´®ÆÕÍ¨×Óµ¯
- *        Ä£Äâ³àÉ«ÓðÃ«É¢ÉäµÄÐ§¹û
+ * @brief MODE_3: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½Ó¦"ï¿½ï¿½"É«ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½Â¼"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ *        Ä£ï¿½ï¿½ï¿½ï¿½É«ï¿½ï¿½Ã«É¢ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
  */
 void ShengyuEnemy::redThunder() {
-    // Ã¿ ThunderInterval ms ·¢ÉäÒ»·¢×Óµ¯
+    // Ã¿ ThunderInterval ms ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Óµï¿½
     if (action_count >= ThunderInterval * (thunderFiredCount + 1) && thunderFiredCount < ThunderBulletCount) {
         thunderFiredCount++;
         
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
         
-        // Ã¿·¢×Óµ¯YÎ»ÖÃÓÐÐ¡Æ«ÒÆ£¬ÐÎ³ÉÉ¢ÉäÐ§¹û
+        // Ã¿ï¿½ï¿½ï¿½Óµï¿½YÎ»ï¿½ï¿½ï¿½ï¿½Ð¡Æ«ï¿½Æ£ï¿½ï¿½Î³ï¿½É¢ï¿½ï¿½Ð§ï¿½ï¿½
         int8_t yOffset = (thunderFiredCount % 2 == 0) ? (thunderFiredCount - 3) : (3 - thunderFiredCount);
         
-        m_pdata->attackData.shootCooldownTimer = 0; // ÖØÖÃÀäÈ´
+        m_pdata->attackData.shootCooldownTimer = 0; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´
         shoot(centerX, centerY + yOffset, BulletType::BASIC);
     }
 }
 
 /*******************************************************************/
 /**
- * @brief LiliEnemy class -  ¾«Ó¢µÐÈË
- * ÍÁÓ¿Í»´Ì£º×·×ÙÍæ¼ÒYÎ»ÖÃ + Ëæ»úÆ«ÒÆ£¬ÓëTaowuµÄËæ»úµ¯Ä»²»Í¬
-â²·ÍÕð²¨£º5·¢¹Ì¶¨ÉÈÐÎ£¬ÓëBoEnemyµÄ3·¢ÉÈÐÎºÍHundunEnemyµÄÂÝÐýµ¯²»Í¬
-¾òµØ³å·æ£º³å·æ + »ðÇò¹ì¼£µÄ×éºÏ»úÖÆ£¬¶ÀÌØµÄ¹¥ÊØ¼æ±¸¼¼ÄÜ
+ * @brief LiliEnemy class -  ï¿½ï¿½Ó¢ï¿½ï¿½ï¿½ï¿½
+ * ï¿½ï¿½Ó¿Í»ï¿½Ì£ï¿½×·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½ï¿½ + ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½ï¿½ï¿½Taowuï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½Í¬
+â²·ï¿½ï¿½ð²¨£ï¿½5ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½BoEnemyï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½HundunEnemyï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬
+ï¿½ï¿½ï¿½Ø³ï¿½ï¿½æ£ºï¿½ï¿½ï¿½ï¿½ + ï¿½ï¿½ï¿½ï¿½ï¿½ì¼£ï¿½ï¿½ï¿½ï¿½ï¿½Ï»ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ØµÄ¹ï¿½ï¿½Ø¼æ±¸ï¿½ï¿½ï¿½ï¿½
  */
 /*******************************************************************/
 
@@ -1810,28 +1807,28 @@ LiliEnemy::LiliEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &LiliImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢: 60 + level * 60£¨ÖÐµÈÑªÁ¿£¬±È²µÉÔÈõ£©
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢: 60 + level * 60ï¿½ï¿½ï¿½Ðµï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     m_pdata->healthData.currentHealth = 60 + level * 160;
     m_pdata->healthData.maxHealth     = 60 + level * 160;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 1;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 12000;
     m_pdata->healthData.healSpeed       = 2;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = false;
     m_pdata->spatialData.currentPosX               = startX;
     m_pdata->spatialData.currentPosY               = startY;
@@ -1839,38 +1836,38 @@ LiliEnemy::LiliEnemy(
     m_pdata->spatialData.refPosY                   = startY;
     m_pdata->spatialData.sizeX                     = m_pdata->img->w;
     m_pdata->spatialData.sizeY                     = m_pdata->img->h;
-    m_pdata->spatialData.moveSpeed                 = 2; // ÖÐËÙÒÆ¶¯
+    m_pdata->spatialData.moveSpeed                 = 2; // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢: 5 + level * 2£¨ÖÐµÈ¹¥»÷Á¦£©
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢: 5 + level * 2ï¿½ï¿½ï¿½ÐµÈ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     m_pdata->attackData.attackPower            = 5 + level * 2;
     m_pdata->attackData.shootCooldownSpeed     = 4;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000/4=1500msÀäÈ´
+    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000/4=1500msï¿½ï¿½È´
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 6; // »ðÇòµ¯·¶Î§
+    m_pdata->attackData.bulletRange            = 6; // ï¿½ï¿½ï¿½òµ¯·ï¿½Î§
     m_pdata->attackData.bulletDamageMultiplier = 1.2f;
 
-    //Åö×²ÉËº¦: 8 + level * 2£¨ÖÐµÈÅö×²ÉËº¦£©
+    //ï¿½ï¿½×²ï¿½Ëºï¿½: 8 + level * 2ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½×²ï¿½Ëºï¿½ï¿½ï¿½
     m_pdata->attackData.collisionPower = 8 + level * 2;
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 100;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 12;
     m_pdata->heatData.heatCoolDownRate = 12;
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = liliEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
 
-    // ³õÊ¼»¯¹¥»÷Ä£Ê½×´Ì¬±äÁ¿
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½×´Ì¬ï¿½ï¿½ï¿½ï¿½
     barkFired       = false;
     earthSurgeCount = 0;
     trapPlaced      = false;
@@ -1905,14 +1902,14 @@ void LiliEnemy::init() {
 
 void LiliEnemy::think() {
     think_count += controlDelayTime;
-    if (think_count < 300) return;  // Ôö¼ÓË¼¿¼¼ä¸ôµ½300ms£¨Ô­180ms£©
+    if (think_count < 300) return;  // ï¿½ï¿½ï¿½ï¿½Ë¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½300msï¿½ï¿½Ô­180msï¿½ï¿½
 
     think_count = 0;
 
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
         uint8_t randomAction = rand() % 10;
 
-        if (randomAction < 6 ) {  // 60%¸ÅÂÊÒÆ¶¯£¨Ô­30%£©
+        if (randomAction < 6 ) {  // 60%ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ô­30%ï¿½ï¿½
             uint8_t moveDir                  = rand() % 4;
             m_pdata->actionData.currentState = ActionState::MOVING;
             switch (moveDir) {
@@ -1929,9 +1926,9 @@ void LiliEnemy::think() {
                 m_pdata->actionData.moveMode = MoveMode::DOWN;
                 break;
             }
-        } else if (randomAction < 7) {  // 10%¸ÅÂÊ´ý»ú£¨Ô­10%£©
+        } else if (randomAction < 7) {  // 10%ï¿½ï¿½ï¿½Ê´ï¿½ï¿½ï¿½ï¿½ï¿½Ô­10%ï¿½ï¿½
             m_pdata->actionData.currentState = ActionState::IDLE;
-        } else {  // 40%¸ÅÂÊ¹¥»÷£¨Ô­60%£©
+        } else {  // 40%ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Ô­60%ï¿½ï¿½
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             uint8_t attackChoice = rand() % 6;
@@ -2016,14 +2013,14 @@ void LiliEnemy::doAction() {
             break;
         }
 
-        // ¶¯×÷½áÊø
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (action_timer == 0) {
             m_pdata->actionData.currentState       = ActionState::IDLE;
             m_pdata->actionData.attackMode         = AttackMode::NONE;
             action_count                           = 0;
             m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
 
-            // ÖØÖÃ×´Ì¬±äÁ¿
+            // ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
             barkFired       = false;
             earthSurgeCount = 0;
             trapPlaced      = false;
@@ -2041,10 +2038,10 @@ void LiliEnemy::drawRole() {
             m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
         );
 
-        // MODE_3ÏÝÚå±ê¼Ç»æÖÆ - ÔÚ±¬Õ¨Ç°ÏÔÊ¾¾¯¸æ±ê¼Ç
+        // MODE_3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç»ï¿½ï¿½ï¿½ - ï¿½Ú±ï¿½Õ¨Ç°ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (m_pdata->actionData.attackMode == AttackMode::MODE_3 && trapPlaced && !trapExploded) {
             for (uint8_t i = 0; i < TrapCount; i++) {
-                // »æÖÆÏÝÚå¾¯¸æ±ê¼Ç£ºXÐÎÍ¼°¸
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å¾¯ï¿½ï¿½ï¿½ï¿½ï¿½Ç£ï¿½Xï¿½ï¿½Í¼ï¿½ï¿½
                 OLED_DrawLine(trapPosX[i] - 3, trapPosY[i] - 3, trapPosX[i] + 3, trapPosY[i] + 3, OLED_COLOR_NORMAL);
                 OLED_DrawLine(trapPosX[i] - 3, trapPosY[i] + 3, trapPosX[i] + 3, trapPosY[i] - 3, OLED_COLOR_NORMAL);
             }
@@ -2120,81 +2117,81 @@ void LiliEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
 }
 
 /**
- * @brief MODE_1: ÍÁÓ¿Í»´Ì
- * @note  ºôÓ¦"ÍÁ¹¦"µä¹Ê£¬ÏòÇ°·½¼ä¸ô·¢Éä»ðÇòµ¯£¨ÍÁ¿é±¬Õ¨£©
- *        »ðÇòµ¯»áÔì³É·¶Î§ÉËº¦
+ * @brief MODE_1: ï¿½ï¿½Ó¿Í»ï¿½ï¿½
+ * @note  ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½Ê£ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½é±¬Õ¨ï¿½ï¿½
+ *        ï¿½ï¿½ï¿½òµ¯»ï¿½ï¿½ï¿½ï¿½É·ï¿½Î§ï¿½Ëºï¿½
  */
 void LiliEnemy::earthSurge() {
-    // Ã¿ EarthSurgeInterval ms ·¢ÉäÒ»·¢»ðÇò
+    // Ã¿ EarthSurgeInterval ms ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (action_count >= EarthSurgeInterval * (earthSurgeCount + 1)) {
         earthSurgeCount++;
 
         uint8_t shootX  = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-        // »ñÈ¡Íæ¼ÒÎ»ÖÃ£¬³¯Íæ¼Ò·½Ïò·¢Éä
+        // ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         IRole *player        = g_entityManager.getPlayerRole();
         int8_t targetYOffset = 0;
         if (player != nullptr) {
             int16_t playerY = player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2;
             int16_t deltaY  = playerY - centerY;
-            // Ìí¼ÓËæ»úÆ«ÒÆ£¬Ä£ÄâÍÁ¿éÅçÉä²»¹æÔò¸Ð
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä²»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             targetYOffset = (deltaY > 5) ? 4 : ((deltaY < -5) ? -4 : 0);
-            targetYOffset += (rand() % 5) - 2; // -2 µ½ +2 Ëæ»úÆ«ÒÆ
+            targetYOffset += (rand() % 5) - 2; // -2 ï¿½ï¿½ +2 ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
         }
 
-        // ·¢Éä»ðÇòµ¯£¨ÍÁ¿é£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½é£©
         shoot(shootX, centerY + targetYOffset, BulletType::FIRE_BALL);
     }
 }
 
 /**
- * @brief MODE_2: â²·ÍÕð²¨
- * @note  ºôÓ¦"ÆäÒôÈç¹··Í"µä¹Ê£¬·¢³öÉù²¨¹¥»÷
- *        Ò»´ÎÐÔ·¢Éä5·¢ÉÈÐÎÆÕÍ¨×Óµ¯£¬¸²¸Ç½Ï´ó·¶Î§
+ * @brief MODE_2: â²·ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½ï¿½ç¹·ï¿½ï¿½"ï¿½ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ *        Ò»ï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç½Ï´ï¿½ï¿½ï¿½Î§
  */
 void LiliEnemy::barkWave() {
-    // Ö»ÔÚ¼¼ÄÜ¿ªÊ¼50msºó·¢ÉäÒ»´Î
+    // Ö»ï¿½Ú¼ï¿½ï¿½Ü¿ï¿½Ê¼50msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
     if (barkFired || action_count < 50) return;
 
     barkFired       = true;
     uint8_t shootX  = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    // ·¢Éä5·¢ÉÈÐÎÆÕÍ¨×Óµ¯£¨Éù²¨À©É¢Ð§¹û£©
+    // ï¿½ï¿½ï¿½ï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¢Ð§ï¿½ï¿½ï¿½ï¿½
     for (int8_t i = -2; i <= 2; i++) {
-        m_pdata->attackData.shootCooldownTimer = 0; // ÖØÖÃÀäÈ´ÒÔÁ¬Ðø·¢Éä
+        m_pdata->attackData.shootCooldownTimer = 0; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         shoot(shootX, centerY + i * 2, BulletType::BASIC);
     }
 }
 
 /**
- * @brief MODE_3: Ñ¨µØÏÝÚå
- * @note  ºôÓ¦"¼ûÔòÆäÏØ¶àÍÁ¹¦"µä¹Ê£¬ÀêÁ¦ÉÆÓÚÍÚ¾òÍÁµØ
- *        ÔÚËæ»úÎ»ÖÃ·ÅÖÃ2¸öÏÝÚå±ê¼Ç£¬ÑÓ³Ùºó±¬Õ¨·¢Éä»ðÇò
- *        Íæ¼ÒÐèÒª¶ã±ÜÏÝÚåÎ»ÖÃ
+ * @brief MODE_3: Ñ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¾ï¿½ï¿½ï¿½ï¿½ï¿½
+ *        ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç£ï¿½ï¿½Ó³Ùºï¿½ï¿½ï¿½Õ¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ *        ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
  */
 void LiliEnemy::burrowTrap() {
-    // ½×¶Î1£º·ÅÖÃÏÝÚå£¨¼¼ÄÜ¿ªÊ¼Ê±£©
+    // ï¿½×¶ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å£¨ï¿½ï¿½ï¿½Ü¿ï¿½Ê¼Ê±ï¿½ï¿½
     if (!trapPlaced && action_count >= 50) {
         trapPlaced = true;
         
-        // ÔÚÍæ¼Ò¸½½üËæ»úÎ»ÖÃ·ÅÖÃÏÝÚå
+        // ï¿½ï¿½ï¿½ï¿½ï¿½Ò¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         IRole *player = g_entityManager.getPlayerRole();
         if (player != nullptr) {
             uint8_t playerX = player->getData()->spatialData.currentPosX + player->getData()->spatialData.sizeX / 2;
             uint8_t playerY = player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2;
             
             for (uint8_t i = 0; i < TrapCount; i++) {
-                // ÏÝÚåÎ»ÖÃ£ºÍæ¼ÒÇ°·½Ëæ»úÎ»ÖÃ£¨X: +30~+50, Y: ¡À15Ëæ»úÆ«ÒÆ£©
+                // ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½X: +30~+50, Y: ï¿½ï¿½15ï¿½ï¿½ï¿½ï¿½Æ«ï¿½Æ£ï¿½
                 int16_t randomOffsetX = 30 + (rand() % 20);
-                int16_t randomOffsetY = (rand() % 31) - 15; // -15 µ½ +15
+                int16_t randomOffsetY = (rand() % 31) - 15; // -15 ï¿½ï¿½ +15
                 
                 trapPosX[i] = etl::clamp<int16_t>(playerX + randomOffsetX, 10, 120);
                 trapPosY[i] = etl::clamp<int16_t>(playerY + randomOffsetY, 5, 58);
             }
         } else {
-            // ÎÞÍæ¼ÒÊ±ÔÚÆÁÄ»ÖÐ¼äÇøÓòËæ»ú·ÅÖÃ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ä»ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             for (uint8_t i = 0; i < TrapCount; i++) {
                 trapPosX[i] = 30 + (rand() % 60);
                 trapPosY[i] = 10 + (rand() % 44);
@@ -2202,13 +2199,13 @@ void LiliEnemy::burrowTrap() {
         }
     }
     
-    // ½×¶Î2£ºÏÝÚå±¬Õ¨£¨ÑÓ³Ùºó£©
+    // ï¿½×¶ï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½å±¬Õ¨ï¿½ï¿½ï¿½Ó³Ùºï¿½ï¿½ï¿½
     if (trapPlaced && !trapExploded && action_count >= TrapExplodeDelay) {
         trapExploded = true;
         
-        // ÔÚÃ¿¸öÏÝÚåÎ»ÖÃ·¢Éä»ðÇòµ¯
+        // ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         for (uint8_t i = 0; i < TrapCount; i++) {
-            m_pdata->attackData.shootCooldownTimer = 0; // ÖØÖÃÀäÈ´
+            m_pdata->attackData.shootCooldownTimer = 0; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´
             shoot(trapPosX[i], trapPosY[i], BulletType::FIRE_BALL);
         }
     }
@@ -2219,42 +2216,42 @@ void LiliEnemy::burrowTrap() {
 /*******************************************************************/
 /**
  * @brief TaotieEnemy class
- * @note  ÖÐÎÄ£º÷Ò÷Ñ £ü Ó¢ÎÄ£ºTaotie,Éñ»°µä¹Ê£ºËÄÐ×Ö®Ò»£¬ÑòÉíÈËÃæ¡¢ÑÛÔÚÒ¸ÏÂ¡¢»¢³ÝÈË×¦£¬ÉùÒôËÆÓ¤¶ù£»
- * @note  ÉÏ¹Å ¡°ËÄÐ×¡± Ö®Ò»£¬Ì°À·ÎÞ¶È£¬ÄÜÍÌÊ³ÌìµØÍòÎï£¬×¨Ê³ÈËÀàÓëÉüÐó£¬ÏóÕ÷¼«ÖÂÌ°Óû¡£
- * @note  BOSS¼¶´óÐÍµÐÈË£¬ÌåÐÍ¾Þ´ó£¨64x64 ÏñËØ£©£¬¸ßÑªÁ¿£¬¸ß¹¥»÷Á¦£¬µÍËÙÒÆ¶¯£¬¹¥»÷·½Ê½¶àÑùÇÒ¾ßÓÐÍþÐ²ÐÔ£¬ÉÃ³¤½üÕ½¡£
- * @note  ¹¥»÷·½Ê½1£¬½«Íæ¼ÒÏò×Ô¼ºÀ­½ü£¬½øÐÐÍÌÊÉ¹¥»÷ 
- * @note  ¹¥»÷·½Ê½2£¬·¢ÉäÈýÅÅÆÕÍ¨×Óµ¯
- * @note  ¹¥»÷·½Ê½3£¬ÏòÇ°³å×²£¬½øÐÐ×²»÷¹¥»÷
- * @note  ¹¥»÷·½Ê½4, ÏòºóÄëÑ¹£¬´ÓÍæ¼Ò×ó²à³öÏÖ£¬½øÐÐÄëÑ¹¹¥»÷
- * @note  ¹¥»÷·½Ê½5, ½«Íæ¼ÒÏò×Ô¼ºÀ­½ü£¬Í¬Ê±ÏòÇ°³å×²
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Taotie,ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½Ö®Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¡¢ï¿½ï¿½ï¿½ï¿½Ò¸ï¿½Â¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¤ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½Ï¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½×¡ï¿½ Ö®Ò»ï¿½ï¿½Ì°ï¿½ï¿½ï¿½Þ¶È£ï¿½ï¿½ï¿½ï¿½ï¿½Ê³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï£¬×¨Ê³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ï¿½ï¿½ï¿½
+ * @note  BOSSï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½Í¾Þ´ï¿½ï¿½ï¿½64x64 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½ß¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¾ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Ô£ï¿½ï¿½Ã³ï¿½ï¿½ï¿½Õ½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½ 
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½3ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½4, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½5, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½Ç°ï¿½ï¿½×²
  */
 
 TaotieEnemy::TaotieEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &TaotieImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->healthData.currentHealth = 350 + level * 1100;
     m_pdata->healthData.maxHealth     = 350 + level * 1100;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 20;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 15000;
     m_pdata->healthData.healSpeed       = 5;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = true;
     m_pdata->spatialData.currentPosX               = startX; // Starting X position
     m_pdata->spatialData.currentPosY               = startY; // Starting Y position
@@ -2265,29 +2262,29 @@ TaotieEnemy::TaotieEnemy(
     m_pdata->spatialData.moveSpeed                 = 1; // Set movement speed
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->attackData.attackPower            = 2 + level * 4;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 10;   //Ö»¶Ô»ðÇòµ¯ÉúÐ§
-    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»¶ÔÉÁµçÁ´µ¯ÉúÐ§
+    m_pdata->attackData.bulletRange            = 10;   //Ö»ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
 
     m_pdata->attackData.collisionPower = 10 + level * 10;
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 200;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 20;
-    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿´ÎÀäÈ´10µãÈÈÁ¿£¬Ã¿´ÎÀäÈ´Ê±¼ä¼ä¸ôÓÉ200ms
+    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿ï¿½ï¿½ï¿½ï¿½È´10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200ms
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = TaotieEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
@@ -2302,8 +2299,8 @@ void TaotieEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::BASIC:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
             if (newBullet != nullptr) {
@@ -2320,8 +2317,8 @@ void TaotieEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::FIRE_BALL:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
             if (newBullet != nullptr) {
@@ -2338,8 +2335,8 @@ void TaotieEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::LIGHTNING_LINE:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
             if (newBullet != nullptr) {
@@ -2360,12 +2357,12 @@ void TaotieEnemy::init() {
     // Initialize enemy role specifics
 
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 60) { // Ã¿60msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 60) { // Ã¿60msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX -= 1;
             m_pdata->initData.init_count = 0;
         }
     } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 60) { // Ã¿60msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 60) { // Ã¿60msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX += 1;
             m_pdata->initData.init_count = 0;
         }
@@ -2380,7 +2377,7 @@ void TaotieEnemy::init() {
 void TaotieEnemy::think() {
     // Implement enemy AI logic
     think_count += controlDelayTime;
-    if (think_count < 100) // Ã¿100ms¾ö¶¨Ò»´ÎÐÐ¶¯
+    if (think_count < 100) // Ã¿100msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½
         return;
 
     think_count = 0;
@@ -2388,7 +2385,7 @@ void TaotieEnemy::think() {
     uint8_t randomAction = rand() % 6;
     // Random action: 0 - move left, 1 - move right, 2 - move down, 3 - move up, 4 - stay still, 5 - shoot
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        //ÒÆ¶¯
+        //ï¿½Æ¶ï¿½
         if (randomAction == 0) {
             m_pdata->actionData.moveMode     = MoveMode::LEFT;
             m_pdata->actionData.currentState = ActionState::MOVING;
@@ -2407,46 +2404,46 @@ void TaotieEnemy::think() {
             m_pdata->actionData.currentState = ActionState::MOVING;
         }
 
-        //¹¥»÷
+        //ï¿½ï¿½ï¿½ï¿½
         else if (randomAction == 5) {
             if (m_pdata->attackData.shootCooldownTimer > 0) {
-                // Èç¹ûÔÚÀäÈ´ÖÐ£¬Ôò²»½øÐÐ¹¥»÷£¬±£³Ö¿ÕÏÐ×´Ì¬
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½ò²»½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿ï¿½ï¿½ï¿½×´Ì¬
                 m_pdata->actionData.moveMode     = MoveMode::NONE;
                 m_pdata->actionData.currentState = ActionState::IDLE;
                 return;
             }
 
-            uint8_t randomAttackMode         = rand() % 5 + 1; // 1-5 ¹¥»÷·½Ê½
+            uint8_t randomAttackMode         = rand() % 5 + 1; // 1-5 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             switch (randomAttackMode) {
             case 1:
-                //¹¥»÷Ä£Ê½1 - ÍÌÊÉ¹¥»÷
-                action_timer                   = 1500; // ÷Ò÷Ñ¹¥»÷¶¯×÷³ÖÐøÊ±¼ä1500ms
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½1 - ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½
+                action_timer                   = 1500; // ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½1500ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
                 break;
             case 2:
-                //¹¥»÷Ä£Ê½2 - ÈýÅÅ×Óµ¯¹¥»÷
-                action_timer                   = 1000; // ÷Ò÷Ñ¹¥»÷¶¯×÷³ÖÐøÊ±¼ä1000ms
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½2 - ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½
+                action_timer                   = 1000; // ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½1000ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_2;
                 break;
 
             case 3:
-                //¹¥»÷Ä£Ê½3 - ³å·æ×²»÷¹¥»÷
-                //500ms³å·æ+1000msÍ£¶Ù+500ms»ØÍË
-                action_timer                   = 2000; // ÷Ò÷Ñ¹¥»÷¶¯×÷³ÖÐøÊ±¼ä2000ms
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½3 - ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                //500msï¿½ï¿½ï¿½ï¿½+1000msÍ£ï¿½ï¿½+500msï¿½ï¿½ï¿½ï¿½
+                action_timer                   = 2000; // ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½2000ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_3;
                 break;
             case 4:
-                //¹¥»÷Ä£Ê½4 - ÏòºóÄëÑ¹¹¥»÷
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½4 - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
                 //crush from left side
-                action_timer                   = 4000; // ÷Ò÷Ñ¹¥»÷¶¯×÷³ÖÐøÊ±¼ä4000ms
+                action_timer                   = 4000; // ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½4000ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 appearedForCrush               = false;
@@ -2454,15 +2451,15 @@ void TaotieEnemy::think() {
                 m_pdata->actionData.attackMode = AttackMode::MODE_4;
                 break;
             case 5:
-                //¹¥»÷Ä£Ê½5 - À­½ü²¢³å·æ¹¥»÷
-                action_timer                   = 3000; // ÷Ò÷Ñ¹¥»÷¶¯×÷³ÖÐøÊ±¼ä3000ms
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½5 - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¹¥ï¿½ï¿½
+                action_timer                   = 3000; // ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½3000ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_5;
                 break;
             default:
-                //Ä¬ÈÏ¹¥»÷Ä£Ê½1 - ÍÌÊÉ¹¥»÷
-                action_timer                   = 1500; // ÷Ò÷Ñ¹¥»÷¶¯×÷³ÖÐøÊ±¼ä1500ms
+                //Ä¬ï¿½Ï¹ï¿½ï¿½ï¿½Ä£Ê½1 - ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½
+                action_timer                   = 1500; // ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½1500ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
@@ -2507,17 +2504,17 @@ void TaotieEnemy::doAction() {
         // Move logic handled in think()
         break;
     case ActionState::ATTACKING:
-        //¶¯×÷×÷ÓÃÊ±¼ä£¬ÓÃÀ´µ÷½Ú¶¯×÷·¢ÉúµÄÆµÂÊ
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½
         action_count += controlDelayTime;
 
-        //¶¯×÷µ¹¼ÆÊ±
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
         if (action_timer >= controlDelayTime)
             action_timer -= controlDelayTime;
         else
             action_timer = 0;
 
         switch (m_pdata->actionData.attackMode) {
-        //Ö´ÐÐ¹¥»÷¶¯×÷
+        //Ö´ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         case AttackMode::MODE_1:
             pullPlayerAndDevourAttack();
             break;
@@ -2542,7 +2539,7 @@ void TaotieEnemy::doAction() {
             m_pdata->actionData.currentState       = ActionState::IDLE;
             m_pdata->actionData.attackMode         = AttackMode::NONE;
             action_count                           = 0;
-            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // ¹¥»÷ºó½øÈëÀäÈ´Ê±¼ä
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½
         }
         break;
     }
@@ -2557,12 +2554,12 @@ void TaotieEnemy::drawRole() {
 
     if (m_pdata->deathData.isDead) {
         // Draw death animation or effect
-        // »æÖÆËÀÍö¶¯»­£¨ÀýÈçÒ»¸ö¼òµ¥µÄÔ²È¦±íÊ¾ÏûÊ§Ð§¹û£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½òµ¥µï¿½Ô²È¦ï¿½ï¿½Ê¾ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
         uint8_t radius =
-            (TaotieEnemyDeadTime - m_pdata->deathData.deathTimer) * 30 / TaotieEnemyDeadTime; // ´Ó0Ôö³¤µ½×î´óÖµ5
-        radius = etl::max(radius, uint8_t(1));                                                // ×îÐ¡°ë¾¶ÏÞÖÆ
+            (TaotieEnemyDeadTime - m_pdata->deathData.deathTimer) * 30 / TaotieEnemyDeadTime; // ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ5
+        radius = etl::max(radius, uint8_t(1));                                                // ï¿½ï¿½Ð¡ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½
 
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
     }
@@ -2579,10 +2576,10 @@ void TaotieEnemy::die() {
     m_pdata->isActive = false;
 }
 
-//¹¥»÷¼¼ÄÜ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void TaotieEnemy::pullPlayerAndDevourAttack() {
-    //½«Íæ¼ÒÏò×Ô¼ºÀ­½ü£¬½øÐÐÍÌÊÉ¹¥»÷
-    if (action_count < action_MaxTime / pullDistance) // Ã¿50msÀ­½üÒ»´Î
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½
+    if (action_count < action_MaxTime / pullDistance) // Ã¿50msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
@@ -2591,7 +2588,7 @@ void TaotieEnemy::pullPlayerAndDevourAttack() {
 
     uint16_t dirX = 0;
     uint16_t dirY = 0;
-    //¼ÆËã·½ÏòÏòÁ¿
+    //ï¿½ï¿½ï¿½ã·½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
     int16_t deltaX = (m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2)
                      - (player->getData()->spatialData.currentPosX + player->getData()->spatialData.sizeX / 2);
@@ -2605,16 +2602,16 @@ void TaotieEnemy::pullPlayerAndDevourAttack() {
     if (deltaY > 0) dirY = 1;
     if (deltaY == 0) dirY = 0;
 
-    //¸üÐÂÍæ¼ÒÎ»ÖÃ
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     player->move(dirX, dirY, true);
 }
 
 void TaotieEnemy::fireThreeRowsBasicBullets() {
-    if (action_count < 500) // Ã¿500ms·¢ÉäÒ»´Î
+    if (action_count < 500) // Ã¿500msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
-    //·¢ÉäÈýÅÅÆÕÍ¨×Óµ¯
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
     uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
@@ -2625,48 +2622,48 @@ void TaotieEnemy::fireThreeRowsBasicBullets() {
     uint8_t m_x_3 = m_x;
     uint8_t m_y_3 = m_y + 6;
 
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢ÉäµÚÒ»·¢×Óµ¯
-    m_pdata->heatData.currentHeat          = 0; //ÖØÖÃÈÈÁ¿ÐÅÏ¢
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Óµï¿½
+    m_pdata->heatData.currentHeat          = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     shoot(m_x, m_y - 6, BulletType::BASIC);
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢ÉäµÚ¶þ·¢×Óµ¯
-    m_pdata->heatData.currentHeat          = 0; //ÖØÖÃÈÈÁ¿ÐÅÏ¢
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Óµï¿½
+    m_pdata->heatData.currentHeat          = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     shoot(m_x_2, m_y_2, BulletType::BASIC);
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢ÉäµÚÈý·¢×Óµ¯
-    m_pdata->heatData.currentHeat          = 0; //ÖØÖÃÈÈÁ¿ÐÅÏ¢
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½
+    m_pdata->heatData.currentHeat          = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     shoot(m_x_3, m_y_3, BulletType::BASIC);
 
     m_x_1 = m_x + 10;
     m_x_2 = m_x + 10;
     m_x_3 = m_x + 10;
 
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢ÉäµÚÒ»·¢×Óµ¯
-    m_pdata->heatData.currentHeat          = 0; //ÖØÖÃÈÈÁ¿ÐÅÏ¢
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Óµï¿½
+    m_pdata->heatData.currentHeat          = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     shoot(m_x_1, m_y_1, BulletType::BASIC);
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢ÉäµÚ¶þ·¢×Óµ¯
-    m_pdata->heatData.currentHeat          = 0; //ÖØÖÃÈÈÁ¿ÐÅÏ¢
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Óµï¿½
+    m_pdata->heatData.currentHeat          = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     shoot(m_x_2, m_y_2, BulletType::BASIC);
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢ÉäµÚÈý·¢×Óµ¯
-    m_pdata->heatData.currentHeat          = 0; //ÖØÖÃÈÈÁ¿ÐÅÏ¢
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½
+    m_pdata->heatData.currentHeat          = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     shoot(m_x_3, m_y_3, BulletType::BASIC);
 }
 
 void TaotieEnemy::chargeForwardAndRamAttack() {
-    //ÏòÇ°³å×²£¬½øÐÐ×²»÷¹¥»÷
-    //¼ÙÉèÏò×ó³å×²
-    if (action_count < action_MaxTime / chargeDistance / 4) // 2000/30/4 msÒÆ¶¯Ò»´Î
+    //ï¿½ï¿½Ç°ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²
+    if (action_count < action_MaxTime / chargeDistance / 4) // 2000/30/4 msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
-    int8_t dir   = -1;                                                                        //Ïò×ó³å×²
-    if (action_timer < action_MaxTime * 3 / 4 && action_timer >= action_MaxTime / 4) dir = 0; //Í£¶Ù
-    if (action_timer < action_MaxTime / 4) dir = 1;                                           //ÏòÓÒ»ØÍË
+    int8_t dir   = -1;                                                                        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²
+    if (action_timer < action_MaxTime * 3 / 4 && action_timer >= action_MaxTime / 4) dir = 0; //Í£ï¿½ï¿½
+    if (action_timer < action_MaxTime / 4) dir = 1;                                           //ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½
     move(dir, 0);
 }
 
 void TaotieEnemy::appearLeftAndRollBackCrushAttack() {
-    // //ÏòºóÄëÑ¹£¬´ÓÍæ¼Ò×ó²à³öÏÖ£¬½øÐÐÄëÑ¹¹¥»÷
+    // //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½
 
-    //ÒòÎªÒªËãÀ´»Ø£¬ËùÒÔ¾àÀë´¥·¢Ê±¼ä³ýÒÔ2
-    if (action_count < action_MaxTime / crushChargeDistance / 2) // 4000/100/2=20 msÒÆ¶¯Ò»´Î
+    //ï¿½ï¿½ÎªÒªï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½Ô¾ï¿½ï¿½ë´¥ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2
+    if (action_count < action_MaxTime / crushChargeDistance / 2) // 4000/100/2=20 msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
@@ -2674,28 +2671,28 @@ void TaotieEnemy::appearLeftAndRollBackCrushAttack() {
     if (taoTie == nullptr) return;
 
     if (action_timer >= action_MaxTime / 2) {
-        //ÏòºóÒÆ¶¯
+        //ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
         if (taoTie->spatialData.currentPosX < 120 && appearedForCrush == false) move(1, 0);
 
-        //´Ó×ó²à³öÏÖ
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (taoTie->spatialData.currentPosX >= 120 && appearedForCrush == false) {
             appearedForCrush                = true;
-            taoTie->spatialData.refPosX     = -70; //ÖØÖÃÎ»ÖÃ
+            taoTie->spatialData.refPosX     = -70; //ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
             taoTie->spatialData.refPosY     = 1;
             taoTie->spatialData.currentPosX = -70;
             taoTie->spatialData.currentPosY = 1;
         }
-        //ÏòÓÒÄëÑ¹
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¹
         if (appearedForCrush == true) {
             move(1, 0);
         }
     } else {
-        //Ïò×ó»ØÍË
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (!comeBackForCrush) move(-1, 0);
         if (taoTie->spatialData.currentPosX <= -64) {
-            //»Øµ½³õÊ¼Î»ÖÃ£¬½áÊø¹¥»÷
+            //ï¿½Øµï¿½ï¿½ï¿½Ê¼Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             comeBackForCrush                = true;
-            taoTie->spatialData.refPosX     = 120; //ÖØÖÃÎ»ÖÃ
+            taoTie->spatialData.refPosX     = 120; //ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
             taoTie->spatialData.refPosY     = 1;
             taoTie->spatialData.currentPosX = 120;
             taoTie->spatialData.currentPosY = 1;
@@ -2706,7 +2703,7 @@ void TaotieEnemy::appearLeftAndRollBackCrushAttack() {
     }
 
     if (action_timer <= 50) {
-        taoTie->spatialData.refPosX     = 64; //ÖØÖÃÎ»ÖÃ
+        taoTie->spatialData.refPosX     = 64; //ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         taoTie->spatialData.refPosY     = 1;
         taoTie->spatialData.currentPosX = 64;
         taoTie->spatialData.currentPosY = 1;
@@ -2714,10 +2711,10 @@ void TaotieEnemy::appearLeftAndRollBackCrushAttack() {
 }
 
 void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
-    // //½«Íæ¼ÒÏò×Ô¼ºÀ­½ü£¬Í¬Ê±ÏòÇ°³å×²
+    // //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½Ç°ï¿½ï¿½×²
 
-    //½«Íæ¼ÒÏò×Ô¼ºÀ­½ü£¬½øÐÐÍÌÊÉ¹¥»÷
-    if (action_count < action_MaxTime / pullAndChargeDistance) // Ã¿3000/120 ms À­½üÒ»´Î
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¹ï¿½ï¿½ï¿½
+    if (action_count < action_MaxTime / pullAndChargeDistance) // Ã¿3000/120 ms ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
@@ -2726,7 +2723,7 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
 
     uint16_t dirX = 0;
     uint16_t dirY = 0;
-    //¼ÆËã·½ÏòÏòÁ¿
+    //ï¿½ï¿½ï¿½ã·½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
     int16_t deltaX = (m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2)
                      - (player->getData()->spatialData.currentPosX + player->getData()->spatialData.sizeX / 2);
@@ -2740,16 +2737,16 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
     if (deltaY > 0) dirY = 1;
     if (deltaY == 0) dirY = 0;
 
-    //¸üÐÂÍæ¼ÒÎ»ÖÃ
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     player->move(dirX, dirY, true);
 
-    //ÏòÇ°³å×²£¬½øÐÐ×²»÷¹¥»÷
-    //Ïò×ó³å×²
-    //³å×²¾àÀë=pullAndChargeDistance
+    //ï¿½ï¿½Ç°ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²
+    //ï¿½ï¿½×²ï¿½ï¿½ï¿½ï¿½=pullAndChargeDistance
     int8_t dir = -2;
-    if (action_timer > action_MaxTime * 3 / 4) dir = -2;                                      //Ç°°ë¶ÎÊ±¼äÏò×ó³å×²
-    if (action_timer <= action_MaxTime * 3 / 4 && action_timer > action_MaxTime / 4) dir = 0; //ºó°ë¶ÎÊ±¼äÍ£¶Ù
-    if (action_timer <= action_MaxTime / 4) dir = 2;                                          //×îºóÊ±¼äÏòÓÒ»ØÍË
+    if (action_timer > action_MaxTime * 3 / 4) dir = -2;                                      //Ç°ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²
+    if (action_timer <= action_MaxTime * 3 / 4 && action_timer > action_MaxTime / 4) dir = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Í£ï¿½ï¿½
+    if (action_timer <= action_MaxTime / 4) dir = 2;                                          //ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½
     move(dir, 0);
 }
 
@@ -2757,58 +2754,58 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
 
 /*******************************************************************/
 /**
- * @brief TaowuEnemy class - —ƒè» BOSS
- * @note  ÖÐÎÄ£º—ƒè» £ü Ó¢ÎÄ£ºTaowu
- * @note  Éñ»°µä¹Ê£ºËÄÐ×Ö®Ò»£¬»¢ÐÎÈ®Ã«¡¢ÈËÃæÖí¿Ú¡¢Î²³¤Ò»ÕÉ°Ë³ß£»
- * @note  ÉÏ¹Å "ËÄÐ×" Ö®Ò»£¬ÐÔ¸ñÍçÁÓ²»¿É½Ì»¯£¬ÔÚ»ÄÒ°ÖÐ½ÁÂÒÖÈÐò¡¢²¶Ê³ÈËÀà£¬´ú±íÐ×±©ÓëÅÑÄæ¡£
+ * @brief TaowuEnemy class - ï¿½ï¿½ï¿½ï¿½ BOSS
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Taowu
+ * @note  ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½Ö®Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È®Ã«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¡ï¿½Î²ï¿½ï¿½Ò»ï¿½É°Ë³ß£ï¿½
+ * @note  ï¿½Ï¹ï¿½ "ï¿½ï¿½ï¿½ï¿½" Ö®Ò»ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½É½Ì»ï¿½ï¿½ï¿½ï¿½Ú»ï¿½Ò°ï¿½Ð½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò¡¢²ï¿½Ê³ï¿½ï¿½ï¿½à£¬ï¿½ï¿½ï¿½ï¿½ï¿½×±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¡£
  * 
- * @note  BOSS¼¶´óÐÍµÐÈË£¬ÌåÐÍ¾Þ´ó£¨64x64 ÏñËØ£©£¬µÍÑªÁ¿£¬¸ß¹¥»÷Á¦£¬¸ßËÙÒÆ¶¯£¬
- * @note  ¹¥»÷·½Ê½¶àÑùÇÒ¾ßÓÐÍþÐ²ÐÔ£¬ÉÃ³¤ÉÁÏÖÒÆ¶¯Óë´óÁ¿µ¯Ä»¡£
+ * @note  BOSSï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½Í¾Þ´ï¿½ï¿½ï¿½64x64 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½ß¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¾ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Ô£ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½
  * 
- * @note  === ¹¥»÷·½Ê½ === 
- * @note  MODE_1: ÉÁÏÖÖÁÖÐ¼äÎ»ÖÃ(63,1)£¬Ëæ»úÎ»ÖÃ·¢Éä´óÁ¿ÆÕÍ¨×Óµ¯
- *               ÑªÁ¿Ô½µÍ·¢Éä³ÖÐøÊ±¼äÔ½³¤£¬»ù´¡Ê±¼ä MassiveBasicBulletFireTime=3000ms£¬×î¶à6000ms
- *               ·¢ÉäÆµÂÊ£ºÃ¿ 1000/BulletsPerSecond=125ms Ò»·¢
- * @note  MODE_2: ÉÁÏÖÖÁÖÐ¼äÎ»ÖÃ(63,1)£¬Ëæ»úÎ»ÖÃ·¢Éä¶à¸ö»ðÇòµ¯
- *               ³ÖÐøÊ±¼ä FiveFireballBulletFireTime=3000ms
- *               ·¢ÉäÆµÂÊ£ºÃ¿ 3000/FireballCount=375ms Ò»·¢£¬¹² FireballCount=8 ·¢
- * @note  MODE_3: Ô­µØË²·¢£¬ÖÐ¼ä·¢ÉäÒ»¿Å»ðÇòµ¯£¬×î±ßÔµÁ½²à¸÷·¢ÉäÁ½¿ÅÆÕÍ¨×Óµ¯
- *               ³ÖÐøÊ±¼ä CenterFireballAttackTime=100ms
- * @note  MODE_4: ·¢ÉäÒ»ÅÅÌØÊâÕóÐÍµÄ×Óµ¯£¬Ö»ÓÐÖÐ¼äÓÐÈ±¿Ú£¨È±¿Ú·¶Î§ 12ÏñËØ£©
- *               ³ÖÐøÊ±¼ä NotchedBulletsAttackTime=500ms
- * @note  MODE_5: ÉÁÏÖÖÁÔ¶´¦(140,1)£¬·¢Éä3¿Å»ðÇòµ¯£¨Ëæ»úYÎ»ÖÃ£©£¬È»ºó·µ»Ø(63,1)
- *               ³ÖÐøÊ±¼ä BlinkRandomTime=1000ms£¬·ÖÈý½×¶ÎÖ´ÐÐ
- * @note  MODE_6: ¶¨ÏòÉÁÏÖ£¬¶ÔÆëÍæ¼ÒYÎ»ÖÃ£¬XÎ»ÖÃËæ»ú(30-80)£¬¹¥»÷½áÊøºóÇå³ýCD
- *               ³ÖÐøÊ±¼ä BlinkAlignedTime=100ms
+ * @note  === ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ === 
+ * @note  MODE_1: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½Î»ï¿½ï¿½(63,1)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ *               Ñªï¿½ï¿½Ô½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ MassiveBasicBulletFireTime=3000msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½6000ms
+ *               ï¿½ï¿½ï¿½ï¿½Æµï¿½Ê£ï¿½Ã¿ 1000/BulletsPerSecond=125ms Ò»ï¿½ï¿½
+ * @note  MODE_2: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½Î»ï¿½ï¿½(63,1)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ FiveFireballBulletFireTime=3000ms
+ *               ï¿½ï¿½ï¿½ï¿½Æµï¿½Ê£ï¿½Ã¿ 3000/FireballCount=375ms Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ FireballCount=8 ï¿½ï¿½
+ * @note  MODE_3: Ô­ï¿½ï¿½Ë²ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ä·¢ï¿½ï¿½Ò»ï¿½Å»ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ CenterFireballAttackTime=100ms
+ * @note  MODE_4: ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Óµï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½È±ï¿½Ú£ï¿½È±ï¿½Ú·ï¿½Î§ 12ï¿½ï¿½ï¿½Ø£ï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ NotchedBulletsAttackTime=500ms
+ * @note  MODE_5: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½(140,1)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½Å»ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½Ã£ï¿½ï¿½ï¿½È»ï¿½ó·µ»ï¿½(63,1)
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ BlinkRandomTime=1000msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×¶ï¿½Ö´ï¿½ï¿½
+ * @note  MODE_6: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½Ã£ï¿½XÎ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(30-80)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CD
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ BlinkAlignedTime=100ms
  */
 
 TaowuEnemy::TaowuEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &TaowuImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
-    //ÑªÁ¿½ÏµÍ£¬µ«¹¥»÷Á¦¸ß£¬ÒÆ¶¯ËÙ¶È¿ì
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
+    //Ñªï¿½ï¿½ï¿½ÏµÍ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½Æ¶ï¿½ï¿½Ù¶È¿ï¿½
     m_pdata->healthData.currentHealth = 130 + level * 800;
     m_pdata->healthData.maxHealth     = 130 + level * 800;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 30;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 15000;
     m_pdata->healthData.healSpeed       = 5;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = true;
     m_pdata->spatialData.currentPosX               = startX; // Starting X position
     m_pdata->spatialData.currentPosY               = startY; // Starting Y position
@@ -2819,29 +2816,29 @@ TaowuEnemy::TaowuEnemy(
     m_pdata->spatialData.moveSpeed                 = 3; // Set movement speed
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->attackData.attackPower            = 10 + level * 5;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 10;   //Ö»¶Ô»ðÇòµ¯ÉúÐ§
-    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»¶ÔÉÁµçÁ´µ¯ÉúÐ§
+    m_pdata->attackData.bulletRange            = 10;   //Ö»ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
 
     m_pdata->attackData.collisionPower = 7 + level * 5;
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 250;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 0;
-    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿´ÎÀäÈ´10µãÈÈÁ¿£¬Ã¿´ÎÀäÈ´Ê±¼ä¼ä¸ôÓÉ200ms
+    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿ï¿½ï¿½ï¿½ï¿½È´10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200ms
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = TaowuEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
@@ -2856,8 +2853,8 @@ void TaowuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::BASIC:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
             if (newBullet != nullptr) {
@@ -2874,8 +2871,8 @@ void TaowuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::FIRE_BALL:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
             if (newBullet != nullptr) {
@@ -2892,8 +2889,8 @@ void TaowuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::LIGHTNING_LINE:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
             if (newBullet != nullptr) {
@@ -2914,12 +2911,12 @@ void TaowuEnemy::init() {
     // Initialize enemy role specifics
 
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 60) { // Ã¿60msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 60) { // Ã¿60msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX -= 1;
             m_pdata->initData.init_count = 0;
         }
     } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 60) { // Ã¿60msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 60) { // Ã¿60msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX += 1;
             m_pdata->initData.init_count = 0;
         }
@@ -2934,7 +2931,7 @@ void TaowuEnemy::init() {
 void TaowuEnemy::think() {
     // Implement enemy AI logic
     think_count += controlDelayTime;
-    if (think_count < 100) // Ã¿100ms¾ö¶¨Ò»´ÎÐÐ¶¯
+    if (think_count < 100) // Ã¿100msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½
         return;
 
     think_count = 0;
@@ -2942,7 +2939,7 @@ void TaowuEnemy::think() {
     uint8_t randomAction = rand() % 6;
     // Random action: 0 - move left, 1 - move right, 2 - move down, 3 - move up, 4 - stay still, 5 - shoot
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        //ÒÆ¶¯
+        //ï¿½Æ¶ï¿½
         if (randomAction == 0) {
             m_pdata->actionData.moveMode     = MoveMode::LEFT;
             m_pdata->actionData.currentState = ActionState::MOVING;
@@ -2961,27 +2958,27 @@ void TaowuEnemy::think() {
             m_pdata->actionData.currentState = ActionState::MOVING;
         }
 
-        //¹¥»÷
+        //ï¿½ï¿½ï¿½ï¿½
         else if (randomAction == 5) {
             if (m_pdata->attackData.shootCooldownTimer > 0) {
-                // Èç¹ûÔÚÀäÈ´ÖÐ£¬Ôò²»½øÐÐ¹¥»÷£¬±£³Ö¿ÕÏÐ×´Ì¬
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½ò²»½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿ï¿½ï¿½ï¿½×´Ì¬
                 m_pdata->actionData.moveMode     = MoveMode::NONE;
                 m_pdata->actionData.currentState = ActionState::IDLE;
                 return;
             }
 
-            uint8_t randomAttackMode         = rand() % 6 + 1; // 1-6 ¹¥»÷·½Ê½
+            uint8_t randomAttackMode         = rand() % 6 + 1; // 1-6 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             switch (randomAttackMode) {
             case 1:
-                //¹¥»÷Ä£Ê½1 - Ëæ»úÎ»ÖÃ·¢Éä´óÁ¿ÆÕÍ¨×Óµ¯£¬ÑªÁ¿Ô½µÍ£¬·¢Éä³ÖÐøÊ±¼äÔ½³¤£¬»ù´¡Ê±¼äÎª3Ãë£¬×î¶àÎª6Ãë£¬Ã¿Ãë·¢Éä5·¢
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½1 - ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½Ñªï¿½ï¿½Ô½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Îª3ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½Îª6ï¿½ë£¬Ã¿ï¿½ë·¢ï¿½ï¿½5ï¿½ï¿½
                 action_timer   = (uint16_t)(MassiveBasicBulletFireTime
                                           * float(
                                               (float)(m_pdata->healthData.maxHealth - m_pdata->healthData.currentHealth)
                                                   / (float)m_pdata->healthData.maxHealth
                                               + 1
-                                          )); // ÑªÁ¿Ô½µÍ£¬¹¥»÷¶¯×÷³ÖÐøÊ±¼äÔ½³¤£¬»ù´¡Ê±¼äÎª3000ms, ×î¶àÎª6000ms
+                                          )); // Ñªï¿½ï¿½Ô½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Îª3000ms, ï¿½ï¿½ï¿½ï¿½Îª6000ms
                 action_MaxTime = action_timer;
                 action_count   = 0;
 
@@ -2990,8 +2987,8 @@ void TaowuEnemy::think() {
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
                 break;
             case 2:
-                //¹¥»÷Ä£Ê½2 - Ëæ»úÎ»ÖÃ·¢Éä5¸ö»ðÇòµ¯£¬³ÖÐøÊ±¼ä3Ãë
-                action_timer   = FiveFireballBulletFireTime; // —ƒè»¹¥»÷¶¯×÷³ÖÐøÊ±¼ä3000ms
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½2 - ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½5ï¿½ï¿½ï¿½ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½3ï¿½ï¿½
+                action_timer   = FiveFireballBulletFireTime; // ï¿½ï¿½è»¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½3000ms
                 action_MaxTime = action_timer;
                 action_count   = 0;
                 positionChange = false;
@@ -3000,25 +2997,25 @@ void TaowuEnemy::think() {
                 break;
 
             case 3:
-                //¹¥»÷Ä£Ê½3 - ÖÐ¼ä·¢ÉäÒ»¿Å»ðÇòµ¯£¬×î±ßÔµÁ½²à·¢Éä¸÷Á½¿ÅÆÕÍ¨×Óµ¯
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½3 - ï¿½Ð¼ä·¢ï¿½ï¿½Ò»ï¿½Å»ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½ï¿½à·¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
                 //1000ms
-                action_timer   = CenterFireballAttackTime; // —ƒè»¹¥»÷¶¯×÷³ÖÐøÊ±¼ä100ms
+                action_timer   = CenterFireballAttackTime; // ï¿½ï¿½è»¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½100ms
                 action_MaxTime = action_timer;
                 action_count   = 0;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_3;
                 break;
             case 4:
-                //¹¥»÷Ä£Ê½4 - ·¢ÉäÒ»ÅÅÌØÊâÕóÐÍµÄ×Óµ¯£¬Ö»ÓÐÖÐ¼äÓÐÈ±¿Ú
-                action_timer   = NotchedBulletsAttackTime; // —ƒè»¹¥»÷¶¯×÷³ÖÐøÊ±¼ä
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½4 - ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Óµï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½È±ï¿½ï¿½
+                action_timer   = NotchedBulletsAttackTime; // ï¿½ï¿½è»¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
                 action_MaxTime = action_timer;
                 action_count   = 0;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_4;
                 break;
             case 5:
-                //¹¥»÷Ä£Ê½5 - Ëæ»úÉÁÏÖÒÆ¶¯£¬ÁôÏÂ»ðÇòµ¯²¢ÏûÊ§
-                action_timer   = BlinkRandomTime; // ÉÁÏÖ³ÖÐøÊ±¼ä
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½5 - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â»ï¿½ï¿½òµ¯²ï¿½ï¿½ï¿½Ê§
+                action_timer   = BlinkRandomTime; // ï¿½ï¿½ï¿½Ö³ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
                 action_MaxTime = action_timer;
                 action_count   = 0;
                 positionChange = false;
@@ -3026,8 +3023,8 @@ void TaowuEnemy::think() {
                 m_pdata->actionData.attackMode = AttackMode::MODE_5;
                 break;
             case 6:
-                //¹¥»÷Ä£Ê½6 - ¶¨ÏòÉÁÏÖ£¬¶ÔÆëÍæ¼ÒÎ»ÖÃÉÁÏÖ
-                action_timer   = BlinkAlignedTime; // ¶¨ÏòÉÁÏÖÊ±¼ä
+                //ï¿½ï¿½ï¿½ï¿½Ä£Ê½6 - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+                action_timer   = BlinkAlignedTime; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
                 action_MaxTime = action_timer;
                 action_count   = 0;
                 positionChange = false;
@@ -3076,17 +3073,17 @@ void TaowuEnemy::doAction() {
         // Move logic handled in think()
         break;
     case ActionState::ATTACKING:
-        //¶¯×÷×÷ÓÃÊ±¼ä£¬ÓÃÀ´µ÷½Ú¶¯×÷·¢ÉúµÄÆµÂÊ
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½
         action_count += controlDelayTime;
 
-        //¶¯×÷µ¹¼ÆÊ±
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
         if (action_timer >= controlDelayTime)
             action_timer -= controlDelayTime;
         else
             action_timer = 0;
 
         switch (m_pdata->actionData.attackMode) {
-        //Ö´ÐÐ¹¥»÷¶¯×÷
+        //Ö´ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         case AttackMode::MODE_1:
             fireContinuousMassiveBasicBullets();
             break;
@@ -3110,7 +3107,7 @@ void TaowuEnemy::doAction() {
         }
 
         if (action_timer == 0) {
-            // ¹¥»÷Ä£Ê½6£¬Çå³ýCD£¨ÔÚÖØÖÃ attackMode Ö®Ç°¼ì²é£©
+            // ï¿½ï¿½ï¿½ï¿½Ä£Ê½6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ attackMode Ö®Ç°ï¿½ï¿½ï¿½é£©
             bool clearCD = (m_pdata->actionData.attackMode == AttackMode::MODE_6);
 
             m_pdata->actionData.currentState = ActionState::IDLE;
@@ -3118,10 +3115,10 @@ void TaowuEnemy::doAction() {
             action_count                     = 0;
 
             if (clearCD) {
-                m_pdata->attackData.shootCooldownTimer = 0; // MODE_6 Çå³ýÀäÈ´Ê±¼ä
+                m_pdata->attackData.shootCooldownTimer = 0; // MODE_6 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½
             } else {
                 m_pdata->attackData.shootCooldownTimer =
-                    m_pdata->attackData.shootCooldownResetTime; // ¹¥»÷ºó½øÈëÀäÈ´Ê±¼ä
+                    m_pdata->attackData.shootCooldownResetTime; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½
             }
         }
         break;
@@ -3137,12 +3134,12 @@ void TaowuEnemy::drawRole() {
 
     if (m_pdata->deathData.isDead) {
         // Draw death animation or effect
-        // »æÖÆËÀÍö¶¯»­£¨ÀýÈçÒ»¸ö¼òµ¥µÄÔ²È¦±íÊ¾ÏûÊ§Ð§¹û£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½òµ¥µï¿½Ô²È¦ï¿½ï¿½Ê¾ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
         uint8_t radius =
-            (TaowuEnemyDeadTime - m_pdata->deathData.deathTimer) * 30 / TaowuEnemyDeadTime; // ´Ó0Ôö³¤µ½×î´óÖµ5
-        radius = etl::max(radius, uint8_t(1));                                              // ×îÐ¡°ë¾¶ÏÞÖÆ
+            (TaowuEnemyDeadTime - m_pdata->deathData.deathTimer) * 30 / TaowuEnemyDeadTime; // ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ5
+        radius = etl::max(radius, uint8_t(1));                                              // ï¿½ï¿½Ð¡ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½
 
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
     }
@@ -3159,14 +3156,14 @@ void TaowuEnemy::die() {
     m_pdata->isActive = false;
 }
 
-//¹¥»÷¼¼ÄÜ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void TaowuEnemy::fireContinuousMassiveBasicBullets() {
-    if (action_count < 1000 / BulletsPerSecond) // Ã¿125ms·¢ÉäÒ»´Î (1000/8)
+    if (action_count < 1000 / BulletsPerSecond) // Ã¿125msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ (1000/8)
         return;
     action_count = 0;
 
     if (!positionChange) {
-        //¸Ä±äÎ»ÖÃ
+        //ï¿½Ä±ï¿½Î»ï¿½ï¿½
         m_pdata->spatialData.currentPosX = 63;
         m_pdata->spatialData.currentPosY = 1;
         m_pdata->spatialData.refPosX     = 63;
@@ -3174,25 +3171,25 @@ void TaowuEnemy::fireContinuousMassiveBasicBullets() {
         positionChange                   = true;
     }
 
-    //·¢Éä´óÁ¿ÆÕÍ¨×Óµ¯
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
     uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    uint8_t offsetY = (rand() % 61) - 30; // -30 µ½ +30 µÄËæ»úÆ«ÒÆ
+    uint8_t offsetY = (rand() % 61) - 30; // -30 ï¿½ï¿½ +30 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
 
-    //¸ÃBOSSÎÞÈÈÁ¿ÏûºÄ£¬½öÐèÖØÖÃÀäÈ´Ê±¼ä
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+    //ï¿½ï¿½BOSSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
     shoot(m_x, m_y + offsetY, BulletType::BASIC);
 }
 
-// Ã¿375ms·¢ÉäÒ»´Î (3000/8)
+// Ã¿375msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ (3000/8)
 void TaowuEnemy::fireFiveFireballBulletsAtRandom() {
-    if (action_count < FiveFireballBulletFireTime / FireballCount) // Ã¿375ms·¢Éä3·¢»ðÇò
+    if (action_count < FiveFireballBulletFireTime / FireballCount) // Ã¿375msï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         return;
     action_count = 0;
 
     if (!positionChange) {
-        //¸Ä±äÎ»ÖÃ
+        //ï¿½Ä±ï¿½Î»ï¿½ï¿½
         m_pdata->spatialData.currentPosX = 63;
         m_pdata->spatialData.currentPosY = 1;
         m_pdata->spatialData.refPosX     = 63;
@@ -3200,91 +3197,91 @@ void TaowuEnemy::fireFiveFireballBulletsAtRandom() {
         positionChange                   = true;
     }
 
-    //·¢Éä»ðÇòµ¯
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    uint8_t offsetY = (rand() % 61) - 30; // -30 µ½ +30 µÄËæ»úÆ«ÒÆ
+    uint8_t offsetY = (rand() % 61) - 30; // -30 ï¿½ï¿½ +30 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ«ï¿½ï¿½
 
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
     shoot(m_x, m_y + offsetY, BulletType::FIRE_BALL);
 }
 
 void TaowuEnemy::fireCenterFireballAndSideBasicBullets() {
-    if (action_count < action_MaxTime - 10) // action_MaxTime=100ms£¬90msºó·¢Éä
+    if (action_count < action_MaxTime - 10) // action_MaxTime=100msï¿½ï¿½90msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         return;
     action_count = 0;
-    //·¢ÉäÖÐ¼ä»ðÇòµ¯£¬²à±ßÆÕÍ¨×Óµ¯
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
     uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-    //ÖÐ¼ä»ðÇòµ¯
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+    //ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
     shoot(m_x, m_y, BulletType::FIRE_BALL);
-    //×ó²àÆÕÍ¨×Óµ¯
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
     shoot(m_x, m_y + 26, BulletType::BASIC);
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
     shoot(m_x + 20, m_y + 30, BulletType::BASIC);
-    //ÓÒ²àÆÕÍ¨×Óµ¯
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+    //ï¿½Ò²ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
     shoot(m_x, m_y - 26, BulletType::BASIC);
-    m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+    m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
     shoot(m_x + 20, m_y - 30, BulletType::BASIC);
 }
 
 void TaowuEnemy::fireSingleRowNotchedBasicBullets() {
-    if (action_count < action_MaxTime - 10) // action_MaxTime=500ms£¬490msºó·¢Éä
+    if (action_count < action_MaxTime - 10) // action_MaxTime=500msï¿½ï¿½490msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         return;
     action_count = 0;
-    //·¢ÉäÒ»ÅÅÌØÊâÕóÐÍµÄ×Óµ¯£¬Ö»ÓÐÖÐ¼äÓÐÈ±¿Ú
+    //ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Óµï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½È±ï¿½ï¿½
     uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    //·¢Éä×Óµ¯£¬¼ä¸ô6¸öÏñËØ£¬Ìø¹ýÖÐ¼äÎ»ÖÃ
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½6ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½Î»ï¿½ï¿½
     for (int8_t offsetY = -30; offsetY <= 30; offsetY += 6) {
         if (offsetY >= -12 && offsetY <= 12) {
-            // ÖÐ¼äÈ±¿Ú£¬Ìø¹ý·¢Éä
+            // ï¿½Ð¼ï¿½È±ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             continue;
         }
-        m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+        m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
         shoot(m_x, m_y + offsetY, BulletType::BASIC);
     }
 }
 
 void TaowuEnemy::blinkToRandomPosition() {
-    // Ê¹ÓÃ action_MaxTime/3 ×÷Îª½×¶Î¼ä¸ô (BlinkRandomTime=1000ms, Ã¿½×¶Î333.3ms)
-    uint16_t phaseInterval = action_MaxTime / 3 - 20; // ÌáÇ°20msÖ´ÐÐ½×¶ÎÇÐ»»
+    // Ê¹ï¿½ï¿½ action_MaxTime/3 ï¿½ï¿½Îªï¿½×¶Î¼ï¿½ï¿½ï¿½ (BlinkRandomTime=1000ms, Ã¿ï¿½×¶ï¿½333.3ms)
+    uint16_t phaseInterval = action_MaxTime / 3 - 20; // ï¿½ï¿½Ç°20msÖ´ï¿½Ð½×¶ï¿½ï¿½Ð»ï¿½
     if (action_count < phaseInterval) return;
     action_count = 0;
 
-    // Ê¹ÓÃ action_timer ÅÐ¶Ïµ±Ç°½×¶Î
-    // action_timer ´Ó action_MaxTime ¿ªÊ¼µÝ¼õ
-    // ½×¶Î1: action_timer > action_MaxTime * 2/3  (¸Õ¿ªÊ¼)
-    // ½×¶Î2: action_timer ÔÚ action_MaxTime * 1/3 µ½ 2/3 Ö®¼ä
-    // ½×¶Î3: action_timer < action_MaxTime * 1/3  (¿ì½áÊø)
+    // Ê¹ï¿½ï¿½ action_timer ï¿½Ð¶Ïµï¿½Ç°ï¿½×¶ï¿½
+    // action_timer ï¿½ï¿½ action_MaxTime ï¿½ï¿½Ê¼ï¿½Ý¼ï¿½
+    // ï¿½×¶ï¿½1: action_timer > action_MaxTime * 2/3  (ï¿½Õ¿ï¿½Ê¼)
+    // ï¿½×¶ï¿½2: action_timer ï¿½ï¿½ action_MaxTime * 1/3 ï¿½ï¿½ 2/3 Ö®ï¿½ï¿½
+    // ï¿½×¶ï¿½3: action_timer < action_MaxTime * 1/3  (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)
 
     uint16_t phase2Threshold = action_MaxTime * 2 / 3; // Ô¼666ms
     uint16_t phase3Threshold = action_MaxTime / 3;     // Ô¼333ms
 
     if (!positionChange) {
-        // ½×¶Î1: ÉÁÏÖµ½Ô¶´¦Î»ÖÃ
+        // ï¿½×¶ï¿½1: ï¿½ï¿½ï¿½Öµï¿½Ô¶ï¿½ï¿½Î»ï¿½ï¿½
         m_pdata->spatialData.currentPosX = 140;
         m_pdata->spatialData.currentPosY = 1;
         m_pdata->spatialData.refPosX     = m_pdata->spatialData.currentPosX;
         m_pdata->spatialData.refPosY     = m_pdata->spatialData.currentPosY;
         positionChange                   = true;
     } else if (action_timer >= phase3Threshold) {
-        // ½×¶Î2: ÔÚÔ¶´¦Î»ÖÃ·¢Éä3¿Å»ðÇòµ¯£¨Ëæ»úYÎ»ÖÃ£©
-        // ×¢Òâ£ºÃ¿´Î·¢ÉäÇ°¶¼ÒªÖØÖÃÀäÈ´Ê±¼ä£¬ÒòÎªshoot()ÄÚ²¿»áÉèÖÃÀäÈ´
+        // ï¿½×¶ï¿½2: ï¿½ï¿½Ô¶ï¿½ï¿½Î»ï¿½Ã·ï¿½ï¿½ï¿½3ï¿½Å»ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½Ã£ï¿½
+        // ×¢ï¿½â£ºÃ¿ï¿½Î·ï¿½ï¿½ï¿½Ç°ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½Îªshoot()ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´
 
         for (int i = 0; i < 3; i++) {
-            m_pdata->attackData.shootCooldownTimer = 0;                // ±ØÐëÔÚÃ¿´ÎshootÇ°ÖØÖÃ
-            uint8_t m_y                            = rand() % 54 + 6;  // 6-59 Ëæ»úYÎ»ÖÃ
-            uint8_t m_x                            = 80 + rand() % 42; // 80-121 Ëæ»úXÎ»ÖÃ
+            m_pdata->attackData.shootCooldownTimer = 0;                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½shootÇ°ï¿½ï¿½ï¿½ï¿½
+            uint8_t m_y                            = rand() % 54 + 6;  // 6-59 ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½ï¿½
+            uint8_t m_x                            = 80 + rand() % 42; // 80-121 ï¿½ï¿½ï¿½ï¿½XÎ»ï¿½ï¿½
             shoot(m_x, m_y, BulletType::FIRE_BALL);
         }
     } else {
-        // ½×¶Î3: »Ö¸´Ô­Î»ÖÃ
+        // ï¿½×¶ï¿½3: ï¿½Ö¸ï¿½Ô­Î»ï¿½ï¿½
         m_pdata->spatialData.currentPosX = 63;
         m_pdata->spatialData.currentPosY = 1;
         m_pdata->spatialData.refPosX     = 63;
@@ -3293,7 +3290,7 @@ void TaowuEnemy::blinkToRandomPosition() {
 }
 
 void TaowuEnemy::blinkToPlayerAlignedPosition() {
-    if (action_count < action_MaxTime - 10) // ÉÁÏÖÒ»´Î
+    if (action_count < action_MaxTime - 10) // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
@@ -3301,14 +3298,14 @@ void TaowuEnemy::blinkToPlayerAlignedPosition() {
     if (player == nullptr) return;
 
     if (!positionChange) {
-        //¸Ä±äÎ»ÖÃ£¬¶ÔÆëÍæ¼ÒÎ»ÖÃ
+        //ï¿½Ä±ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
         uint8_t playerY = player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2;
         int8_t  targetY = playerY - m_pdata->spatialData.sizeY / 2;
 
-        //XÎ»ÖÃËæ»ú
-        m_pdata->spatialData.currentPosX = 30 + (rand() % 51); // 30-80 Ëæ»úÎ»ÖÃ
+        //XÎ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        m_pdata->spatialData.currentPosX = 30 + (rand() % 51); // 30-80 ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
 
-        //È·±£BOSSÎ»ÖÃÔÚÆÁÄ»ÄÚ
+        //È·ï¿½ï¿½BOSSÎ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½
         if (targetY < -31) targetY = -31;
         if (targetY > 95) targetY = 95;
 
@@ -3324,44 +3321,44 @@ void TaowuEnemy::blinkToPlayerAlignedPosition() {
 /*******************************************************************/
 /**
  * @brief XiangliuEnemy class
- * @note  ÖÐÎÄ£ºÏàÁø £ü Ó¢ÎÄ£ºXiangliu,Éñ»°µä¹Ê£º¾ÅÍ·ÉßÐÎ¹ÖÊÞ£¬¾ÓÓÚºéË®Ö®ÖÐ£¬¶¾ÆøÃÖÂþ£¬Ëùµ½Ö®´¦²ÝÄ¾½Ô¿Ý£¬ºÓÁ÷¸ÉºÔ¡£
- * @note  ¾ÅÍ·ÉßÐÎ¹ÖÊÞ£¬ÄÜÅçÉä¾ç¶¾£¬Ëùµ½Ö®´¦²ÝÄ¾½Ô¿Ý£¬ºÓÁ÷¸ÉºÔ£¬ÏóÕ÷ÔÖÄÑÓë»ÙÃð¡£
- * @note  BOSS¼¶´óÐÍµÐÈË£¬ÌåÐÍ¾Þ´ó£¨64x64 ÏñËØ£©£¬¸ßÑªÁ¿£¬¸ß¹¥»÷Á¦£¬ÖÐËÙÒÆ¶¯£¬¹¥»÷·½Ê½¶àÑùÇÒ¾ßÓÐÍþÐ²ÐÔ¡£
- * @note  ¹¥»÷·½Ê½1£¬·¢Éä¾ÅÅÅÆÕÍ¨×Óµ¯
- * @note  ¹¥»÷·½Ê½2£¬·¢ÉäÈýÅÅÉÁµç
- * @note  ¹¥»÷·½Ê½3£¬·¢ÉäÈýÅÅ»ðÇòµ¯
- * @note  ¹¥»÷·½Ê½4£¬Éú³É3Ö»ChiMeiEnemy×÷ÎªÕÙ»½ÎïÐ­Í¬×÷Õ½
- * @note  ¹¥»÷·½Ê½5£¬Éú³É2Ö»FeilianEnemy×÷ÎªÕÙ»½ÎïÐ­Í¬×÷Õ½
- * @note  ¹¥»÷·½Ê½6£¬Éú³É1Ö»GudiaoEnemy×÷ÎªÕÙ»½ÎïÐ­Í¬×÷Õ½
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Xiangliu,ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½Î¹ï¿½ï¿½Þ£ï¿½ï¿½ï¿½ï¿½Úºï¿½Ë®Ö®ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½Ô¿Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÉºÔ¡ï¿½
+ * @note  ï¿½ï¿½Í·ï¿½ï¿½ï¿½Î¹ï¿½ï¿½Þ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ç¶¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½ï¿½ï¿½Ä¾ï¿½Ô¿Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÉºÔ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  BOSSï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½Í¾Þ´ï¿½ï¿½ï¿½64x64 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½ß¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¾ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Ô¡ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½2ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½3ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½3Ö»ChiMeiEnemyï¿½ï¿½Îªï¿½Ù»ï¿½ï¿½ï¿½Ð­Í¬ï¿½ï¿½Õ½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2Ö»FeilianEnemyï¿½ï¿½Îªï¿½Ù»ï¿½ï¿½ï¿½Ð­Í¬ï¿½ï¿½Õ½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1Ö»GudiaoEnemyï¿½ï¿½Îªï¿½Ù»ï¿½ï¿½ï¿½Ð­Í¬ï¿½ï¿½Õ½
  */
 
 XiangliuEnemy::XiangliuEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &XiangliuImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
-    //ÑªÁ¿½ÏµÍ£¬µ«¹¥»÷Á¦¸ß£¬ÒÆ¶¯ËÙ¶È¿ì
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
+    //Ñªï¿½ï¿½ï¿½ÏµÍ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½Æ¶ï¿½ï¿½Ù¶È¿ï¿½
     m_pdata->healthData.currentHealth = 30 + level * 900;
     m_pdata->healthData.maxHealth     = 30 + level * 900;
 
-    //»ØÑªÐÅÏ¢
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
     m_pdata->healthData.healValue       = 30;
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 15000;
     m_pdata->healthData.healSpeed       = 5;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = true;
     m_pdata->spatialData.currentPosX               = startX; // Starting X position
     m_pdata->spatialData.currentPosY               = startY; // Starting Y position
@@ -3372,30 +3369,30 @@ XiangliuEnemy::XiangliuEnemy(
     m_pdata->spatialData.moveSpeed                 = 2; // Set movement speed
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->attackData.attackPower            = 3 + level * 5;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 8000; //8000 ms
     m_pdata->attackData.bulletSpeed            = 1;
-    //¹¥»÷ËÙ¶È 15000 ms
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿½ 15000 ms
 
-    m_pdata->attackData.bulletRange            = 10;   //Ö»¶Ô»ðÇòµ¯ÉúÐ§
-    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»¶ÔÉÁµçÁ´µ¯ÉúÐ§
+    m_pdata->attackData.bulletRange            = 10;   //Ö»ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f; //Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§
 
     m_pdata->attackData.collisionPower = 12 + level * 4;
 
-    //ÈÈÁ¿ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->heatData.maxHeat          = 250;
     m_pdata->heatData.currentHeat      = 0;
     m_pdata->heatData.heatPerShot      = 0;
-    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿´ÎÀäÈ´10µãÈÈÁ¿£¬Ã¿´ÎÀäÈ´Ê±¼ä¼ä¸ôÓÉ200ms
+    m_pdata->heatData.heatCoolDownRate = 10; //Ã¿ï¿½ï¿½ï¿½ï¿½È´10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½200ms
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = XiangliuEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
@@ -3410,8 +3407,8 @@ void XiangliuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::BASIC:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
             if (newBullet != nullptr) {
@@ -3428,8 +3425,8 @@ void XiangliuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::FIRE_BALL:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
             if (newBullet != nullptr) {
@@ -3446,8 +3443,8 @@ void XiangliuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     case BulletType::LIGHTNING_LINE:
         {
             if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
-                return;                                             // ³¬¹ý×î´óÈÈÁ¿£¬ÎÞ·¨Éä»÷
-            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ÀäÈ´ÖÐ£¬ÎÞ·¨Éä»÷
+                return;                                             // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
+            if (m_pdata->attackData.shootCooldownTimer > 0) return; // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
             if (newBullet != nullptr) {
@@ -3468,12 +3465,12 @@ void XiangliuEnemy::init() {
     // Initialize enemy role specifics
 
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 60) { // Ã¿60msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 60) { // Ã¿60msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX -= 1;
             m_pdata->initData.init_count = 0;
         }
     } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 60) { // Ã¿60msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 60) { // Ã¿60msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX += 1;
             m_pdata->initData.init_count = 0;
         }
@@ -3488,7 +3485,7 @@ void XiangliuEnemy::init() {
 void XiangliuEnemy::think() {
     // Implement enemy AI logic
     think_count += controlDelayTime;
-    if (think_count < 100) // Ã¿100ms¾ö¶¨Ò»´ÎÐÐ¶¯
+    if (think_count < 100) // Ã¿100msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½
         return;
 
     think_count = 0;
@@ -3496,7 +3493,7 @@ void XiangliuEnemy::think() {
     uint8_t randomAction = rand() % 6;
     // Random action: 0 - move left, 1 - move right, 2 - move down, 3 - move up, 4 - stay still, 5 - shoot
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        //ÒÆ¶¯
+        //ï¿½Æ¶ï¿½
         if (randomAction == 0) {
             m_pdata->actionData.moveMode     = MoveMode::LEFT;
             m_pdata->actionData.currentState = ActionState::MOVING;
@@ -3515,32 +3512,32 @@ void XiangliuEnemy::think() {
             m_pdata->actionData.currentState = ActionState::MOVING;
         }
 
-        //¹¥»÷
+        //ï¿½ï¿½ï¿½ï¿½
         else if (randomAction == 5) {
             if (m_pdata->attackData.shootCooldownTimer > 0) {
-                // Èç¹ûÔÚÀäÈ´ÖÐ£¬Ôò²»½øÐÐ¹¥»÷£¬±£³Ö¿ÕÏÐ×´Ì¬
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½ò²»½ï¿½ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¿ï¿½ï¿½ï¿½×´Ì¬
                 m_pdata->actionData.moveMode     = MoveMode::NONE;
                 m_pdata->actionData.currentState = ActionState::IDLE;
                 return;
             }
 
-            uint8_t randomAttackMode = rand() % 6 + 1; // 1-6 ¹¥»÷·½Ê½
+            uint8_t randomAttackMode = rand() % 6 + 1; // 1-6 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
             if (randomAttackMode > 3 && g_entityManager.m_roles.size() >= 4)
-                randomAttackMode -= 3; // Èç¹û³¡ÉÏµÐÈË¹ý¶à£¬Ôò¼õÉÙÕÙ»½Îï¹¥»÷·½Ê½µÄ¸ÅÂÊ
+                randomAttackMode -= 3; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½Ë¹ï¿½ï¿½à£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù»ï¿½ï¿½ï¹¥ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Ä¸ï¿½ï¿½ï¿½
 
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             switch (randomAttackMode) {
             case 1:
                 action_count   = 0;
-                action_timer   = 300; // ÏàÁø¹¥»÷¶¯×÷³ÖÐøÊ±¼ä300ms
+                action_timer   = 300; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
                 break;
             case 2:
                 action_count   = 0;
-                action_timer   = 300; // ÏàÁø¹¥»÷¶¯×÷³ÖÐøÊ±¼ä300ms
+                action_timer   = 300; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_2;
@@ -3548,28 +3545,28 @@ void XiangliuEnemy::think() {
 
             case 3:
                 action_count   = 0;
-                action_timer   = 300; // ÏàÁø¹¥»÷¶¯×÷³ÖÐøÊ±¼ä300ms
+                action_timer   = 300; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_3;
                 break;
             case 4:
                 action_count   = 0;
-                action_timer   = 300; // ÏàÁø¹¥»÷¶¯×÷³ÖÐøÊ±¼ä300ms
+                action_timer   = 300; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_4;
                 break;
             case 5:
                 action_count   = 0;
-                action_timer   = 300; // ÏàÁø¹¥»÷¶¯×÷³ÖÐøÊ±¼ä300ms
+                action_timer   = 300; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_5;
                 break;
             case 6:
                 action_count   = 0;
-                action_timer   = 300; // ÏàÁø¹¥»÷¶¯×÷³ÖÐøÊ±¼ä300ms
+                action_timer   = 300; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_6;
@@ -3616,17 +3613,17 @@ void XiangliuEnemy::doAction() {
         // Move logic handled in think()
         break;
     case ActionState::ATTACKING:
-        //¶¯×÷×÷ÓÃÊ±¼ä£¬ÓÃÀ´µ÷½Ú¶¯×÷·¢ÉúµÄÆµÂÊ
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½
         action_count += controlDelayTime;
 
-        //¶¯×÷µ¹¼ÆÊ±
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
         if (action_timer >= controlDelayTime)
             action_timer -= controlDelayTime;
         else
             action_timer = 0;
 
         switch (m_pdata->actionData.attackMode) {
-        //Ö´ÐÐ¹¥»÷¶¯×÷
+        //Ö´ï¿½Ð¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         case AttackMode::MODE_1:
             fireNineRowsBasicBullets();
             break;
@@ -3653,7 +3650,7 @@ void XiangliuEnemy::doAction() {
             m_pdata->actionData.currentState       = ActionState::IDLE;
             m_pdata->actionData.attackMode         = AttackMode::NONE;
             action_count                           = 0;
-            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // ¹¥»÷ºó½øÈëÀäÈ´Ê±¼ä
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ï¿½
         }
         break;
     }
@@ -3668,12 +3665,12 @@ void XiangliuEnemy::drawRole() {
 
     if (m_pdata->deathData.isDead) {
         // Draw death animation or effect
-        // »æÖÆËÀÍö¶¯»­£¨ÀýÈçÒ»¸ö¼òµ¥µÄÔ²È¦±íÊ¾ÏûÊ§Ð§¹û£©
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½òµ¥µï¿½Ô²È¦ï¿½ï¿½Ê¾ï¿½ï¿½Ê§Ð§ï¿½ï¿½ï¿½ï¿½
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
         uint8_t radius =
-            (XiangliuEnemyDeadTime - m_pdata->deathData.deathTimer) * 30 / XiangliuEnemyDeadTime; // ´Ó0Ôö³¤µ½×î´óÖµ5
-        radius = etl::max(radius, uint8_t(1));                                                    // ×îÐ¡°ë¾¶ÏÞÖÆ
+            (XiangliuEnemyDeadTime - m_pdata->deathData.deathTimer) * 30 / XiangliuEnemyDeadTime; // ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ5
+        radius = etl::max(radius, uint8_t(1));                                                    // ï¿½ï¿½Ð¡ï¿½ë¾¶ï¿½ï¿½ï¿½ï¿½
 
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
     }
@@ -3690,64 +3687,64 @@ void XiangliuEnemy::die() {
     m_pdata->isActive = false;
 }
 
-//¹¥»÷¼¼ÄÜ
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 void XiangliuEnemy::fireNineRowsBasicBullets() {
-    //·¢Éä¾ÅÅÅÆÕÍ¨×Óµ¯
-    if (action_count < action_MaxTime - 10) // ·¢ÉäÒ»´Î
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+    if (action_count < action_MaxTime - 10) // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
     uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-    //·¢Éä×Óµ¯£¬¼ä¸ô2¸öÏñËØ£¬ÖÐ¼äÁôÓÐ¿ÕÏ¶
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½Ï¶
     int8_t offsetYList[9] = {-31, -29, -27, -2, 0, 2, 27, 29, 31};
     for (uint8_t i = 0; i < 9; i++) {
-        m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+        m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
         shoot(m_x, m_y + offsetYList[i], BulletType::BASIC);
-        m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+        m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
         shoot(m_x + 18, m_y + offsetYList[i], BulletType::BASIC);
     }
 }
 
 void XiangliuEnemy::fireThreeRowsLightningBullets() {
-    if (action_count < action_MaxTime - 10) // ·¢ÉäÒ»´Î
+    if (action_count < action_MaxTime - 10) // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
-    //µ÷ÕûÎ»ÖÃ
+    //ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->spatialData.currentPosX = 64 + 14;
     m_pdata->spatialData.refPosX     = 64 + 14;
     m_pdata->spatialData.currentPosY = 1;
     m_pdata->spatialData.refPosY     = 1;
 
-    //·¢ÉäÈýÅÅÉÁµç
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-    //·¢Éä×Óµ¯£¬¼ä¸ô21¸öÏñËØ
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½21ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     int8_t offsetYList[3] = {-27, 0, 27};
     for (uint8_t i = 0; i < 3; i++) {
-        m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+        m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
         shoot(1, m_y + offsetYList[i], BulletType::LIGHTNING_LINE);
     }
 }
 
 void XiangliuEnemy::fireThreeRowsFireballBullets() {
-    if (action_count < action_MaxTime - 10) // ·¢ÉäÒ»´Î
+    if (action_count < action_MaxTime - 10) // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
-    //·¢ÉäÈýÅÅ»ðÇòµ¯
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½
     uint8_t m_x = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t m_y = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-    //·¢Éä×Óµ¯£¬¼ä¸ô21¸öÏñËØ
+    //ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½21ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     int8_t offsetYList[3] = {-21, 0, 21};
     for (uint8_t i = 0; i < 3; i++) {
-        m_pdata->attackData.shootCooldownTimer = 0; //ÖØÖÃÀäÈ´Ê±¼ä£¬¿ìËÙ·¢Éä×Óµ¯
+        m_pdata->attackData.shootCooldownTimer = 0; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£¬ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½Óµï¿½
         shoot(m_x, m_y + offsetYList[i], BulletType::FIRE_BALL);
     }
 }
 
 void XiangliuEnemy::summonThreeChiMeiMinions() {
-    if (action_count < action_MaxTime - 10) // ÕÙ»½Ò»´Î
+    if (action_count < action_MaxTime - 10) // ï¿½Ù»ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
@@ -3763,7 +3760,7 @@ void XiangliuEnemy::summonThreeChiMeiMinions() {
 }
 
 void XiangliuEnemy::summonTwoFeilianMinions() {
-    if (action_count < action_MaxTime - 10) // ÕÙ»½Ò»´Î
+    if (action_count < action_MaxTime - 10) // ï¿½Ù»ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
@@ -3778,7 +3775,7 @@ void XiangliuEnemy::summonTwoFeilianMinions() {
 }
 
 void XiangliuEnemy::summonOneGudiaoMinion() {
-    if (action_count < action_MaxTime - 10) // ÕÙ»½Ò»´Î
+    if (action_count < action_MaxTime - 10) // ï¿½Ù»ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
@@ -3795,63 +3792,63 @@ void XiangliuEnemy::summonOneGudiaoMinion() {
 
 /*******************************************************************/
 /**
- * @brief HundunEnemy class - »ìãç BOSS£¨ËÄÐ×Ö®Ê×£©
- * @note  ÖÐÎÄ£º»ìãç £ü Ó¢ÎÄ£ºHundun
- * @note  Éñ»°µä¹Ê£ºËÄÐ×Ö®Ò»£¬¡¶É½º£¾­¡·¼ÇÔØÆäÐÎÈç»ÆÄÒ£¬³àÈçµ¤»ð£¬Áù×ãËÄÒí£¬ÎÞÃæÄ¿£»
- * @note  ¡¶×¯×Ó¡·ÓÐ"ÆßÇÏÔä¶ø»ìãçËÀ"µÄµä¹Ê£¬ÏóÕ÷»ìÂÒ¡¢ÎÞÐò¡¢Î´·Ö»¯µÄÔ­Ê¼×´Ì¬¡£
+ * @brief HundunEnemy class - ï¿½ï¿½ï¿½ï¿½ BOSSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½×£ï¿½
+ * @note  ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ó¢ï¿½Ä£ï¿½Hundun
+ * @note  ï¿½ñ»°µï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½Ö®Ò»ï¿½ï¿½ï¿½ï¿½É½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½çµ¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½
+ * @note  ï¿½ï¿½×¯ï¿½Ó¡ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½Äµï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½Ö»ï¿½ï¿½ï¿½Ô­Ê¼×´Ì¬ï¿½ï¿½
  * 
- * @note  BOSS¼¶´óÐÍµÐÈË£¬ÌåÐÍ¾Þ´ó£¨68x64 ÏñËØ£©£¬×î¸ßÑªÁ¿£¨ËÄÐ×Ö®Ê×£©£¬ÖÐµÈ¹¥»÷Á¦£¬
- * @note  µÍËÙÒÆ¶¯µ«¿ÉË²ÒÆ£¬¹¥»÷·½Ê½ÒÔ¸ÉÈÅºÍ»ìÂÒÎªÖ÷¡£
+ * @note  BOSSï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½Í¾Þ´ï¿½ï¿½ï¿½68x64 ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½×£ï¿½ï¿½ï¿½ï¿½ÐµÈ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ë²ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Ô¸ï¿½ï¿½ÅºÍ»ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½
  * 
- * @note  === ¹¥»÷·½Ê½ ===
- * @note  MODE_1: »ìãçÓ¿¶¯ - Ëæ»úÉÁË¸ÒÆ¶¯£¬Í¬Ê±Ïò4¸ö·½Ïò·¢ÉäÆÕÍ¨×Óµ¯
- *               ³ÖÐøÊ±¼ä ChaosSurgeTime=3000ms£¬Ã¿ ChaosSurgeInterval=500ms ÉÁË¸²¢·¢ÉäÒ»ÂÖ
- * @note  MODE_2: ÆßÇÏ·âÓ¡ - ÔÚÆÁÄ»ÉÏÉú³É7¸öÉÁË¸¸ÉÈÅÇøÓòÕÚµ²ÊÓÒ°
- *               ³ÖÐøÊ±¼ä SealAperturesTime=2000ms£¬ºôÓ¦"ÆßÇÏÔä¶ø»ìãçËÀ"µä¹Ê
- * @note  MODE_3: Ðé¿ÕÇ£Òý - ½«Íæ¼ÒÏò»ìãçÎ»ÖÃ»ºÂýÀ­½ü£¬Í¬Ê±·¢Éä×·×Ù»ðÇòµ¯
- *               ³ÖÐøÊ±¼ä VoidPullTime=2500ms£¬Ã¿ VoidPullInterval=300ms À­½üÒ»´Î
- * @note  MODE_4: »ìãçäöÎÐ - ÂÝÐýÊ½·¢Éä×Óµ¯£¬YÎ»ÖÃ°´ÕýÏÒ²¨É¨Éä
- *               ³ÖÐøÊ±¼ä ChaoticBarrageTime=2000ms£¬Ã¿ ChaoticBarrageInterval=150ms ·¢ÉäÒ»·¢
- * @note  MODE_5: Ê±¿ÕÁÑÏ¶ - ¿ìËÙ·¢Éä´øËæ»úÈ±¿ÚµÄµ¯Ä»Ç½£¬È±¿ÚÎ»ÖÃÃ¿ÂÖ±ä»¯
- *               ³ÖÐøÊ±¼ä TemporalRiftTime=2500ms£¬Ã¿ TemporalRiftInterval=400ms ·¢ÉäÒ»ÂÖ
- * @note  MODE_6: ¹éÓÚ»ìãç - È«ÆÁµ¯Ä»¹¥»÷£¬ÖÐ¼äÓÐ°²È«È±¿Ú£¬ÑªÁ¿Ô½µÍÈ±¿ÚÔ½Ð¡
- *               ¾¯¸æÊ±¼ä ReturnToChaosWarning=500ms£¬·¢ÉäÊ±¼ä ReturnToChaosTime=100ms
+ * @note  === ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ ===
+ * @note  MODE_1: ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¸ï¿½Æ¶ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ChaosSurgeTime=3000msï¿½ï¿½Ã¿ ChaosSurgeInterval=500ms ï¿½ï¿½Ë¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
+ * @note  MODE_2: ï¿½ï¿½ï¿½Ï·ï¿½Ó¡ - ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½7ï¿½ï¿½ï¿½ï¿½Ë¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½Ò°
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ SealAperturesTime=2000msï¿½ï¿½ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½
+ * @note  MODE_3: ï¿½ï¿½ï¿½ï¿½Ç£ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ï¿½×·ï¿½Ù»ï¿½ï¿½ï¿½ï¿½ï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ VoidPullTime=2500msï¿½ï¿½Ã¿ VoidPullInterval=300ms ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
+ * @note  MODE_4: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½YÎ»ï¿½Ã°ï¿½ï¿½ï¿½ï¿½Ò²ï¿½É¨ï¿½ï¿½
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ChaoticBarrageTime=2000msï¿½ï¿½Ã¿ ChaoticBarrageInterval=150ms ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
+ * @note  MODE_5: Ê±ï¿½ï¿½ï¿½ï¿½Ï¶ - ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±ï¿½ÚµÄµï¿½Ä»Ç½ï¿½ï¿½È±ï¿½ï¿½Î»ï¿½ï¿½Ã¿ï¿½Ö±ä»¯
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ TemporalRiftTime=2500msï¿½ï¿½Ã¿ TemporalRiftInterval=400ms ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
+ * @note  MODE_6: ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ - È«ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½Ð°ï¿½È«È±ï¿½Ú£ï¿½Ñªï¿½ï¿½Ô½ï¿½ï¿½È±ï¿½ï¿½Ô½Ð¡
+ *               ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ReturnToChaosWarning=500msï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ReturnToChaosTime=100ms
  */
 
-//ÊýÖµÉè¶¨²Î¿¼£¨ËÄÐ×Ö®Ê×£¬×îÇ¿BOSS£©
-//ÑªÁ¿£º200 + level * 1000£¨×î¸ßÑªÁ¿£©
-//¹¥»÷Á¦£º8 + level * 4£¨ÖÐµÈ¹¥»÷Á¦£©
-//ÒÆ¶¯ËÙ¶È£º1£¨µÍËÙÒÆ¶¯£¬µ«ÓÐÉÁÏÖÄÜÁ¦£©
-//Éä»÷ÀäÈ´Ê±¼ä£º6000ms
-//Åö×²ÉËº¦£º15 + level * 5£¨¸ßÅö×²ÉËº¦£©
+//ï¿½ï¿½Öµï¿½è¶¨ï¿½Î¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½×£ï¿½ï¿½ï¿½Ç¿BOSSï¿½ï¿½
+//Ñªï¿½ï¿½ï¿½ï¿½200 + level * 1000ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½8 + level * 4ï¿½ï¿½ï¿½ÐµÈ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//ï¿½Æ¶ï¿½ï¿½Ù¶È£ï¿½1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´Ê±ï¿½ä£º6000ms
+//ï¿½ï¿½×²ï¿½Ëºï¿½ï¿½ï¿½15 + level * 5ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×²ï¿½Ëºï¿½ï¿½ï¿½
 
 HundunEnemy::HundunEnemy(
     uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
 )
 : IRole() {
-    //Í¼Æ¬ÐÅÏ¢
+    //Í¼Æ¬ï¿½ï¿½Ï¢
     m_pdata->img = &HundunImg;
 
-    //Éí·ÝÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
     m_pdata->identity          = RoleIdentity::ENEMY;
     m_pdata->isActive          = true;
     m_pdata->initData.isInited = false;
 
-    //µÈ¼¶ÐÅÏ¢
+    //ï¿½È¼ï¿½ï¿½ï¿½Ï¢
     m_pdata->level = level;
 
-    //ÑªÁ¿ÐÅÏ¢
-    //ËÄÐ×Ö®Ê×£¬ÑªÁ¿×î¸ß
+    //Ñªï¿½ï¿½ï¿½ï¿½Ï¢
+    //ï¿½ï¿½ï¿½ï¿½Ö®ï¿½×£ï¿½Ñªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     m_pdata->healthData.currentHealth = 200 + level * 1000;
     m_pdata->healthData.maxHealth     = 200 + level * 1000;
 
-    //»ØÑªÐÅÏ¢
-    m_pdata->healthData.healValue       = 50; // ½Ï¸ßµÄ»ØÑªÁ¿
+    //ï¿½ï¿½Ñªï¿½ï¿½Ï¢
+    m_pdata->healthData.healValue       = 50; // ï¿½Ï¸ßµÄ»ï¿½Ñªï¿½ï¿½
     m_pdata->healthData.healTimeCounter = 0;
-    m_pdata->healthData.healResetTime   = 12000; // 12Ãë»ØÑª¼ä¸ô
+    m_pdata->healthData.healResetTime   = 12000; // 12ï¿½ï¿½ï¿½ï¿½Ñªï¿½ï¿½ï¿½ï¿½
     m_pdata->healthData.healSpeed       = 5;
 
-    //¿Õ¼äÒÆ¶¯ÐÅÏ¢
+    //ï¿½Õ¼ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½Ï¢
     m_pdata->spatialData.canCrossBorder            = true;
     m_pdata->spatialData.currentPosX               = startX;
     m_pdata->spatialData.currentPosY               = startY;
@@ -3859,37 +3856,37 @@ HundunEnemy::HundunEnemy(
     m_pdata->spatialData.refPosY                   = startY;
     m_pdata->spatialData.sizeX                     = m_pdata->img->w; // 68
     m_pdata->spatialData.sizeY                     = m_pdata->img->h; // 64
-    m_pdata->spatialData.moveSpeed                 = 1;               // µÍËÙÒÆ¶¯£¬µ«ÓÐÉÁÏÖ
+    m_pdata->spatialData.moveSpeed                 = 1;               // ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
-    //³õÊ¼»¯Î»ÖÃ
+    //ï¿½ï¿½Ê¼ï¿½ï¿½Î»ï¿½ï¿½
     m_pdata->initData.posX = initPosX;
     m_pdata->initData.posY = initPosY;
 
-    //¹¥»÷ÐÅÏ¢
-    m_pdata->attackData.attackPower            = 8 + level * 4; // ÖÐµÈ¹¥»÷Á¦
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
+    m_pdata->attackData.attackPower            = 8 + level * 4; // ï¿½ÐµÈ¹ï¿½ï¿½ï¿½ï¿½ï¿½
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
-    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000ms ¹¥»÷ÀäÈ´
+    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000ms ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´
     m_pdata->attackData.bulletSpeed            = 1;
 
-    m_pdata->attackData.bulletRange            = 12;   // »ðÇòµ¯·¶Î§
-    m_pdata->attackData.bulletDamageMultiplier = 1.8f; // ÉÁµçÁ´µ¯ÉËº¦±¶ÂÊ
+    m_pdata->attackData.bulletRange            = 12;   // ï¿½ï¿½ï¿½òµ¯·ï¿½Î§
+    m_pdata->attackData.bulletDamageMultiplier = 1.8f; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½
 
-    m_pdata->attackData.collisionPower = 15 + level * 5; // ¸ßÅö×²ÉËº¦
+    m_pdata->attackData.collisionPower = 15 + level * 5; // ï¿½ï¿½ï¿½ï¿½×²ï¿½Ëºï¿½
 
-    //ÈÈÁ¿ÐÅÏ¢£¨BOSSÎÞÈÈÁ¿ÏÞÖÆ£©
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½BOSSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½
     m_pdata->heatData.maxHeat          = 500;
     m_pdata->heatData.currentHeat      = 0;
-    m_pdata->heatData.heatPerShot      = 0; // BOSSÎÞÈÈÁ¿ÏûºÄ
+    m_pdata->heatData.heatPerShot      = 0; // BOSSï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     m_pdata->heatData.heatCoolDownRate = 10;
 
-    //ËÀÍö×´Ì¬ÐÅÏ¢
+    //ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ï¢
     m_pdata->deathData.deathTimer           = HundunEnemyDeadTime;
     m_pdata->deathData.isDead               = false;
     m_pdata->deathData.dropExperiencePoints = dropExp;
 
-    // ³õÊ¼»¯¹¥»÷Ä£Ê½×´Ì¬±äÁ¿
+    // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½×´Ì¬ï¿½ï¿½ï¿½ï¿½
     positionChange     = false;
     aperturesGenerated = false;
     warningDisplayed   = false;
@@ -3898,7 +3895,7 @@ HundunEnemy::HundunEnemy(
 }
 
 void HundunEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
-    // ÓëÆäËûBOSS±£³ÖÒ»ÖÂµÄÉä»÷Âß¼­
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BOSSï¿½ï¿½ï¿½ï¿½Ò»ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½
     switch (type) {
     case BulletType::BASIC:
         {
@@ -3954,9 +3951,9 @@ void HundunEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
 void HundunEnemy::init() {
     m_pdata->initData.init_count += controlDelayTime;
 
-    // ´ÓÆÁÄ»Íâ»ºÂýÒÆ¶¯µ½³õÊ¼Î»ÖÃ
+    // ï¿½ï¿½ï¿½ï¿½Ä»ï¿½â»ºï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-        if (m_pdata->initData.init_count >= 60) { // Ã¿60msÒÆ¶¯Ò»´Î
+        if (m_pdata->initData.init_count >= 60) { // Ã¿60msï¿½Æ¶ï¿½Ò»ï¿½ï¿½
             m_pdata->spatialData.currentPosX -= 1;
             m_pdata->initData.init_count = 0;
         }
@@ -3975,16 +3972,16 @@ void HundunEnemy::init() {
 
 void HundunEnemy::think() {
     think_count += controlDelayTime;
-    if (think_count < 100) // Ã¿100ms¾ö¶¨Ò»´ÎÐÐ¶¯
+    if (think_count < 100) // Ã¿100msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¶ï¿½
         return;
 
     think_count = 0;
 
     uint8_t randomAction = rand() % 6;
-    // Ëæ»úÐÐ¶¯: 0-3 ÒÆ¶¯, 4 ¾²Ö¹, 5 ¹¥»÷
+    // ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½: 0-3 ï¿½Æ¶ï¿½, 4 ï¿½ï¿½Ö¹, 5 ï¿½ï¿½ï¿½ï¿½
 
     if (m_pdata->actionData.currentState == ActionState::IDLE) {
-        // ÒÆ¶¯¾ö²ß
+        // ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½
         if (randomAction == 0) {
             m_pdata->actionData.moveMode     = MoveMode::LEFT;
             m_pdata->actionData.currentState = ActionState::MOVING;
@@ -4002,21 +3999,21 @@ void HundunEnemy::think() {
             m_pdata->actionData.currentState = ActionState::MOVING;
         }
 
-        // ¹¥»÷¾ö²ß
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         else if (randomAction == 5) {
             if (m_pdata->attackData.shootCooldownTimer > 0) {
-                // ÀäÈ´ÖÐ£¬±£³Ö¿ÕÏÐ
+                // ï¿½ï¿½È´ï¿½Ð£ï¿½ï¿½ï¿½ï¿½Ö¿ï¿½ï¿½ï¿½
                 m_pdata->actionData.moveMode     = MoveMode::NONE;
                 m_pdata->actionData.currentState = ActionState::IDLE;
                 return;
             }
 
-            uint8_t randomAttackMode         = rand() % 6 + 1; // 1-6 ¹¥»÷·½Ê½
+            uint8_t randomAttackMode         = rand() % 6 + 1; // 1-6 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             switch (randomAttackMode) {
             case 1:
-                // MODE_1: »ìãçÓ¿¶¯ - Ëæ»úÉÁË¸ÒÆ¶¯²¢Ïò8·½Ïò·¢Éä×Óµ¯
+                // MODE_1: ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¸ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½
                 action_timer   = ChaosSurgeTime; // 3000ms
                 action_MaxTime = action_timer;
                 action_count   = 0;
@@ -4026,7 +4023,7 @@ void HundunEnemy::think() {
                 break;
 
             case 2:
-                // MODE_2: ÆßÇÏ·âÓ¡ - Éú³É7¸ö¸ÉÈÅÇøÓò
+                // MODE_2: ï¿½ï¿½ï¿½Ï·ï¿½Ó¡ - ï¿½ï¿½ï¿½ï¿½7ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 action_timer       = SealAperturesTime; // 2000ms
                 action_MaxTime     = action_timer;
                 action_count       = 0;
@@ -4036,7 +4033,7 @@ void HundunEnemy::think() {
                 break;
 
             case 3:
-                // MODE_3: Ðé¿ÕÇ£Òý - À­½üÍæ¼Ò²¢·¢Éä»ðÇò
+                // MODE_3: ï¿½ï¿½ï¿½ï¿½Ç£ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 action_timer   = VoidPullTime; // 2500ms
                 action_MaxTime = action_timer;
                 action_count   = 0;
@@ -4045,29 +4042,29 @@ void HundunEnemy::think() {
                 break;
 
             case 4:
-                // MODE_4: »ìãçäöÎÐ - ÂÝÐýÊ½·¢Éä×Óµ¯
+                // MODE_4: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½
                 action_timer   = ChaoticBarrageTime; // 2000ms
                 action_MaxTime = action_timer;
                 action_count   = 0;
                 positionChange = false;
-                spiralPhase    = 0; // ÖØÖÃÂÝÐýÏàÎ»
+                spiralPhase    = 0; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_4;
                 break;
 
             case 5:
-                // MODE_5: Ê±¿ÕÁÑÏ¶ - ·¢Éä´øËæ»úÈ±¿ÚµÄµ¯Ä»Ç½
+                // MODE_5: Ê±ï¿½ï¿½ï¿½ï¿½Ï¶ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±ï¿½ÚµÄµï¿½Ä»Ç½
                 action_timer   = TemporalRiftTime; // 2500ms
                 action_MaxTime = action_timer;
                 action_count   = 0;
                 positionChange = false;
-                riftWaveCount  = 0; // ÖØÖÃ²¨´Î¼ÆÊý
+                riftWaveCount  = 0; // ï¿½ï¿½ï¿½Ã²ï¿½ï¿½Î¼ï¿½ï¿½ï¿½
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_5;
                 break;
 
             case 6:
-                // MODE_6: ¹éÓÚ»ìãç - È«ÆÁµ¯Ä»¹¥»÷
+                // MODE_6: ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½ - È«ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
                 action_timer     = ReturnToChaosWarning + ReturnToChaosTime; // 600ms
                 action_MaxTime   = action_timer;
                 action_count     = 0;
@@ -4118,16 +4115,16 @@ void HundunEnemy::doAction() {
         break;
 
     case ActionState::ATTACKING:
-        // ¶¯×÷¼ÆÊ±
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
         action_count += controlDelayTime;
 
-        // ¶¯×÷µ¹¼ÆÊ±
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±
         if (action_timer >= controlDelayTime)
             action_timer -= controlDelayTime;
         else
             action_timer = 0;
 
-        // Ö´ÐÐ¶ÔÓ¦¹¥»÷¼¼ÄÜ
+        // Ö´ï¿½Ð¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         switch (m_pdata->actionData.attackMode) {
         case AttackMode::MODE_1:
             chaosSurge();
@@ -4151,14 +4148,14 @@ void HundunEnemy::doAction() {
             break;
         }
 
-        // ¶¯×÷½áÊø
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (action_timer == 0) {
             m_pdata->actionData.currentState       = ActionState::IDLE;
             m_pdata->actionData.attackMode         = AttackMode::NONE;
             action_count                           = 0;
             m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
 
-            // ÖØÖÃ×´Ì¬±äÁ¿
+            // ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½
             positionChange     = false;
             aperturesGenerated = false;
             warningDisplayed   = false;
@@ -4171,28 +4168,28 @@ void HundunEnemy::doAction() {
 
 void HundunEnemy::drawRole() {
     if (m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
-        // »æÖÆÕæÉí
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         OLED_DrawImage(
             m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
         );
 
-        // MODE_2: »æÖÆÆßÇÏ·âÓ¡¸ÉÈÅÇøÓò
+        // MODE_2: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï·ï¿½Ó¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         if (m_pdata->actionData.attackMode == AttackMode::MODE_2 && aperturesGenerated) {
-            // ÉÁË¸Ð§¹û£º¸ù¾ÝÊ±¼äÇÐ»»ÏÔÊ¾
+            // ï¿½ï¿½Ë¸Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½Ê¾
             bool showApertures = ((action_timer / 100) % 2 == 0);
             if (showApertures) {
                 for (uint8_t i = 0; i < ApertureCount; i++) {
                     uint8_t ax = aperturePositions[i][0];
                     uint8_t ay = aperturePositions[i][1];
-                    // »æÖÆ¸ÉÈÅÇøÓò£¨8x8ÏñËØµÄÌî³ä·½¿é£©
+                    // ï¿½ï¿½ï¿½Æ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½8x8ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ä·½ï¿½é£©
                     OLED_DrawFilledRectangle(ax, ay, 8, 8, OLED_COLOR_NORMAL);
                 }
             }
         }
 
-        // MODE_6: »æÖÆ¾¯¸æÐ§¹û
+        // MODE_6: ï¿½ï¿½ï¿½Æ¾ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
         if (m_pdata->actionData.attackMode == AttackMode::MODE_6 && !warningDisplayed) {
-            // ¾¯¸æ½×¶Î£ºÆÁÄ»±ßÔµÉÁË¸
+            // ï¿½ï¿½ï¿½ï¿½ï¿½×¶Î£ï¿½ï¿½ï¿½Ä»ï¿½ï¿½Ôµï¿½ï¿½Ë¸
             if ((action_timer / 50) % 2 == 0) {
                 OLED_DrawRectangle(0, 0, 127, 63, OLED_COLOR_NORMAL);
                 OLED_DrawRectangle(1, 1, 125, 61, OLED_COLOR_NORMAL);
@@ -4200,14 +4197,14 @@ void HundunEnemy::drawRole() {
         }
     }
 
-    // ËÀÍö¶¯»­
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (m_pdata->deathData.isDead) {
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
         uint8_t radius  = (HundunEnemyDeadTime - m_pdata->deathData.deathTimer) * 35 / HundunEnemyDeadTime;
         radius          = etl::max(radius, uint8_t(1));
 
-        // »ìãçËÀÍöÐ§¹û£º¶àÖØÀ©É¢Ô²»·
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¢Ô²ï¿½ï¿½
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
         if (radius > 5) {
             OLED_DrawCircle(centerX, centerY, radius - 5, OLED_COLOR_NORMAL);
@@ -4225,23 +4222,23 @@ void HundunEnemy::die() {
     m_pdata->isActive = false;
 }
 
-//=========================== ¹¥»÷¼¼ÄÜÊµÏÖ ===========================
+//=========================== ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ ===========================
 
 /**
- * @brief MODE_1: »ìãçÓ¿¶¯
- * @note  Ëæ»úÉÁË¸ÒÆ¶¯£¬Í¬Ê±Ïò4¸ö·½Ïò·¢ÉäÆÕÍ¨×Óµ¯
- *        ºôÓ¦»ìãç"ÎÞ¶¨ÐÎ"µÄÌØÐÔ£¬µ¯Ä»Á¿ÊÊÖÐ
+ * @brief MODE_1: ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¸ï¿½Æ¶ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½
+ *        ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½"ï¿½Þ¶ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 void HundunEnemy::chaosSurge() {
-    if (action_count < ChaosSurgeInterval) // Ã¿500msÖ´ÐÐÒ»´Î
+    if (action_count < ChaosSurgeInterval) // Ã¿500msÖ´ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
-    // Ëæ»úÉÁÏÖµ½ÐÂÎ»ÖÃ
-    uint8_t newX = 30 + rand() % 71;  // 30-100 Ëæ»úXÎ»ÖÃ
-    int8_t  newY = -20 + rand() % 70; // -20-49 Ëæ»úYÎ»ÖÃ£¨¿É²¿·Ö³¬³öÆÁÄ»£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½ï¿½Î»ï¿½ï¿½
+    uint8_t newX = 30 + rand() % 71;  // 30-100 ï¿½ï¿½ï¿½ï¿½XÎ»ï¿½ï¿½
+    int8_t  newY = -20 + rand() % 70; // -20-49 ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½Ã£ï¿½ï¿½É²ï¿½ï¿½Ö³ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½
 
-    // ÏÞÖÆYÎ»ÖÃ·¶Î§
+    // ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½Ã·ï¿½Î§
     if (newY < -30) newY = -30;
     if (newY > 60) newY = 60;
 
@@ -4250,21 +4247,21 @@ void HundunEnemy::chaosSurge() {
     m_pdata->spatialData.refPosX     = newX;
     m_pdata->spatialData.refPosY     = newY;
 
-    // ¼ÆËãÖÐÐÄÎ»ÖÃ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    // Ïò4¸ö·½Ïò·¢ÉäÆÕÍ¨×Óµ¯£¨ÉÏÏÂ×óÓÒ£©£¬¼õÉÙµ¯Ä»Á¿
-    // ×Óµ¯Éú³ÉÎ»ÖÃÔÚBOSS±ßÔµ
+    // ï¿½ï¿½4ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ùµï¿½Ä»ï¿½ï¿½
+    // ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½BOSSï¿½ï¿½Ôµ
     int8_t directions[4][2] = {
-        {-1, 0 }, // ×ó
-        {1,  0 }, // ÓÒ
-        {0,  -1}, // ÉÏ
-        {0,  1 }  // ÏÂ
+        {-1, 0 }, // ï¿½ï¿½
+        {1,  0 }, // ï¿½ï¿½
+        {0,  -1}, // ï¿½ï¿½
+        {0,  1 }  // ï¿½ï¿½
     };
 
     for (uint8_t i = 0; i < 4; i++) {
-        m_pdata->attackData.shootCooldownTimer = 0; // ÖØÖÃÀäÈ´
+        m_pdata->attackData.shootCooldownTimer = 0; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È´
         uint8_t bulletX                        = centerX + directions[i][0] * 20;
         uint8_t bulletY                        = centerY + directions[i][1] * 20;
         shoot(bulletX, bulletY, BulletType::BASIC);
@@ -4272,39 +4269,39 @@ void HundunEnemy::chaosSurge() {
 }
 
 /**
- * @brief MODE_2: ÆßÇÏ·âÓ¡
- * @note  ÔÚÆÁÄ»ÉÏÉú³É7¸öÉÁË¸¸ÉÈÅÇøÓòÕÚµ²ÊÓÒ°
- *        ºôÓ¦"ÆßÇÏÔä¶ø»ìãçËÀ"µÄµä¹Ê
+ * @brief MODE_2: ï¿½ï¿½ï¿½Ï·ï¿½Ó¡
+ * @note  ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½7ï¿½ï¿½ï¿½ï¿½Ë¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½Ò°
+ *        ï¿½ï¿½Ó¦"ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½Äµï¿½ï¿½ï¿½
  */
 void HundunEnemy::sealSevenApertures() {
-    // Ö»ÔÚ¼¼ÄÜ¿ªÊ¼Ê±Éú³ÉÒ»´Î¸ÉÈÅÇøÓòÎ»ÖÃ
+    // Ö»ï¿½Ú¼ï¿½ï¿½Ü¿ï¿½Ê¼Ê±ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Î¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
     if (!aperturesGenerated) {
         for (uint8_t i = 0; i < ApertureCount; i++) {
-            // Ëæ»úÉú³É¸ÉÈÅÇøÓòÎ»ÖÃ£¨±ÜÃâÖØµþÖ÷ÒªÓÎÏ·ÇøÓò£©
-            aperturePositions[i][0] = rand() % 100 + 10; // 10-109 XÎ»ÖÃ
-            aperturePositions[i][1] = rand() % 48 + 8;   // 8-55 YÎ»ÖÃ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Òªï¿½ï¿½Ï·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            aperturePositions[i][0] = rand() % 100 + 10; // 10-109 XÎ»ï¿½ï¿½
+            aperturePositions[i][1] = rand() % 48 + 8;   // 8-55 YÎ»ï¿½ï¿½
         }
         aperturesGenerated = true;
     }
 
-    // ¸ÉÈÅÇøÓòµÄ»æÖÆÔÚ drawRole() ÖÐÍê³É
-    // ´Ë´¦¿ÉÌí¼Ó¶îÍâÂß¼­£¨ÈçÃ¿¸ôÒ»¶ÎÊ±¼äÖØÐÂËæ»úÎ»ÖÃ£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ drawRole() ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    // ï¿½Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¶ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½Ò»ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½
 }
 
 /**
- * @brief MODE_3: Ðé¿ÕÇ£Òý
- * @note  ½«Íæ¼ÒÏò»ìãçÎ»ÖÃ»ºÂýÀ­½ü£¬Í¬Ê±·¢Éä×·×Ù»ðÇòµ¯
- *        ºôÓ¦»ìãçÍÌÊÉÍòÎïµÄÌØÐÔ
+ * @brief MODE_3: ï¿½ï¿½ï¿½ï¿½Ç£ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ï¿½×·ï¿½Ù»ï¿½ï¿½ï¿½ï¿½ï¿½
+ *        ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 void HundunEnemy::voidPull() {
-    if (action_count < VoidPullInterval) // Ã¿300msÖ´ÐÐÒ»´Î
+    if (action_count < VoidPullInterval) // Ã¿300msÖ´ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
     IRole *player = g_entityManager.getPlayerRole();
     if (player == nullptr) return;
 
-    // ¼ÆËã·½ÏòÏòÁ¿
+    // ï¿½ï¿½ï¿½ã·½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     int16_t bossX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     int16_t bossY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
@@ -4320,43 +4317,43 @@ void HundunEnemy::voidPull() {
     if (deltaY < 0) dirY = -1;
     if (deltaY > 0) dirY = 1;
 
-    // À­½üÍæ¼Ò£¨Ç¿ÖÆÒÆ¶¯£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò£ï¿½Ç¿ï¿½ï¿½ï¿½Æ¶ï¿½ï¿½ï¿½
     for (uint8_t i = 0; i < VoidPullDistance / 2; i++) {
         player->move(dirX, dirY, true);
     }
 
-    // Í¬Ê±·¢Éä»ðÇòµ¯£¨ÏòÍæ¼Ò·½Ïò£©
+    // Í¬Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½òµ¯£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò·ï¿½ï¿½ï¿½ï¿½ï¿½
     m_pdata->attackData.shootCooldownTimer = 0;
     shoot(bossX, bossY, BulletType::FIRE_BALL);
 }
 
 /**
- * @brief MODE_4: »ìãçäöÎÐ
- * @note  ÂÝÐýÊ½·¢Éä×Óµ¯£¬×Óµ¯°´ÕýÏÒ²¨ÐÎ´ÓÉÏµ½ÏÂÉ¨Éä
- *        ÌåÏÖ»ìãçµÄ"Ðý×ªÍÌÊÉ"ÌØÐÔ£¬ÓëTaowuµÄËæ»úµ¯Ä»Çø·Ö
+ * @brief MODE_4: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+ * @note  ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½Î´ï¿½ï¿½Ïµï¿½ï¿½ï¿½É¨ï¿½ï¿½
+ *        ï¿½ï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½Ô£ï¿½ï¿½ï¿½Taowuï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½
  */
 void HundunEnemy::chaoticBarrage() {
-    if (action_count < ChaoticBarrageInterval) // Ã¿150ms·¢ÉäÒ»´Î
+    if (action_count < ChaoticBarrageInterval) // Ã¿150msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
-    // µÚÒ»´ÎÖ´ÐÐÊ±ÒÆ¶¯µ½ÖÐ¼äÎ»ÖÃ
+    // ï¿½ï¿½Ò»ï¿½ï¿½Ö´ï¿½ï¿½Ê±ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½Î»ï¿½ï¿½
     if (!positionChange) {
         m_pdata->spatialData.currentPosX = 60;
         m_pdata->spatialData.currentPosY = 0;
         m_pdata->spatialData.refPosX     = 60;
         m_pdata->spatialData.refPosY     = 0;
         positionChange                   = true;
-        spiralPhase                      = 0; // ÖØÖÃÂÝÐýÏàÎ»
+        spiralPhase                      = 0; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»
     }
 
     uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    // ÂÝÐýÉ¨Éä£ºYÎ»ÖÃ°´ÏàÎ»´ÓÉÏµ½ÏÂÀ´»ØÉ¨
-    // Ê¹ÓÃÈý½Çº¯Êý½üËÆ£ºÏàÎ»0-8¶ÔÓ¦YÆ«ÒÆ´Ó-25µ½+25ÔÙ»Øµ½-25
+    // ï¿½ï¿½ï¿½ï¿½É¨ï¿½ä£ºYÎ»ï¿½Ã°ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É¨
+    // Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Çºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½Î»0-8ï¿½ï¿½Ó¦YÆ«ï¿½Æ´ï¿½-25ï¿½ï¿½+25ï¿½Ù»Øµï¿½-25
     int8_t  yOffset = 0;
-    uint8_t phase   = spiralPhase % 16; // 16¸öÏàÎ»ÎªÒ»¸öÖÜÆÚ
+    uint8_t phase   = spiralPhase % 16; // 16ï¿½ï¿½ï¿½ï¿½Î»ÎªÒ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     if (phase < 8) {
         yOffset = -25 + phase * 6; // 0->-25, 1->-19, ..., 7->17
     } else {
@@ -4366,21 +4363,21 @@ void HundunEnemy::chaoticBarrage() {
     m_pdata->attackData.shootCooldownTimer = 0;
     shoot(centerX, centerY + yOffset, BulletType::BASIC);
 
-    spiralPhase++; // µÝÔöÏàÎ»
+    spiralPhase++; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»
 }
 
 /**
- * @brief MODE_5: Ê±¿ÕÁÑÏ¶
- * @note  ¿ìËÙ·¢ÉäÒ»ÅÅµ¯Ä»Ç½£¬µ«ÓÐÒ»¸öËæ»úÎ»ÖÃµÄÐ¡È±¿Ú
- *        È±¿ÚÎ»ÖÃÃ¿ÂÖ±ä»¯£¬Íæ¼ÒÐè¿ìËÙ·´Ó¦Ñ°ÕÒ°²È«Î»ÖÃ
- *        ºôÓ¦»ìãç"ÌìµØÎ´·Ö"Ê±¿Õ½»´íµÄÌØÐÔ
+ * @brief MODE_5: Ê±ï¿½ï¿½ï¿½ï¿½Ï¶
+ * @note  ï¿½ï¿½ï¿½Ù·ï¿½ï¿½ï¿½Ò»ï¿½Åµï¿½Ä»Ç½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ãµï¿½Ð¡È±ï¿½ï¿½
+ *        È±ï¿½ï¿½Î»ï¿½ï¿½Ã¿ï¿½Ö±ä»¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù·ï¿½Ó¦Ñ°ï¿½Ò°ï¿½È«Î»ï¿½ï¿½
+ *        ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½"ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½"Ê±ï¿½Õ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
  */
 void HundunEnemy::temporalRift() {
-    if (action_count < TemporalRiftInterval) // Ã¿400ms·¢ÉäÒ»ÂÖ
+    if (action_count < TemporalRiftInterval) // Ã¿400msï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
         return;
     action_count = 0;
 
-    // µÚÒ»´ÎÖ´ÐÐÊ±ÒÆ¶¯µ½ÓÒ²à
+    // ï¿½ï¿½Ò»ï¿½ï¿½Ö´ï¿½ï¿½Ê±ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½Ò²ï¿½
     if (!positionChange) {
         m_pdata->spatialData.currentPosX = 60;
         m_pdata->spatialData.currentPosY = 0;
@@ -4391,45 +4388,45 @@ void HundunEnemy::temporalRift() {
 
     uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
 
-    // Ëæ»úÉú³ÉÈ±¿ÚÎ»ÖÃ£¨8-52·¶Î§£¬±£Ö¤È±¿ÚÔÚ¿É¼ûÇøÓò£©
-    uint8_t gapCenter = 8 + rand() % 44; // È±¿ÚÖÐÐÄYÎ»ÖÃ
-    uint8_t gapSize   = RiftGapSize;     // È±¿Ú´óÐ¡£¨12ÏñËØ£©
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±ï¿½ï¿½Î»ï¿½Ã£ï¿½8-52ï¿½ï¿½Î§ï¿½ï¿½ï¿½ï¿½Ö¤È±ï¿½ï¿½ï¿½Ú¿É¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    uint8_t gapCenter = 8 + rand() % 44; // È±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½YÎ»ï¿½ï¿½
+    uint8_t gapSize   = RiftGapSize;     // È±ï¿½Ú´ï¿½Ð¡ï¿½ï¿½12ï¿½ï¿½ï¿½Ø£ï¿½
 
-    // ·¢ÉäÒ»ÅÅ×Óµ¯£¬Ìø¹ýÈ±¿ÚÇøÓò
+    // ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     for (uint8_t y = 2; y < 62; y += 6) {
-        // ÅÐ¶ÏÊÇ·ñÔÚÈ±¿Ú·¶Î§ÄÚ
+        // ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È±ï¿½Ú·ï¿½Î§ï¿½ï¿½
         if (y >= gapCenter - gapSize / 2 && y <= gapCenter + gapSize / 2) {
-            continue; // Ìø¹ýÈ±¿Ú
+            continue; // ï¿½ï¿½ï¿½ï¿½È±ï¿½ï¿½
         }
         m_pdata->attackData.shootCooldownTimer = 0;
         shoot(centerX, y, BulletType::BASIC);
     }
 
-    // Ã¿2ÂÖ¶îÍâ·¢ÉäÒ»¸ö»ðÇòµ¯Ôö¼ÓÍþÐ²
+    // Ã¿2ï¿½Ö¶ï¿½ï¿½â·¢ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²
     riftWaveCount++;
     if (riftWaveCount % 2 == 0) {
         m_pdata->attackData.shootCooldownTimer = 0;
-        shoot(centerX, gapCenter, BulletType::FIRE_BALL); // »ðÇòÔÚÈ±¿ÚÎ»ÖÃ£¬ÆÈÊ¹Íæ¼ÒÒÆ¶¯
+        shoot(centerX, gapCenter, BulletType::FIRE_BALL); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È±ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½Æ¶ï¿½
     }
 }
 
 /**
- * @brief MODE_6: ¹éÓÚ»ìãç
- * @note  È«ÆÁµ¯Ä»¹¥»÷£¬ÖÐ¼äÓÐ°²È«È±¿Ú£¬ÑªÁ¿Ô½µÍÈ±¿ÚÔ½Ð¡
- *        ÖÕ¼«¼¼ÄÜ£¬´ú±í»ìãçÍÌÊÉÒ»ÇÐ
+ * @brief MODE_6: ï¿½ï¿½ï¿½Ú»ï¿½ï¿½ï¿½
+ * @note  È«ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½Ð°ï¿½È«È±ï¿½Ú£ï¿½Ñªï¿½ï¿½Ô½ï¿½ï¿½È±ï¿½ï¿½Ô½Ð¡
+ *        ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
  */
 void HundunEnemy::returnToChaos() {
-    // ½×¶Î1: ¾¯¸æ½×¶Î (Ç°500ms)
+    // ï¿½×¶ï¿½1: ï¿½ï¿½ï¿½ï¿½ï¿½×¶ï¿½ (Ç°500ms)
     if (action_timer > ReturnToChaosTime) {
-        // ¾¯¸æÐ§¹ûÔÚ drawRole() ÖÐ»æÖÆ
+        // ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ drawRole() ï¿½Ð»ï¿½ï¿½ï¿½
         return;
     }
 
-    // ½×¶Î2: ·¢Éäµ¯Ä» (×îºó100msÖ»Ö´ÐÐÒ»´Î)
+    // ï¿½×¶ï¿½2: ï¿½ï¿½ï¿½äµ¯Ä» (ï¿½ï¿½ï¿½ï¿½100msÖ»Ö´ï¿½ï¿½Ò»ï¿½ï¿½)
     if (!warningDisplayed) {
         warningDisplayed = true;
 
-        // ÒÆ¶¯µ½ÖÐ¼äÎ»ÖÃ
+        // ï¿½Æ¶ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½Î»ï¿½ï¿½
         m_pdata->spatialData.currentPosX = 60;
         m_pdata->spatialData.currentPosY = 0;
         m_pdata->spatialData.refPosX     = 60;
@@ -4438,25 +4435,25 @@ void HundunEnemy::returnToChaos() {
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-        // ¼ÆËã°²È«È±¿Ú´óÐ¡£ºÑªÁ¿Ô½µÍ£¬È±¿ÚÔ½Ð¡
-        // ÑªÁ¿100%Ê±È±¿Ú20ÏñËØ£¬ÑªÁ¿0%Ê±È±¿Ú8ÏñËØ
+        // ï¿½ï¿½ï¿½ã°²È«È±ï¿½Ú´ï¿½Ð¡ï¿½ï¿½Ñªï¿½ï¿½Ô½ï¿½Í£ï¿½È±ï¿½ï¿½Ô½Ð¡
+        // Ñªï¿½ï¿½100%Ê±È±ï¿½ï¿½20ï¿½ï¿½ï¿½Ø£ï¿½Ñªï¿½ï¿½0%Ê±È±ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½
         float  healthRatio = (float)m_pdata->healthData.currentHealth / (float)m_pdata->healthData.maxHealth;
-        int8_t gapSize     = 8 + (int8_t)(healthRatio * 12); // 8-20ÏñËØ
+        int8_t gapSize     = 8 + (int8_t)(healthRatio * 12); // 8-20ï¿½ï¿½ï¿½ï¿½
 
-        // ·¢ÉäÈ«ÆÁµ¯Ä»£¬ÖÐ¼äÁôÈ±¿Ú
+        // ï¿½ï¿½ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½Ä»ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½È±ï¿½ï¿½
         for (int8_t offsetY = -30; offsetY <= 30; offsetY += 5) {
-            // Ìø¹ýÖÐ¼äÈ±¿ÚÇøÓò
+            // ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½È±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if (offsetY >= -gapSize / 2 && offsetY <= gapSize / 2) {
                 continue;
             }
             m_pdata->attackData.shootCooldownTimer = 0;
             shoot(centerX, centerY + offsetY, BulletType::BASIC);
-            // µÚ¶þÅÅ×Óµ¯£¬Ôö¼Óµ¯Ä»ÃÜ¶È
+            // ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½Ä»ï¿½Ü¶ï¿½
             m_pdata->attackData.shootCooldownTimer = 0;
             shoot(centerX + 15, centerY + offsetY + 2, BulletType::BASIC);
         }
 
-        // ¶îÍâ·¢ÉäÁ½¿Å»ðÇò£¨Ôö¼ÓÍþÐ²£©
+        // ï¿½ï¿½ï¿½â·¢ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½ï¿½
         m_pdata->attackData.shootCooldownTimer = 0;
         shoot(centerX, centerY - gapSize / 2 - 5, BulletType::FIRE_BALL);
         m_pdata->attackData.shootCooldownTimer = 0;

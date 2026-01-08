@@ -377,7 +377,7 @@ void gameControlThread(void *argument) {
                 
                 // 更新玩家僚机系统
                 LeadingRole* player = (LeadingRole*)g_entityManager.getPlayerRole();
-                if (player != nullptr) {
+                if (player != nullptr ) {
                     player->updateWingmans();
                 }
             }

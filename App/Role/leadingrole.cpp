@@ -43,6 +43,9 @@ LeadingRole::LeadingRole()
     //图片信息
     m_pdata->img = &BITtankImg;
 
+    phoenixWingmanOwned = true;
+    kuiniuWingmanOwned  = true;
+
     //身份信息
     m_pdata->identity          = RoleIdentity::Player;
     m_pdata->isActive          = true;
@@ -285,12 +288,72 @@ void LeadingRole::drawRole() {
             m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
         );
 
-        // 绘制僚机
-        if (phoenixWingmanOwned) {
-            drawPhoenixWingman();
-        }
-        if (kuiniuWingmanOwned) {
-            drawKuiniuWingman();
+        // 绘制子弹类型特效（仅在玩家初始化完成后绘制）
+        if (m_pdata->initData.isInited) {
+            int16_t px = m_pdata->spatialData.currentPosX;
+            int16_t py = m_pdata->spatialData.currentPosY;
+            int16_t sizeX = m_pdata->spatialData.sizeX;
+            int16_t sizeY = m_pdata->spatialData.sizeY;
+
+            // 火焰特效：玩家尾部（X负方向）- 如果拥有火球子弹
+            if (bulletTypeOwned.fireBallBulletOwed && px > 3) {
+                static uint8_t firePhase = 0;
+                firePhase = (firePhase + 1) % 6;
+                
+                int16_t tailX = px;  // 玩家尾部X位置
+                int16_t tailY = py + sizeY / 2;  // Y方向中心
+                
+                // 动态火焰效果 - 多层火焰向后飘动
+                if (firePhase < 2) {
+                    // 帧1：火焰向后上方
+                    OLED_DrawFilledRectangle(tailX - 2, tailY - 1, 1, 3, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(tailX - 3, tailY - 2, 1, 2, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(tailX - 3, tailY + 1, 1, 2, OLED_COLOR_NORMAL);
+                } else if (firePhase < 4) {
+                    // 帧2：火焰居中
+                    OLED_DrawFilledRectangle(tailX - 2, tailY - 2, 1, 4, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(tailX - 3, tailY - 1, 1, 2, OLED_COLOR_NORMAL);
+                } else {
+                    // 帧3：火焰向后下方
+                    OLED_DrawFilledRectangle(tailX - 2, tailY - 1, 1, 3, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(tailX - 3, tailY, 1, 2, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(tailX - 3, tailY - 2, 1, 1, OLED_COLOR_NORMAL);
+                }
+            }
+
+            // 闪电特效：玩家头部（X正方向）- 如果拥有闪电子弹
+            if (bulletTypeOwned.lightningLineBulletOwed && px + sizeX < 125) {
+                static uint8_t lightningPhase = 0;
+                lightningPhase = (lightningPhase + 1) % 6;
+                
+                int16_t headX = px + sizeX;  // 玩家头部X位置
+                int16_t headY = py + sizeY / 2;  // Y方向中心
+                
+                // 动态闪电效果 - 电弧闪烁
+                if (lightningPhase < 2) {
+                    // 帧1：向上的电弧
+                    OLED_DrawLine(headX + 1, headY, headX + 2, headY - 2, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 2, headY - 2, headX + 3, headY - 1, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(headX + 1, headY + 1, 1, 1, OLED_COLOR_NORMAL);
+                } else if (lightningPhase < 4) {
+                    // 帧2：水平电弧
+                    OLED_DrawLine(headX + 1, headY - 1, headX + 3, headY, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 1, headY + 1, headX + 3, headY, OLED_COLOR_NORMAL);
+                } else {
+                    // 帧3：向下的电弧
+                    OLED_DrawLine(headX + 1, headY, headX + 2, headY + 2, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 2, headY + 2, headX + 3, headY + 1, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(headX + 1, headY - 1, 1, 1, OLED_COLOR_NORMAL);
+                }
+            }
+
+            // 绘制僚机
+            if (phoenixWingmanOwned) {
+                drawPhoenixWingman();
+            }
+            if (kuiniuWingmanOwned) {
+                drawKuiniuWingman();
+            }
         }
     }
     if (m_pdata->deathData.isDead) {
@@ -302,7 +365,7 @@ void LeadingRole::drawRole() {
 // ===== 僚机系统实现 =====
 
 void LeadingRole::updateWingmans() {
-    if (m_pdata->deathData.isDead || !m_pdata->isActive) {
+    if (m_pdata->deathData.isDead || !m_pdata->isActive || !m_pdata->initData.isInited) {
         return;
     }
 
@@ -335,59 +398,78 @@ void LeadingRole::updateWingmans() {
 }
 
 void LeadingRole::drawPhoenixWingman() {
-    // 凤凰僚机绘制在玩家左侧，呈羽毛状包裹效果
-    // 从玩家左侧边缘开始，向左前方延伸
-    int16_t px = m_pdata->spatialData.currentPosX+m_pdata->spatialData.sizeX ;
-    int16_t py = m_pdata->spatialData.currentPosY;
+    // 凤凰僚机绘制在玩家后方（X负方向），羽毛向后延伸
+    // 基准点：玩家左侧边缘
+    int16_t px = m_pdata->spatialData.currentPosX+m_pdata->spatialData.sizeX+3;
+    int16_t py = m_pdata->spatialData.currentPosY+3 ;
 
-    // 凤凰羽毛形状 - 从玩家左侧向左前方延展
-    // 起点：玩家左侧靠内1像素，离顶部5像素
-    // 终点：玩家左前方3像素处
+    // 边界检查：确保所有绘制坐标为正数（最左侧绘制点为 px-10）
+    if (px < 11 || py < 8 || py > 64) {
+        return;
+    }
 
-    // 主羽毛线（向左前方延伸）
-    OLED_DrawLine(px - 1, py + 5, px - 3, py + 2, OLED_COLOR_NORMAL);
-    OLED_DrawLine(px - 1, py + 6, px - 4, py + 3, OLED_COLOR_NORMAL);
+    // 凤凰身体核心（小圆点）
+    OLED_DrawFilledRectangle(px - 2, py - 1, 2, 3, OLED_COLOR_NORMAL);
 
-    // 下方羽毛
-    OLED_DrawLine(px - 1, py + 10, px - 3, py + 8, OLED_COLOR_NORMAL);
-    OLED_DrawLine(px - 1, py + 11, px - 4, py + 9, OLED_COLOR_NORMAL);
+    // 上方羽毛 - 向后上方优雅弯曲延伸（参考凤凰羽毛图）
+    // 主羽轴
+    OLED_DrawLine(px - 2, py - 1, px - 6, py - 4, OLED_COLOR_NORMAL);  // 羽轴向后上
+    OLED_DrawLine(px - 6, py - 4, px - 8, py - 6, OLED_COLOR_NORMAL);  // 羽轴延伸
+    // 羽毛分叉（火焰状）
+    OLED_DrawLine(px - 5, py - 3, px - 7, py - 2, OLED_COLOR_NORMAL);  // 分叉1
+    OLED_DrawLine(px - 7, py - 5, px - 9, py - 4, OLED_COLOR_NORMAL);  // 分叉2
 
-    // 中间连接点（凤凰身体）
-    OLED_DrawFilledRectangle(px - 2, py + 6, 2, 4, OLED_COLOR_NORMAL);
+    // // 下方羽毛 - 向后下方优雅弯曲延伸
+    // // 主羽轴
+    // OLED_DrawLine(px - 2, py + 1, px - 6, py + 4, OLED_COLOR_NORMAL);  // 羽轴向后下
+    // OLED_DrawLine(px - 6, py + 4, px - 8, py + 6, OLED_COLOR_NORMAL);  // 羽轴延伸
+    // // 羽毛分叉
+    // OLED_DrawLine(px - 5, py + 3, px - 7, py + 2, OLED_COLOR_NORMAL);  // 分叉1
+    // OLED_DrawLine(px - 7, py + 5, px - 9, py + 4, OLED_COLOR_NORMAL);  // 分叉2
 
-    // 闪烁的火焰尾巴效果
+    // 闪烁的火焰尖端效果
     static uint8_t flamePhase = 0;
-    flamePhase                = (flamePhase + 1) % 4;
+    flamePhase = (flamePhase + 1) % 4;
     if (flamePhase < 2) {
-        OLED_DrawFilledRectangle(px - 4, py + 5, 1, 1, OLED_COLOR_NORMAL);
-        OLED_DrawFilledRectangle(px - 5, py + 4, 1, 1, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(px - 9, py - 7, 1, 1, OLED_COLOR_NORMAL);  // 上羽毛火焰尖
+        OLED_DrawFilledRectangle(px - 9, py + 7, 1, 1, OLED_COLOR_NORMAL);  // 下羽毛火焰尖
+    } else {
+        OLED_DrawFilledRectangle(px - 10, py - 5, 1, 1, OLED_COLOR_NORMAL); // 上火焰飘动
+        OLED_DrawFilledRectangle(px - 10, py + 5, 1, 1, OLED_COLOR_NORMAL); // 下火焰飘动
     }
 }
 
 void LeadingRole::drawKuiniuWingman() {
-    // 夔牛僚机绘制在玩家右侧，呈牛角/雷电状
-    int16_t px    = m_pdata->spatialData.currentPosX+m_pdata->spatialData.sizeX-5;
-    int16_t py    = m_pdata->spatialData.currentPosY+m_pdata->spatialData.sizeY-5;
-    int16_t sizeX = m_pdata->spatialData.sizeX;
+    // 夔牛僚机绘制在玩家后方（X负方向），牛角向后延伸
+    // 基准点：玩家左下侧
+    int16_t px = m_pdata->spatialData.currentPosX+m_pdata->spatialData.sizeX+3;
+    int16_t py = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY-3;
 
-    // 夔牛角形状 - 从玩家右侧向右前方延展  
-    // 上方牛角
-    OLED_DrawLine(px + sizeX + 1, py + 5, px + sizeX + 3, py + 2, OLED_COLOR_NORMAL);
-    OLED_DrawLine(px + sizeX + 1, py + 6, px + sizeX + 4, py + 3, OLED_COLOR_NORMAL);
+    // 边界检查：确保所有绘制坐标为正数（最左侧绘制点为 px-11）
+    if (px < 12 || py < 6 || py > 58) {
+        return;
+    }
 
-    // 下方牛角
-    OLED_DrawLine(px + sizeX + 1, py + 10, px + sizeX + 3, py + 8, OLED_COLOR_NORMAL);
-    OLED_DrawLine(px + sizeX + 1, py + 11, px + sizeX + 4, py + 9, OLED_COLOR_NORMAL);
+    // 夔牛身体核心
+    OLED_DrawFilledRectangle(px - 2, py - 1, 2, 3, OLED_COLOR_NORMAL);
 
-    // 中间连接点（夔牛身体）
-    OLED_DrawFilledRectangle(px + sizeX, py + 6, 2, 4, OLED_COLOR_NORMAL);
+    // 下方牛角 - 向后下方弯曲延伸（类似凤凰羽毛的优雅弧线）
+    // 主角轴
+    OLED_DrawLine(px - 2, py + 2, px - 5, py + 4, OLED_COLOR_NORMAL);  // 角根部
+    OLED_DrawLine(px - 5, py + 4, px - 8, py + 5, OLED_COLOR_NORMAL);  // 角中部弯曲
+    OLED_DrawLine(px - 8, py + 5, px - 10, py + 4, OLED_COLOR_NORMAL); // 角尖回勾
+    // 角的厚度
+    OLED_DrawLine(px - 3, py + 3, px - 6, py + 5, OLED_COLOR_NORMAL);  // 平行线增加厚度
 
     // 闪烁的雷电效果
     static uint8_t thunderPhase = 0;
-    thunderPhase                = (thunderPhase + 1) % 4;
+    thunderPhase = (thunderPhase + 1) % 4;
     if (thunderPhase < 2) {
-        OLED_DrawFilledRectangle(px + sizeX + 4, py + 5, 1, 1, OLED_COLOR_NORMAL);
-        OLED_DrawFilledRectangle(px + sizeX + 5, py + 6, 1, 1, OLED_COLOR_NORMAL);
+        OLED_DrawFilledRectangle(px - 11, py - 4, 1, 1, OLED_COLOR_NORMAL); // 上角雷电
+        OLED_DrawFilledRectangle(px - 11, py + 4, 1, 1, OLED_COLOR_NORMAL); // 下角雷电
+    } else {
+        OLED_DrawFilledRectangle(px - 10, py - 3, 1, 1, OLED_COLOR_NORMAL); // 上角闪烁
+        OLED_DrawFilledRectangle(px - 10, py + 3, 1, 1, OLED_COLOR_NORMAL); // 下角闪烁
     }
 }
 
@@ -404,9 +486,9 @@ void LeadingRole::phoenixShoot() {
         return;
     }
 
-    // 从凤凰位置发射（玩家左侧靠内1像素，Y方向中间位置）
-    uint8_t shootX = px - 1;
-    uint8_t shootY = py + 8;
+    // 从凤凰位置发射（玩家左侧靠内1像素，Y方向组左侧位置）
+    uint16_t shootX = px ;
+    uint16_t shootY = py ;
 
     IBullet *newBullet = createBullet(shootX, shootY, BulletType::FIRE_BALL);
     if (newBullet != nullptr) {
@@ -422,19 +504,18 @@ void LeadingRole::kuiniuShoot() {
     // 夔牛从玩家右侧发射雷电
     taskENTER_CRITICAL();
 
-    int16_t px    = m_pdata->spatialData.currentPosX;
-    int16_t py    = m_pdata->spatialData.currentPosY;
-    int16_t sizeX = m_pdata->spatialData.sizeX;
+    int16_t px    = m_pdata->spatialData.currentPosX+m_pdata->spatialData.sizeX;
+    int16_t py    = m_pdata->spatialData.currentPosY+m_pdata->spatialData.sizeY;
 
     // 边界检查：如果玩家太靠近右边界，不发射
-    if (px + sizeX + 5 > 127) {
+    if (px + 5 > 127) {
         taskEXIT_CRITICAL();
         return;
     }
 
-    // 从夔牛位置发射（玩家右侧+1像素，Y方向中间位置）
-    uint8_t shootX = px + sizeX + 1;
-    uint8_t shootY = py + 8;
+    // 从夔牛位置发射（玩家右侧+1像素，Y方向右侧位置）
+    uint16_t shootX = px ;
+    uint16_t shootY = py ;
 
     IBullet *newBullet = createBullet(shootX, shootY, BulletType::LIGHTNING_LINE);
     if (newBullet != nullptr) {
