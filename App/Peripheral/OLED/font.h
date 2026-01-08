@@ -45,16 +45,24 @@ typedef struct Image {
 } Image;
 
 extern const Image bilibiliImg;
-extern const Image tankImg;
+extern const Image BITtankImg;
+extern const Image playerTankImg;
 
+//BOSS
 extern const Image TaotieImg;
 extern const Image TaowuImg;
 extern const Image XiangliuImg;
 extern const Image HundunImg;
 
+//基础敌人
 extern const Image feilianImg;
 extern const Image GudiaoImg;
 extern const Image ChiMeiImg;
+
+//精英敌人
+extern const Image BoImg;
+extern const Image ShengyuImg;
+extern const Image LiliImg;
 
 extern const Image BasicBulletImg;
 extern const Image FireBallBulletImg;

@@ -21,6 +21,7 @@
 //闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
 
 uint8_t const boundary_deadzone = 5; // 左侧边界
+
 /***************小型敌人***************/
 /**
  * @brief FeilianEnemy class
@@ -95,6 +96,149 @@ public:
     void die() override;                                        // 只保留声明
     void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
+
+
+/*******************************************/
+/***************精英级中型敌人***************/
+
+/**
+ * @brief BoEnemy class - 驳 精英敌人
+ * @note  中文：驳 ｜ 英文：Bo
+ * @note  神话典故：《山海经·西山经》记载："中曲之山，有兽焉，其状如马而白身黑尾，一角，虎牙爪，
+ *                音如鼓音，其名曰驳，是食虎豹，可以御兵。"
+ * @note  驳是一种马形神兽，白身黑尾，头生独角，有虎牙虎爪，叫声如鼓，能捕食虎豹，佩戴可御刀兵。
+ * 
+ * @note  精英级中型敌人，体型中等（24x24 像素），中等血量，较高攻击力，中速移动。
+ * @note  会与普通敌人一同出现，攻击方式直接凶猛，无瞬移技能。
+ * 
+ * @note  === 攻击方式 ===
+ * @note  MODE_1: 冲锋践踏 - 向玩家方向快速直线冲锋，造成碰撞伤害
+ *               冲锋距离 ChargeDistance=40，冲锋持续时间 ChargeTime=800ms
+ * @note  MODE_2: 虎牙利爪 - 呼应"虎牙爪"，发射3发呈扇形的普通子弹
+ *               持续时间 ClawAttackTime=200ms
+ * @note  MODE_3: 鼓音震荡 - 呼应"音如鼓音"，发射一排横向冲击波子弹
+ *               持续时间 DrumSoundTime=300ms
+ */
+
+//数值设定参考（精英级，比普通敌人强，比BOSS弱）
+//血量：80 + level * 80（中等血量）
+//攻击力：6 + level * 2（较高攻击力）
+//移动速度：2（中速移动）
+//碰撞伤害：10 + level * 3（较高碰撞伤害）
+
+class BoEnemy : public IRole {
+public:
+    uint16_t              think_count     = 0;
+    static const uint16_t boEnemyDeadTime = 300; // 死亡动画时间，单位ms
+
+    uint16_t action_timer   = 0; // 倒计时
+    uint16_t action_MaxTime = 0; // 记录动作最大持续时间
+    uint16_t action_count   = 0; // 记录动作持续时间
+
+    // 攻击方式1相关参数 - 冲锋践踏
+    static const uint16_t ChargeTime     = 800; // 冲锋持续时间，单位ms
+    static const uint8_t  ChargeDistance = 40;  // 冲锋距离，单位像素
+    int8_t                chargeDirectionX = 0; // 冲锋方向X
+    int8_t                chargeDirectionY = 0; // 冲锋方向Y
+    bool                  chargeStarted    = false;
+
+    // 攻击方式2相关参数 - 虎牙利爪
+    static const uint16_t ClawAttackTime = 200; // 爪击持续时间，单位ms
+
+    // 攻击方式3相关参数 - 鼓音震荡
+    static const uint16_t DrumSoundTime = 300; // 鼓音持续时间，单位ms
+
+public:
+    BoEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1, uint16_t dropExp = 0
+    );
+    ~BoEnemy() = default;
+
+    void drawRole() override;                                   // 绘制角色
+    void init() override;                                       // 初始化
+    void think() override;                                      // 思考决策
+    void doAction() override;                                   // 执行动作
+    void die() override;                                        // 死亡处理
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
+
+    void chargeTowardsPlayer(); // 攻击方式1，冲锋践踏 - 向玩家方向冲锋
+    void tigerClawAttack();     // 攻击方式2，虎牙利爪 - 发射扇形子弹
+    void drumSoundWave();       // 攻击方式3，鼓音震荡 - 发射横向冲击波
+};
+
+/**
+ * @brief LiliEnemy class - 狸力 精英敌人
+ * @note  中文：狸力 ｜ 英文：Lili
+ * @note  神话典故：《山海经·南山经》记载："柜山，有兽焉，其状如豚，有距，其音如狗吠，
+ *                其名曰狸力，见则其县多土功。"
+ * @note  狸力是一种猪形神兽，长有利爪（距），叫声如狗吠，出现则预示当地将有大量土木工程。
+ * 
+ * @note  精英级中型敌人，体型中等，中等血量，中等攻击力，较快移动。
+ * @note  会与普通敌人一同出现，攻击方式以土系和声波为主。
+ * 
+ * @note  === 攻击方式 ===
+ * @note  MODE_1: 土涌突刺 - 呼应"土功"，在前方间隔发射火球弹（土块爆炸）
+ *               持续时间 EarthSurgeTime=1200ms，每 EarthSurgeInterval=300ms 发射一发火球
+ * @note  MODE_2: 獠吠震波 - 呼应"其音如狗吠"，发射5发扇形普通子弹阵
+ *               持续时间 BarkWaveTime=400ms，一次性发射
+ * @note  MODE_3: 穴地陷阱 - 呼应"见则其县多土功"，在随机位置挖掘陷阱后爆炸
+ *               持续时间 BurrowTrapTime=800ms，先标记2个陷阱位置，延迟后发射火球
+ */
+
+//数值设定参考（精英级，比普通敌人强，比BOSS弱）
+//血量：60 + level * 60（中等血量，比驳稍弱）
+//攻击力：5 + level * 2（中等攻击力）
+//移动速度：2（中速移动）
+//碰撞伤害：8 + level * 2（中等碰撞伤害）
+
+class LiliEnemy : public IRole {
+public:
+    uint16_t              think_count       = 0;
+    static const uint16_t liliEnemyDeadTime = 300; // 死亡动画时间，单位ms
+
+    uint16_t action_timer   = 0; // 倒计时
+    uint16_t action_MaxTime = 0; // 记录动作最大持续时间
+    uint16_t action_count   = 0; // 记录动作持续时间
+
+    // 攻击方式1相关参数 - 土涌突刺
+    static const uint16_t EarthSurgeTime     = 1200; // 土涌持续时间，单位ms
+    static const uint16_t EarthSurgeInterval = 400;  // 每发间隔，单位ms
+    uint8_t               earthSurgeCount    = 0;    // 已发射火球数
+
+    // 攻击方式2相关参数 - 獠吠震波
+    static const uint16_t BarkWaveTime = 400; // 吠声持续时间，单位ms
+    bool                  barkFired    = false;
+
+    // 攻击方式3相关参数 - 穴地陷阱
+    static const uint16_t BurrowTrapTime     = 800;  // 陷阱技能持续时间，单位ms
+    static const uint16_t TrapExplodeDelay   = 500;  // 陷阱爆炸延迟，单位ms
+    static const uint8_t  TrapCount          = 2;    // 陷阱数量
+    uint8_t               trapPosX[TrapCount] = {0}; // 陷阱X位置
+    uint8_t               trapPosY[TrapCount] = {0}; // 陷阱Y位置
+    bool                  trapPlaced         = false;// 陷阱是否已放置
+    bool                  trapExploded       = false;// 陷阱是否已爆炸
+
+public:
+    LiliEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1, uint16_t dropExp = 0
+    );
+    ~LiliEnemy() = default;
+
+    void drawRole() override;                                   // 绘制角色
+    void init() override;                                       // 初始化
+    void think() override;                                      // 思考决策
+    void doAction() override;                                   // 执行动作
+    void die() override;                                        // 死亡处理
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
+
+    void earthSurge();  // 攻击方式1，土涌突刺 - 发射火球弹
+    void barkWave();    // 攻击方式2，獠吠震波 - 发射扇形子弹
+    void burrowTrap();  // 攻击方式3，穴地陷阱 - 随机位置爆炸陷阱
+};
+
+
+/*******************************************/
+/***************BOSS级大型敌人***************/
 
 /**
  * @brief TaotieEnemy class
@@ -332,8 +476,8 @@ public:
 
     // 攻击方式5相关参数 - 时空裂隙
     static const uint16_t TemporalRiftTime     = 2500; // 时空裂隙持续时间，单位ms
-    static const uint16_t TemporalRiftInterval = 400;  // 每次发射间隔，单位ms
-    static const uint8_t  RiftGapSize          = 12;   // 缺口大小，单位像素
+    static const uint16_t TemporalRiftInterval = 550;  // 每次发射间隔，单位ms（延长给玩家反应时间）
+    static const uint8_t  RiftGapSize          = 18;   // 缺口大小，单位像素（增大缺口）
     uint8_t               riftWaveCount        = 0;    // 裂隙波次计数
 
     // 攻击方式6相关参数 - 归于混沌

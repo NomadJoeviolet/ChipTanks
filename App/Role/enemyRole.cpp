@@ -457,11 +457,10 @@ void GudiaoEnemy::init() {
     m_pdata->initData.init_count = 0;
 
     if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
-            m_pdata->spatialData.currentPosX -= 1;
+        m_pdata->spatialData.currentPosX -= 1;
     } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
-            m_pdata->spatialData.currentPosX += 1;
-    }
-    else{
+        m_pdata->spatialData.currentPosX += 1;
+    } else {
         m_pdata->initData.isInited   = true;
         m_pdata->spatialData.refPosX = m_pdata->spatialData.currentPosX;
         m_pdata->spatialData.refPosY = m_pdata->spatialData.currentPosY;
@@ -870,6 +869,871 @@ void ChiMeiEnemy::die() {
     }
     m_pdata->isActive = false;
 }
+
+/*******************************************************************/
+
+/*******************************************************************/
+/**
+ * @brief BoEnemy class - 驳 精英敌人
+ * @note  中文：驳 ｜ 英文：Bo
+ * @note  神话典故：《山海经·西山经》记载："中曲之山，有兽焉，其状如马而白身黑尾，一角，虎牙爪，
+ *                音如鼓音，其名曰驳，是食虎豹，可以御兵。"
+ * @note  驳是一种马形神兽，白身黑尾，头生独角，有虎牙虎爪，叫声如鼓，能捕食虎豹，佩戴可御刀兵。
+ * 
+ * @note  精英级中型敌人，体型中等（24x24 像素），中等血量，较高攻击力，中速移动。
+ * @note  会与普通敌人一同出现，攻击方式直接凶猛，无瞬移技能。
+ * 
+ * @note  === 攻击方式 ===
+ * @note  MODE_1: 冲锋践踏 - 向玩家方向快速直线冲锋，造成碰撞伤害
+ *               冲锋距离 ChargeDistance=40，冲锋持续时间 ChargeTime=800ms
+ * @note  MODE_2: 虎牙利爪 - 呼应"虎牙爪"，发射3发呈扇形的普通子弹
+ *               持续时间 ClawAttackTime=200ms
+ * @note  MODE_3: 鼓音震荡 - 呼应"音如鼓音"，发射一排横向冲击波子弹
+ *               持续时间 DrumSoundTime=300ms
+ */
+
+//数值设定参考（精英级，比普通敌人强，比BOSS弱）
+//血量：80 + level * 80（中等血量）
+//攻击力：6 + level * 2（较高攻击力）
+//移动速度：2（中速移动）
+//碰撞伤害：10 + level * 3（较高碰撞伤害）
+
+BoEnemy::BoEnemy(uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp)
+: IRole() {
+    //图片信息（需要在font.c中添加BoImg）
+    m_pdata->img = &BoImg;
+
+    //身份信息
+    m_pdata->identity          = RoleIdentity::ENEMY;
+    m_pdata->isActive          = true;
+    m_pdata->initData.isInited = false;
+
+    //等级信息
+    m_pdata->level = level;
+
+    //血量信息
+    m_pdata->healthData.currentHealth = 100 + level * 140;
+    m_pdata->healthData.maxHealth     = 100 + level * 140;
+
+    //回血信息
+    m_pdata->healthData.healValue       = 2;
+    m_pdata->healthData.healTimeCounter = 0;
+    m_pdata->healthData.healResetTime   = 10000;
+    m_pdata->healthData.healSpeed       = 2;
+
+    //空间移动信息
+    m_pdata->spatialData.canCrossBorder            = false;
+    m_pdata->spatialData.currentPosX               = startX;
+    m_pdata->spatialData.currentPosY               = startY;
+    m_pdata->spatialData.refPosX                   = startX;
+    m_pdata->spatialData.refPosY                   = startY;
+    m_pdata->spatialData.sizeX                     = m_pdata->img->w;
+    m_pdata->spatialData.sizeY                     = m_pdata->img->h;
+    m_pdata->spatialData.moveSpeed                 = 2; // 中速移动
+    m_pdata->spatialData.consecutiveCollisionCount = 0;
+
+    //初始化位置
+    m_pdata->initData.posX = initPosX;
+    m_pdata->initData.posY = initPosY;
+
+    //攻击信息
+    m_pdata->attackData.attackPower            = 6 + level * 2;
+    m_pdata->attackData.shootCooldownSpeed     = 5;
+    m_pdata->attackData.shootCooldownTimer     = 0;
+    m_pdata->attackData.shootCooldownResetTime = 8000; // 8000/5=1600ms冷却
+    m_pdata->attackData.bulletSpeed            = 1;
+
+    m_pdata->attackData.bulletRange            = 8; // 火球弹范围
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f;
+
+    m_pdata->attackData.collisionPower = 10 + level * 3; // 较高碰撞伤害
+
+    //热量信息
+    m_pdata->heatData.maxHeat          = 120;
+    m_pdata->heatData.currentHeat      = 0;
+    m_pdata->heatData.heatPerShot      = 15;
+    m_pdata->heatData.heatCoolDownRate = 10;
+
+    //死亡状态信息
+    m_pdata->deathData.deathTimer           = boEnemyDeadTime;
+    m_pdata->deathData.isDead               = false;
+    m_pdata->deathData.dropExperiencePoints = dropExp;
+
+    // 初始化攻击模式状态变量
+    chargeStarted    = false;
+    chargeDirectionX = 0;
+    chargeDirectionY = 0;
+}
+
+void BoEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
+    switch (type) {
+    case BulletType::BASIC:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    case BulletType::FIRE_BALL:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot * 2;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    case BulletType::LIGHTNING_LINE:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot * 1.5;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    }
+}
+
+void BoEnemy::init() {
+    m_pdata->initData.init_count += controlDelayTime;
+
+    // 从右侧入场，移动到初始位置
+    if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 20) { // 每20ms移动一次
+            m_pdata->spatialData.currentPosX -= 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 20) { // 每20ms移动一次
+            m_pdata->spatialData.currentPosX += 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else {
+        m_pdata->initData.isInited       = true;
+        m_pdata->spatialData.refPosX     = m_pdata->spatialData.currentPosX;
+        m_pdata->spatialData.refPosY     = m_pdata->spatialData.currentPosY;
+        m_pdata->actionData.currentState = ActionState::IDLE;
+        m_pdata->initData.init_count     = 0;
+    }
+}
+
+void BoEnemy::think() {
+    think_count += controlDelayTime;
+    if (think_count < 150) // 每150ms思考一次
+        return;
+
+    think_count = 0;
+
+    if (m_pdata->actionData.currentState == ActionState::IDLE) {
+        // 获取玩家位置用于决策
+        IRole *player = g_entityManager.getPlayerRole();
+        (void)player; // 避免未使用警告
+
+        uint8_t randomAction = rand() % 10;
+
+        if (randomAction < 3) {
+            // 30% 概率移动
+            uint8_t moveDir                  = rand() % 4;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+            switch (moveDir) {
+            case 0:
+                m_pdata->actionData.moveMode = MoveMode::LEFT;
+                break;
+            case 1:
+                m_pdata->actionData.moveMode = MoveMode::RIGHT;
+                break;
+            case 2:
+                m_pdata->actionData.moveMode = MoveMode::UP;
+                break;
+            case 3:
+                m_pdata->actionData.moveMode = MoveMode::DOWN;
+                break;
+            }
+        } else if (randomAction < 5) {
+            // 20% 概率待机
+            m_pdata->actionData.currentState = ActionState::IDLE;
+        } else {
+            // 50% 概率攻击
+            m_pdata->actionData.currentState = ActionState::ATTACKING;
+
+            uint8_t attackChoice = rand() % 6;
+            switch (attackChoice) {
+            case 0:
+            case 1:
+                // MODE_1: 冲锋践踏 (约33%)
+                action_timer                   = ChargeTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                chargeStarted                  = false;
+                m_pdata->actionData.attackMode = AttackMode::MODE_1;
+                break;
+            case 2:
+            case 3:
+                // MODE_2: 虎牙利爪 (约33%)
+                action_timer                   = ClawAttackTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                m_pdata->actionData.attackMode = AttackMode::MODE_2;
+                break;
+            case 4:
+            case 5:
+                // MODE_3: 鼓音震荡 (约33%)
+                action_timer                   = DrumSoundTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                m_pdata->actionData.attackMode = AttackMode::MODE_3;
+                break;
+            }
+        }
+    }
+}
+
+void BoEnemy::doAction() {
+    if (m_pdata->initData.isInited == false) {
+        return;
+    }
+
+    if (m_pdata->deathData.isDead) {
+        return;
+    }
+
+    switch (m_pdata->actionData.currentState) {
+    case ActionState::IDLE:
+        break;
+
+    case ActionState::MOVING:
+        switch (m_pdata->actionData.moveMode) {
+        case MoveMode::LEFT:
+            move(-1, 0);
+            break;
+        case MoveMode::RIGHT:
+            move(1, 0);
+            break;
+        case MoveMode::UP:
+            move(0, -1);
+            break;
+        case MoveMode::DOWN:
+            move(0, 1);
+            break;
+        default:
+            break;
+        }
+        m_pdata->actionData.currentState = ActionState::IDLE;
+        m_pdata->actionData.moveMode     = MoveMode::NONE;
+        break;
+
+    case ActionState::ATTACKING:
+        // 更新计数器
+        action_count += controlDelayTime;
+
+        // 动作倒计时
+        if (action_timer >= controlDelayTime)
+            action_timer -= controlDelayTime;
+        else
+            action_timer = 0;
+
+        // 执行对应攻击技能
+        switch (m_pdata->actionData.attackMode) {
+        case AttackMode::MODE_1:
+            chargeTowardsPlayer();
+            break;
+        case AttackMode::MODE_2:
+            tigerClawAttack();
+            break;
+        case AttackMode::MODE_3:
+            drumSoundWave();
+            break;
+        default:
+            break;
+        }
+
+        // 动作结束
+        if (action_timer == 0) {
+            m_pdata->actionData.currentState       = ActionState::IDLE;
+            m_pdata->actionData.attackMode         = AttackMode::NONE;
+            action_count                           = 0;
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+
+            // 重置状态变量
+            chargeStarted = false;
+        }
+        break;
+    }
+}
+
+void BoEnemy::drawRole() {
+    if (m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
+        OLED_DrawImage(
+            m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
+        );
+
+        // MODE_1冲锋时绘制冲锋特效（拖尾线条）
+        if (m_pdata->actionData.attackMode == AttackMode::MODE_1 && chargeStarted) {
+            uint8_t tailX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX;
+            uint8_t tailY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+            // 在身后绘制短线表示冲锋拖尾
+            OLED_DrawLine(
+                tailX - chargeDirectionX * 0, tailY - chargeDirectionY * 0, tailX - chargeDirectionX * 8,
+                tailY - chargeDirectionY * 4, OLED_COLOR_NORMAL
+            );
+        }
+    }
+
+    // 死亡动画
+    if (m_pdata->deathData.isDead) {
+        uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+        uint8_t radius  = (boEnemyDeadTime - m_pdata->deathData.deathTimer) * 15 / boEnemyDeadTime;
+        radius          = etl::max(radius, uint8_t(1));
+
+        // 驳死亡效果：扩散圆环
+        OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
+    }
+}
+
+void BoEnemy::die() {
+    if (m_pdata->deathData.deathTimer > 0) {
+        m_pdata->deathData.deathTimer -= controlDelayTime;
+        m_pdata->deathData.deathTimer = etl::max(m_pdata->deathData.deathTimer, uint16_t(0));
+        return;
+    }
+    m_pdata->isActive = false;
+}
+
+//=========================== 攻击技能实现 ===========================
+
+/**
+ * @brief MODE_1: 冲锋践踏
+ * @note  向玩家方向快速直线冲锋，呼应马形神兽的特性
+ *        冲锋过程中造成高碰撞伤害
+ */
+void BoEnemy::chargeTowardsPlayer() {
+    // 冲锋开始时计算方向
+    static int16_t safe_dis = 40; // 安全距离，避免过近
+    if (!chargeStarted) {
+        chargeStarted = true;
+
+        IRole *player = g_entityManager.getPlayerRole();
+        if (player != nullptr) {
+            safe_dis = player->getData()->spatialData.sizeX / 2 + m_pdata->spatialData.sizeX / 2 + 50;
+            int16_t playerX =
+                player->getData()->spatialData.currentPosX + player->getData()->spatialData.sizeX / 2 + safe_dis;
+            int16_t playerY = player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2;
+            int16_t myX     = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+            int16_t myY     = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+            int16_t deltaX = playerX - myX;
+            int16_t deltaY = playerY - myY;
+
+            // 计算冲锋方向（向玩家方向）
+            chargeDirectionX = (deltaX > 0) ? 1 : -1; // deltaX > 0 表示玩家在右边，向右冲锋
+            chargeDirectionY = 0;
+            if (deltaY < -5)
+                chargeDirectionY = -1;
+            else if (deltaY > 5)
+                chargeDirectionY = 1;
+
+            if (deltaX == 0) {
+                chargeDirectionX = 0;
+            }
+            if (deltaY == 0) {
+                chargeDirectionY = 0;
+            }
+
+        } else {
+            // 无玩家时向左冲锋
+            chargeDirectionX = -1;
+            chargeDirectionY = 0;
+        }
+    }
+
+    // 每20ms移动一次（快速冲锋）
+    if (action_count >= 30) {
+        action_count = 0;
+        // 冲锋移动（速度翻倍）
+        move(chargeDirectionX * 2, chargeDirectionY, true);
+    }
+}
+
+/**
+ * @brief MODE_2: 虎牙利爪
+ * @note  发射3发呈扇形的普通子弹，呼应"虎牙爪"
+ *        一次性发射，覆盖较大范围
+ */
+void BoEnemy::tigerClawAttack() {
+    // 只在技能开始时发射一次
+    if (action_count < 50) return;
+    if (action_timer < action_MaxTime - 100) return; // 只在开始100ms内触发
+
+    uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+    // 发射3发扇形子弹（中间、上偏、下偏）
+    m_pdata->attackData.shootCooldownTimer = 0;
+    shoot(centerX, centerY, BulletType::BASIC); // 中间
+    m_pdata->attackData.shootCooldownTimer = 0;
+    shoot(centerX, centerY - 3, BulletType::BASIC); // 上偏
+    m_pdata->attackData.shootCooldownTimer = 0;
+    shoot(centerX, centerY + 3, BulletType::BASIC); // 下偏
+}
+
+/**
+ * @brief MODE_3: 鼓音震荡
+ * @note  发射一排横向冲击波子弹，呼应"音如鼓音"
+ *        覆盖较宽的Y轴范围
+ */
+void BoEnemy::drumSoundWave() {
+    // 只在技能开始时发射一次
+    if (action_count < 50) return;
+    if (action_timer < action_MaxTime - 150) return; // 只在开始150ms内触发
+
+    uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+    // 发射一排5发子弹（横向冲击波）
+    for (int8_t offset = -10; offset <= 10; offset += 5) {
+        m_pdata->attackData.shootCooldownTimer = 0;
+        shoot(centerX, centerY + offset, BulletType::BASIC);
+    }
+}
+/*******************************************************************/
+/**
+ * @brief LiliEnemy class -  精英敌人
+ * 土涌突刺：追踪玩家Y位置 + 随机偏移，与Taowu的随机弹幕不同
+獠吠震波：5发固定扇形，与BoEnemy的3发扇形和HundunEnemy的螺旋弹不同
+掘地冲锋：冲锋 + 火球轨迹的组合机制，独特的攻守兼备技能
+ */
+/*******************************************************************/
+
+LiliEnemy::LiliEnemy(
+    uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
+)
+: IRole() {
+    //图片信息
+    m_pdata->img = &LiliImg;
+
+    //身份信息
+    m_pdata->identity          = RoleIdentity::ENEMY;
+    m_pdata->isActive          = true;
+    m_pdata->initData.isInited = false;
+
+    //等级信息
+    m_pdata->level = level;
+
+    //血量信息: 60 + level * 60（中等血量，比驳稍弱）
+    m_pdata->healthData.currentHealth = 60 + level * 60;
+    m_pdata->healthData.maxHealth     = 60 + level * 60;
+
+    //回血信息
+    m_pdata->healthData.healValue       = 1;
+    m_pdata->healthData.healTimeCounter = 0;
+    m_pdata->healthData.healResetTime   = 12000;
+    m_pdata->healthData.healSpeed       = 2;
+
+    //空间移动信息
+    m_pdata->spatialData.canCrossBorder            = false;
+    m_pdata->spatialData.currentPosX               = startX;
+    m_pdata->spatialData.currentPosY               = startY;
+    m_pdata->spatialData.refPosX                   = startX;
+    m_pdata->spatialData.refPosY                   = startY;
+    m_pdata->spatialData.sizeX                     = m_pdata->img->w;
+    m_pdata->spatialData.sizeY                     = m_pdata->img->h;
+    m_pdata->spatialData.moveSpeed                 = 2; // 中速移动
+    m_pdata->spatialData.consecutiveCollisionCount = 0;
+
+    //初始化位置
+    m_pdata->initData.posX = initPosX;
+    m_pdata->initData.posY = initPosY;
+
+    //攻击信息: 5 + level * 2（中等攻击力）
+    m_pdata->attackData.attackPower            = 5 + level * 2;
+    m_pdata->attackData.shootCooldownSpeed     = 4;
+    m_pdata->attackData.shootCooldownTimer     = 0;
+    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000/4=1500ms冷却
+    m_pdata->attackData.bulletSpeed            = 1;
+
+    m_pdata->attackData.bulletRange            = 6; // 火球弹范围
+    m_pdata->attackData.bulletDamageMultiplier = 1.2f;
+
+    //碰撞伤害: 8 + level * 2（中等碰撞伤害）
+    m_pdata->attackData.collisionPower = 8 + level * 2;
+
+    //热量信息
+    m_pdata->heatData.maxHeat          = 100;
+    m_pdata->heatData.currentHeat      = 0;
+    m_pdata->heatData.heatPerShot      = 12;
+    m_pdata->heatData.heatCoolDownRate = 12;
+
+    //死亡状态信息
+    m_pdata->deathData.deathTimer           = liliEnemyDeadTime;
+    m_pdata->deathData.isDead               = false;
+    m_pdata->deathData.dropExperiencePoints = dropExp;
+
+    // 初始化攻击模式状态变量
+    barkFired       = false;
+    earthSurgeCount = 0;
+    trapPlaced      = false;
+    trapExploded    = false;
+    for (uint8_t i = 0; i < TrapCount; i++) {
+        trapPosX[i] = 0;
+        trapPosY[i] = 0;
+    }
+}
+
+void LiliEnemy::init() {
+    m_pdata->initData.init_count += controlDelayTime;
+
+    if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 25) {
+            m_pdata->spatialData.currentPosX -= 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 25) {
+            m_pdata->spatialData.currentPosX += 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else {
+        m_pdata->initData.isInited       = true;
+        m_pdata->spatialData.refPosX     = m_pdata->spatialData.currentPosX;
+        m_pdata->spatialData.refPosY     = m_pdata->spatialData.currentPosY;
+        m_pdata->actionData.currentState = ActionState::IDLE;
+        m_pdata->initData.init_count     = 0;
+    }
+}
+
+void LiliEnemy::think() {
+    think_count += controlDelayTime;
+    if (think_count < 300) return;  // 增加思考间隔到300ms（原180ms）
+
+    think_count = 0;
+
+    if (m_pdata->actionData.currentState == ActionState::IDLE) {
+        uint8_t randomAction = rand() % 10;
+
+        if (randomAction < 6 ) {  // 60%概率移动（原30%）
+            uint8_t moveDir                  = rand() % 4;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+            switch (moveDir) {
+            case 0:
+                m_pdata->actionData.moveMode = MoveMode::LEFT;
+                break;
+            case 1:
+                m_pdata->actionData.moveMode = MoveMode::RIGHT;
+                break;
+            case 2:
+                m_pdata->actionData.moveMode = MoveMode::UP;
+                break;
+            case 3:
+                m_pdata->actionData.moveMode = MoveMode::DOWN;
+                break;
+            }
+        } else if (randomAction < 7) {  // 10%概率待机（原10%）
+            m_pdata->actionData.currentState = ActionState::IDLE;
+        } else {  // 40%概率攻击（原60%）
+            m_pdata->actionData.currentState = ActionState::ATTACKING;
+
+            uint8_t attackChoice = rand() % 6;
+            switch (attackChoice) {
+            case 0:
+            case 1:
+                action_timer                   = EarthSurgeTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                earthSurgeCount                = 0;
+                m_pdata->actionData.attackMode = AttackMode::MODE_1;
+                break;
+            case 2:
+            case 3:
+                action_timer                   = BarkWaveTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                barkFired                      = false;
+                m_pdata->actionData.attackMode = AttackMode::MODE_2;
+                break;
+            case 4:
+            case 5:
+                action_timer                   = BurrowTrapTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                trapPlaced                     = false;
+                trapExploded                   = false;
+                m_pdata->actionData.attackMode = AttackMode::MODE_3;
+                break;
+            }
+        }
+    }
+}
+
+void LiliEnemy::doAction() {
+    if (!m_pdata->initData.isInited || m_pdata->deathData.isDead) return;
+
+    switch (m_pdata->actionData.currentState) {
+    case ActionState::IDLE:
+        break;
+
+    case ActionState::MOVING:
+        switch (m_pdata->actionData.moveMode) {
+        case MoveMode::LEFT:
+            move(-1, 0);
+            break;
+        case MoveMode::RIGHT:
+            move(1, 0);
+            break;
+        case MoveMode::UP:
+            move(0, -1);
+            break;
+        case MoveMode::DOWN:
+            move(0, 1);
+            break;
+        default:
+            break;
+        }
+        m_pdata->actionData.currentState = ActionState::IDLE;
+        m_pdata->actionData.moveMode     = MoveMode::NONE;
+        break;
+
+    case ActionState::ATTACKING:
+        action_count += controlDelayTime;
+
+        if (action_timer >= controlDelayTime)
+            action_timer -= controlDelayTime;
+        else
+            action_timer = 0;
+
+        switch (m_pdata->actionData.attackMode) {
+        case AttackMode::MODE_1:
+            earthSurge();
+            break;
+        case AttackMode::MODE_2:
+            barkWave();
+            break;
+        case AttackMode::MODE_3:
+            burrowTrap();
+            break;
+        default:
+            break;
+        }
+
+        // 动作结束
+        if (action_timer == 0) {
+            m_pdata->actionData.currentState       = ActionState::IDLE;
+            m_pdata->actionData.attackMode         = AttackMode::NONE;
+            action_count                           = 0;
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+
+            // 重置状态变量
+            barkFired       = false;
+            earthSurgeCount = 0;
+            trapPlaced      = false;
+            trapExploded    = false;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void LiliEnemy::drawRole() {
+    if (m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
+        OLED_DrawImage(
+            m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
+        );
+
+        // MODE_3陷阱标记绘制 - 在爆炸前显示警告标记
+        if (m_pdata->actionData.attackMode == AttackMode::MODE_3 && trapPlaced && !trapExploded) {
+            for (uint8_t i = 0; i < TrapCount; i++) {
+                // 绘制陷阱警告标记：X形图案
+                OLED_DrawLine(trapPosX[i] - 3, trapPosY[i] - 3, trapPosX[i] + 3, trapPosY[i] + 3, OLED_COLOR_NORMAL);
+                OLED_DrawLine(trapPosX[i] - 3, trapPosY[i] + 3, trapPosX[i] + 3, trapPosY[i] - 3, OLED_COLOR_NORMAL);
+            }
+        }
+    }
+
+    if (m_pdata->deathData.isDead) {
+        uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+        uint8_t radius  = (liliEnemyDeadTime - m_pdata->deathData.deathTimer) * 12 / liliEnemyDeadTime;
+        radius          = etl::max(radius, uint8_t(1));
+        OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
+    }
+}
+
+void LiliEnemy::die() {
+    if (m_pdata->deathData.deathTimer > 0) {
+        m_pdata->deathData.deathTimer -= controlDelayTime;
+        m_pdata->deathData.deathTimer = etl::max(m_pdata->deathData.deathTimer, uint16_t(0));
+        return;
+    }
+    m_pdata->isActive = false;
+}
+
+void LiliEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
+    switch (type) {
+    case BulletType::BASIC:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    case BulletType::FIRE_BALL:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot * 2;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    case BulletType::LIGHTNING_LINE:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot * 1.5;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    }
+}
+
+/**
+ * @brief MODE_1: 土涌突刺
+ * @note  呼应"土功"典故，向前方间隔发射火球弹（土块爆炸）
+ *        火球弹会造成范围伤害
+ */
+void LiliEnemy::earthSurge() {
+    // 每 EarthSurgeInterval ms 发射一发火球
+    if (action_count >= EarthSurgeInterval * (earthSurgeCount + 1)) {
+        earthSurgeCount++;
+
+        uint8_t shootX  = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+        // 获取玩家位置，朝玩家方向发射
+        IRole *player        = g_entityManager.getPlayerRole();
+        int8_t targetYOffset = 0;
+        if (player != nullptr) {
+            int16_t playerY = player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2;
+            int16_t deltaY  = playerY - centerY;
+            // 添加随机偏移，模拟土块喷射不规则感
+            targetYOffset = (deltaY > 5) ? 4 : ((deltaY < -5) ? -4 : 0);
+            targetYOffset += (rand() % 5) - 2; // -2 到 +2 随机偏移
+        }
+
+        // 发射火球弹（土块）
+        shoot(shootX, centerY + targetYOffset, BulletType::FIRE_BALL);
+    }
+}
+
+/**
+ * @brief MODE_2: 獠吠震波
+ * @note  呼应"其音如狗吠"典故，发出声波攻击
+ *        一次性发射5发扇形普通子弹，覆盖较大范围
+ */
+void LiliEnemy::barkWave() {
+    // 只在技能开始50ms后发射一次
+    if (barkFired || action_count < 50) return;
+
+    barkFired       = true;
+    uint8_t shootX  = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+    // 发射5发扇形普通子弹（声波扩散效果）
+    for (int8_t i = -2; i <= 2; i++) {
+        m_pdata->attackData.shootCooldownTimer = 0; // 重置冷却以连续发射
+        shoot(shootX, centerY + i * 2, BulletType::BASIC);
+    }
+}
+
+/**
+ * @brief MODE_3: 穴地陷阱
+ * @note  呼应"见则其县多土功"典故，狸力善于挖掘土地
+ *        在随机位置放置2个陷阱标记，延迟后爆炸发射火球
+ *        玩家需要躲避陷阱位置
+ */
+void LiliEnemy::burrowTrap() {
+    // 阶段1：放置陷阱（技能开始时）
+    if (!trapPlaced && action_count >= 50) {
+        trapPlaced = true;
+        
+        // 在玩家附近随机位置放置陷阱
+        IRole *player = g_entityManager.getPlayerRole();
+        if (player != nullptr) {
+            uint8_t playerX = player->getData()->spatialData.currentPosX + player->getData()->spatialData.sizeX / 2;
+            uint8_t playerY = player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2;
+            
+            for (uint8_t i = 0; i < TrapCount; i++) {
+                // 陷阱位置：玩家前方随机位置（X: +30~+50, Y: ±15随机偏移）
+                int16_t randomOffsetX = 30 + (rand() % 20);
+                int16_t randomOffsetY = (rand() % 31) - 15; // -15 到 +15
+                
+                trapPosX[i] = etl::clamp<int16_t>(playerX + randomOffsetX, 10, 120);
+                trapPosY[i] = etl::clamp<int16_t>(playerY + randomOffsetY, 5, 58);
+            }
+        } else {
+            // 无玩家时在屏幕中间区域随机放置
+            for (uint8_t i = 0; i < TrapCount; i++) {
+                trapPosX[i] = 30 + (rand() % 60);
+                trapPosY[i] = 10 + (rand() % 44);
+            }
+        }
+    }
+    
+    // 阶段2：陷阱爆炸（延迟后）
+    if (trapPlaced && !trapExploded && action_count >= TrapExplodeDelay) {
+        trapExploded = true;
+        
+        // 在每个陷阱位置发射火球弹
+        for (uint8_t i = 0; i < TrapCount; i++) {
+            m_pdata->attackData.shootCooldownTimer = 0; // 重置冷却
+            shoot(trapPosX[i], trapPosY[i], BulletType::FIRE_BALL);
+        }
+    }
+}
+
 
 /*******************************************************************/
 
@@ -1705,7 +2569,6 @@ void TaowuEnemy::doAction() {
 
     // Implement enemy action logic
     if (m_pdata->deathData.isDead) {
-        
         return;
     }
     switch (m_pdata->actionData.currentState) {
@@ -1771,14 +2634,15 @@ void TaowuEnemy::doAction() {
             // 攻击模式6，清除CD（在重置 attackMode 之前检查）
             bool clearCD = (m_pdata->actionData.attackMode == AttackMode::MODE_6);
 
-            m_pdata->actionData.currentState       = ActionState::IDLE;
-            m_pdata->actionData.attackMode         = AttackMode::NONE;
-            action_count                           = 0;
-            
+            m_pdata->actionData.currentState = ActionState::IDLE;
+            m_pdata->actionData.attackMode   = AttackMode::NONE;
+            action_count                     = 0;
+
             if (clearCD) {
                 m_pdata->attackData.shootCooldownTimer = 0; // MODE_6 清除冷却时间
             } else {
-                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // 攻击后进入冷却时间
+                m_pdata->attackData.shootCooldownTimer =
+                    m_pdata->attackData.shootCooldownResetTime; // 攻击后进入冷却时间
             }
         }
         break;
@@ -1919,7 +2783,7 @@ void TaowuEnemy::blinkToRandomPosition() {
     // 阶段1: action_timer > action_MaxTime * 2/3  (刚开始)
     // 阶段2: action_timer 在 action_MaxTime * 1/3 到 2/3 之间
     // 阶段3: action_timer < action_MaxTime * 1/3  (快结束)
-    
+
     uint16_t phase2Threshold = action_MaxTime * 2 / 3; // 约666ms
     uint16_t phase3Threshold = action_MaxTime / 3;     // 约333ms
 
@@ -1933,11 +2797,11 @@ void TaowuEnemy::blinkToRandomPosition() {
     } else if (action_timer >= phase3Threshold) {
         // 阶段2: 在远处位置发射3颗火球弹（随机Y位置）
         // 注意：每次发射前都要重置冷却时间，因为shoot()内部会设置冷却
-        
+
         for (int i = 0; i < 3; i++) {
-            m_pdata->attackData.shootCooldownTimer = 0; // 必须在每次shoot前重置
-            uint8_t m_y = rand() % 54 + 6;              // 6-59 随机Y位置
-            uint8_t m_x = 80 + rand() % 42;             // 80-121 随机X位置
+            m_pdata->attackData.shootCooldownTimer = 0;                // 必须在每次shoot前重置
+            uint8_t m_y                            = rand() % 54 + 6;  // 6-59 随机Y位置
+            uint8_t m_x                            = 80 + rand() % 42; // 80-121 随机X位置
             shoot(m_x, m_y, BulletType::FIRE_BALL);
         }
     } else {
@@ -2034,7 +2898,7 @@ XiangliuEnemy::XiangliuEnemy(
     m_pdata->initData.posY = initPosY;
 
     //攻击信息
-    m_pdata->attackData.attackPower            = 3 + level * 5 ;
+    m_pdata->attackData.attackPower            = 3 + level * 5;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 8000; //8000 ms
@@ -2503,7 +3367,7 @@ HundunEnemy::HundunEnemy(
     m_pdata->healthData.maxHealth     = 200 + level * 1000;
 
     //回血信息
-    m_pdata->healthData.healValue       = 50;  // 较高的回血量
+    m_pdata->healthData.healValue       = 50; // 较高的回血量
     m_pdata->healthData.healTimeCounter = 0;
     m_pdata->healthData.healResetTime   = 12000; // 12秒回血间隔
     m_pdata->healthData.healSpeed       = 5;
@@ -2516,7 +3380,7 @@ HundunEnemy::HundunEnemy(
     m_pdata->spatialData.refPosY                   = startY;
     m_pdata->spatialData.sizeX                     = m_pdata->img->w; // 68
     m_pdata->spatialData.sizeY                     = m_pdata->img->h; // 64
-    m_pdata->spatialData.moveSpeed                 = 1; // 低速移动，但有闪现
+    m_pdata->spatialData.moveSpeed                 = 1;               // 低速移动，但有闪现
     m_pdata->spatialData.consecutiveCollisionCount = 0;
 
     //初始化位置
@@ -2559,8 +3423,7 @@ void HundunEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
     switch (type) {
     case BulletType::BASIC:
         {
-            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
-                return;
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat) return;
             if (m_pdata->attackData.shootCooldownTimer > 0) return;
 
             IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
@@ -2576,8 +3439,7 @@ void HundunEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
         break;
     case BulletType::FIRE_BALL:
         {
-            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
-                return;
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat) return;
             if (m_pdata->attackData.shootCooldownTimer > 0) return;
 
             IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
@@ -2593,8 +3455,7 @@ void HundunEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
         break;
     case BulletType::LIGHTNING_LINE:
         {
-            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
-                return;
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat) return;
             if (m_pdata->attackData.shootCooldownTimer > 0) return;
 
             IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
@@ -2671,7 +3532,7 @@ void HundunEnemy::think() {
                 return;
             }
 
-            uint8_t randomAttackMode = rand() % 6 + 1; // 1-6 攻击方式
+            uint8_t randomAttackMode         = rand() % 6 + 1; // 1-6 攻击方式
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             switch (randomAttackMode) {
@@ -2864,9 +3725,8 @@ void HundunEnemy::drawRole() {
     if (m_pdata->deathData.isDead) {
         uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
-        uint8_t radius =
-            (HundunEnemyDeadTime - m_pdata->deathData.deathTimer) * 35 / HundunEnemyDeadTime;
-        radius = etl::max(radius, uint8_t(1));
+        uint8_t radius  = (HundunEnemyDeadTime - m_pdata->deathData.deathTimer) * 35 / HundunEnemyDeadTime;
+        radius          = etl::max(radius, uint8_t(1));
 
         // 混沌死亡效果：多重扩散圆环
         OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
@@ -2899,7 +3759,7 @@ void HundunEnemy::chaosSurge() {
     action_count = 0;
 
     // 随机闪现到新位置
-    uint8_t newX = 30 + rand() % 71; // 30-100 随机X位置
+    uint8_t newX = 30 + rand() % 71;  // 30-100 随机X位置
     int8_t  newY = -20 + rand() % 70; // -20-49 随机Y位置（可部分超出屏幕）
 
     // 限制Y位置范围
@@ -2918,16 +3778,16 @@ void HundunEnemy::chaosSurge() {
     // 向4个方向发射普通子弹（上下左右），减少弹幕量
     // 子弹生成位置在BOSS边缘
     int8_t directions[4][2] = {
-        {-1, 0},  // 左
-        {1, 0},   // 右
-        {0, -1},  // 上
-        {0, 1}    // 下
+        {-1, 0 }, // 左
+        {1,  0 }, // 右
+        {0,  -1}, // 上
+        {0,  1 }  // 下
     };
 
     for (uint8_t i = 0; i < 4; i++) {
         m_pdata->attackData.shootCooldownTimer = 0; // 重置冷却
-        uint8_t bulletX = centerX + directions[i][0] * 20;
-        uint8_t bulletY = centerY + directions[i][1] * 20;
+        uint8_t bulletX                        = centerX + directions[i][0] * 20;
+        uint8_t bulletY                        = centerY + directions[i][1] * 20;
         shoot(bulletX, bulletY, BulletType::BASIC);
     }
 }
@@ -3016,8 +3876,8 @@ void HundunEnemy::chaoticBarrage() {
 
     // 螺旋扫射：Y位置按相位从上到下来回扫
     // 使用三角函数近似：相位0-8对应Y偏移从-25到+25再回到-25
-    int8_t yOffset = 0;
-    uint8_t phase = spiralPhase % 16; // 16个相位为一个周期
+    int8_t  yOffset = 0;
+    uint8_t phase   = spiralPhase % 16; // 16个相位为一个周期
     if (phase < 8) {
         yOffset = -25 + phase * 6; // 0->-25, 1->-19, ..., 7->17
     } else {
@@ -3100,9 +3960,9 @@ void HundunEnemy::returnToChaos() {
         uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
         // 计算安全缺口大小：血量越低，缺口越小
-        // 血量100%时缺口24像素，血量0%时缺口8像素
-        float healthRatio = (float)m_pdata->healthData.currentHealth / (float)m_pdata->healthData.maxHealth;
-        int8_t gapSize    = 8 + (int8_t)(healthRatio * 16); // 8-24像素
+        // 血量100%时缺口20像素，血量0%时缺口8像素
+        float  healthRatio = (float)m_pdata->healthData.currentHealth / (float)m_pdata->healthData.maxHealth;
+        int8_t gapSize     = 8 + (int8_t)(healthRatio * 12); // 8-20像素
 
         // 发射全屏弹幕，中间留缺口
         for (int8_t offsetY = -30; offsetY <= 30; offsetY += 5) {

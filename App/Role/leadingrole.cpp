@@ -43,7 +43,7 @@ extern GamePerkCardManager g_perkCardManager;
 LeadingRole::LeadingRole()
 : IRole() { //会优先执行 基类构造函数
     //图片信息
-    m_pdata->img = &tankImg;
+    m_pdata->img = &BITtankImg;
 
     //身份信息
     m_pdata->identity          = RoleIdentity::Player;
