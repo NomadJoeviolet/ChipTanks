@@ -50,14 +50,11 @@ extern const Image tankImg;
 extern const Image TaotieImg;
 extern const Image TaowuImg;
 extern const Image XiangliuImg;
+extern const Image HundunImg;
 
 extern const Image feilianImg;
 extern const Image GudiaoImg;
 extern const Image ChiMeiImg;
-
-extern const Image TaotieShowImg;
-extern const Image TaowuShowImg;
-extern const Image XiangliuShowImg;
 
 extern const Image BasicBulletImg;
 extern const Image FireBallBulletImg;

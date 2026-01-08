@@ -15,6 +15,8 @@
 #include "gamePerkCardManager.hpp"
 #include "gameProgressManager.hpp"
 
+/******************************************************************/
+
 GameEntityManager   g_entityManager;
 GamePerkCardManager g_perkCardManager;
 GameProgressManager g_progressManager;
@@ -160,7 +162,7 @@ void keyScanThread(void *argument) {
                         key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_LEFT)] == 1 ||
                         key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_RIGHT)] == 1) {
                         g_progressManager.PauseTimer += scanDelayTime;
-                        if (g_progressManager.PauseTimer >= 500) {
+                        if (g_progressManager.PauseTimer >= 1200) {
                             g_progressManager.PauseGame = !g_progressManager.PauseGame;
                             g_progressManager.PauseTimer = 0;
                         }
@@ -206,19 +208,93 @@ void keyScanThread(void *argument) {
 #include "leadingRole.hpp"
 
 /***********/
-//测试用代码
-// uint8_t debugCurrentPosX = 0;
-// uint8_t debugCurrentPosY = 0;
+/************************** 调试模式配置 **************************/
+// 设置为 1 启用调试模式，0 为正常游戏模式
+#define DEBUG_MODE_ENABLED 1
 
-// uint8_t debugEnemyPosX[9] = {};
-// uint8_t debugEnemyPosY[9] = {};
-// IRole  *debugRole         = nullptr;
+#if DEBUG_MODE_ENABLED
+// 调试敌人类型枚举
+enum class DebugEnemyType {
+    CHIMEI = 0,    // 魑魅（普通小怪）
+    FEILIAN,       // 飞廉（普通小怪）
+    GUDIAO,        // 古雕（普通小怪）
+    BOSS_TAOTIE,   // Boss 饕餮
+    BOSS_TAOWU,    // Boss 梼杌
+    BOSS_XIANGLIU, // Boss 相柳
+    BOSS_HUNDUN,   // Boss 混沌（四凶之首）
+    MIXED_NORMAL,  // 混合普通敌人
+};
 
-// TaowuEnemy   *enemyTaotu   = new TaowuEnemy;
-// TaotieEnemy  *enemyTaotie  = new TaotieEnemy;
-// FeilianEnemy *enemyFeilian = new FeilianEnemy;
-// GudiaoEnemy  *enemyGudiao  = new GudiaoEnemy;
-// ChiMeiEnemy  *enemyChiMei  = new ChiMeiEnemy;
+// 调试模式配置
+struct DebugConfig {
+    DebugEnemyType enemyType = DebugEnemyType::BOSS_HUNDUN; // 当前测试的敌人类型
+    uint8_t enemyCount       = 1;                       // 生成敌人数量（普通敌人有效）
+    bool autoRespawn         = true;                    // 敌人全灭后是否自动重新生成
+};
+
+static DebugConfig g_debugConfig;
+
+// 调试模式下生成敌人
+static void debugSpawnEnemies() {
+    if (!g_debugConfig.autoRespawn) return;
+    if (g_entityManager.m_roles.size() > 1 || g_entityManager.isGameOver) return;
+    
+    switch (g_debugConfig.enemyType) {
+        case DebugEnemyType::CHIMEI: {
+            for (int i = 0; i < g_debugConfig.enemyCount; i++) {
+                IRole* enemy = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1, 90 + (i/3)*15, (i%3)*24+1);
+                if (!g_entityManager.addRole(enemy)) delete enemy;
+            }
+            break;
+        }
+        case DebugEnemyType::FEILIAN: {
+            for (int i = 0; i < g_debugConfig.enemyCount; i++) {
+                IRole* enemy = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1, 90 + (i/3)*15, (i%3)*24+1);
+                if (!g_entityManager.addRole(enemy)) delete enemy;
+            }
+            break;
+        }
+        case DebugEnemyType::GUDIAO: {
+            IRole* enemy = new GudiaoEnemy(156, 32, 100, 26);
+            if (!g_entityManager.addRole(enemy)) delete enemy;
+            break;
+        }
+        case DebugEnemyType::BOSS_TAOTIE: {
+            IRole* enemy = new TaotieEnemy(180, 0, 64, 0);
+            if (!g_entityManager.addRole(enemy)) delete enemy;
+            break;
+        }
+        case DebugEnemyType::BOSS_TAOWU: {
+            IRole* enemy = new TaowuEnemy(180, 0, 64, 0);
+            if (!g_entityManager.addRole(enemy)) delete enemy;
+            break;
+        }
+        case DebugEnemyType::BOSS_XIANGLIU: {
+            IRole* enemy = new XiangliuEnemy(180, 0, 64, 0);
+            if (!g_entityManager.addRole(enemy)) delete enemy;
+            break;
+        }
+        case DebugEnemyType::BOSS_HUNDUN: {
+            IRole* enemy = new HundunEnemy(180, 0, 60, 0);
+            if (!g_entityManager.addRole(enemy)) delete enemy;
+            break;
+        }
+        case DebugEnemyType::MIXED_NORMAL: {
+            for (int i = 0; i < 2; i++) {
+                IRole* chimei = new ChiMeiEnemy(124 + i*20, i*24+1, 90 + i*10, i*24+1);
+                if (!g_entityManager.addRole(chimei)) delete chimei;
+            }
+            for (int i = 0; i < 2; i++) {
+                IRole* feilian = new FeilianEnemy(140 + i*20, (i+1)*20, 100 + i*10, (i+1)*20);
+                if (!g_entityManager.addRole(feilian)) delete feilian;
+            }
+            IRole* gudiao = new GudiaoEnemy(160, 32, 110, 32);
+            if (!g_entityManager.addRole(gudiao)) delete gudiao;
+            break;
+        }
+    }
+}
+#endif // DEBUG_MODE_ENABLED
 /***********/
 
 /********************************************************************/
@@ -253,49 +329,10 @@ void gameControlThread(void *argument) {
             }
         }
 
-        // // 添加一些敌人角色进行测试
-        // if (g_entityManager.m_roles.size() == 1 && !g_entityManager.isGameOver ) {
-        //     // 全部敌人被消灭，重新添加敌人
-
-        //     // 普通敌人测试
-        //     // for(int i=0; i< 3 ; i++) {
-        //     //     IRole* enemyChiMei = new ChiMeiEnemy(124 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-        //     //     if(!g_entityManager.addRole(enemyChiMei)) {
-        //     //         delete enemyChiMei ;
-        //     //     }
-        //     // }
-
-        //     // for(int i=0; i< 3 ; i++) {
-        //     //     IRole* enemyFeilian = new FeilianEnemy(140 + (i/3)*30, (i%3)*24+1 , 90 + (i/3)*15, (i%3)*24+1 );
-        //     //     if(!g_entityManager.addRole(enemyFeilian)) {
-        //     //         delete enemyFeilian ;
-        //     //     }
-        //     // }
-        //     // IRole* enemyGudiao = new GudiaoEnemy(156, 32, 100 , 26 );
-        //     // if(!g_entityManager.addRole(enemyGudiao)) {
-        //     //     delete enemyGudiao ;
-        //     // }
-
-        //     // // BOSS饕餮测试
-        //     // IRole *enemyTaotie = new TaotieEnemy(180, 0, 64, 0);
-        //     // if (!g_entityManager.addRole(enemyTaotie)) {
-        //     //     delete enemyTaotie;
-        //     // }
-
-        //     // //BOSS梼杌测试
-        //     // IRole *enemyTaowu = new TaowuEnemy(180, 0, 64, 0);
-        //     // if (!g_entityManager.addRole(enemyTaowu)) {
-        //     //     delete enemyTaowu;
-        //     // }
-
-        //     // // BOSS相柳测试
-        //     // IRole *enemyXiangliu = new XiangliuEnemy(180, 0, 64, 0);
-        //     // if (!g_entityManager.addRole(enemyXiangliu)) {
-        //     //     delete enemyXiangliu;
-        //     // }
-
-        //     //debugRole = enemyTaowu;
-        // }
+#if DEBUG_MODE_ENABLED
+        // 调试模式：敌人全灭后自动重新生成
+        debugSpawnEnemies();
+#endif
 
         osDelay(controlDelayTime);
     }

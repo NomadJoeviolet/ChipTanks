@@ -154,16 +154,29 @@ public:
 };
 
 /**
- * @brief TaowuEnemy class
- * @note  中文：饕餮 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
- * @note  上古 “四凶” 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
- * @note  攻击方式1，闪现至中间位置，随机位置发射大量普通子弹，血量越低，发射持续时间越长，基础时间为3秒，最多为6秒，每秒发射5发
- * @note  攻击方式2，随机位置发射5个火球弹，持续时间3s
- * @note  攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
- * @note  攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
- * @note  攻击方式5，原地留下火球弹并消失
- * @note  攻击方式6，定向闪现，对齐玩家位置闪现，同时消除CD
+ * @brief TaowuEnemy class - 梼杌 BOSS
+ * @note  中文：梼杌 ｜ 英文：Taowu
+ * @note  神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
+ * @note  上古 "四凶" 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
+ * 
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，
+ * @note  攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
+ * 
+ * @note  === 攻击方式 === 
+ * @note  MODE_1: 闪现至中间位置(63,1)，随机位置发射大量普通子弹
+ *               血量越低发射持续时间越长，基础时间 MassiveBasicBulletFireTime=3000ms，最多6000ms
+ *               发射频率：每 1000/BulletsPerSecond=125ms 一发
+ * @note  MODE_2: 闪现至中间位置(63,1)，随机位置发射多个火球弹
+ *               持续时间 FiveFireballBulletFireTime=3000ms
+ *               发射频率：每 3000/FireballCount=375ms 一发，共 FireballCount=8 发
+ * @note  MODE_3: 原地瞬发，中间发射一颗火球弹，最边缘两侧各发射两颗普通子弹
+ *               持续时间 CenterFireballAttackTime=100ms
+ * @note  MODE_4: 发射一排特殊阵型的子弹，只有中间有缺口（缺口范围 ±12像素）
+ *               持续时间 NotchedBulletsAttackTime=500ms
+ * @note  MODE_5: 闪现至远处(140,1)，发射3颗火球弹（随机Y位置），然后返回(63,1)
+ *               持续时间 BlinkRandomTime=1000ms，分三阶段执行
+ * @note  MODE_6: 定向闪现，对齐玩家Y位置，X位置随机(30-80)，攻击结束后清除CD
+ *               持续时间 BlinkAlignedTime=100ms
  */
 
 class TaowuEnemy : public IRole {
@@ -177,14 +190,23 @@ class TaowuEnemy : public IRole {
     bool positionChange = false;
     // 攻击方式1相关参数
     static const uint16_t MassiveBasicBulletFireTime = 3000; // 最短发射时间，单位ms
-    static const uint8_t  BulletsPerSecond           = 5;    // 发射频率，单位ms
+    static const uint8_t  BulletsPerSecond           = 8;    // 发射频率，单位ms
 
     // 攻击方式2相关参数
     static const uint16_t FiveFireballBulletFireTime = 3000; // 发射时间，单位ms
-    static const uint8_t  FireballCount              = 5;    // 发射数量
+    static const uint8_t  FireballCount              = 8 ;    // 发射数量
 
     // 攻击方式3相关参数
-    static const uint8_t CenterFireballAttackTime = 100; // 发射时间，单位ms
+    static const uint16_t CenterFireballAttackTime = 100; // 发射时间，单位ms
+
+    // 攻击方式4相关参数
+    static const uint16_t NotchedBulletsAttackTime = 500; // 发射时间，单位ms
+
+    // 攻击方式5相关参数
+    static const uint16_t BlinkRandomTime = 1000; // 闪现持续时间，单位ms（包含闪现+留火球+返回）
+
+    // 攻击方式6相关参数
+    static const uint16_t BlinkAlignedTime = 100; // 定向闪现时间，单位ms
 
 public:
     TaowuEnemy(
@@ -252,5 +274,93 @@ public:
     void summonOneGudiaoMinion();          // 攻击方式6，生成1只GudiaoEnemy作为召唤物协同作战
 
 };
+
+/**
+ * @brief HundunEnemy class - 混沌 BOSS（四凶之首）
+ * @note  中文：混沌 ｜ 英文：Hundun
+ * @note  神话典故：四凶之一，《山海经》记载其形如黄囊，赤如丹火，六足四翼，无面目；
+ * @note  《庄子》有"七窍凿而混沌死"的典故，象征混乱、无序、未分化的原始状态。
+ * 
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），最高血量（四凶之首），中等攻击力，
+ * @note  低速移动但可瞬移，攻击方式以干扰和混乱为主。
+ * 
+ * @note  === 攻击方式 ===
+ * @note  MODE_1: 混沌涌动 - 随机闪烁移动，同时向4个方向发射普通子弹
+ *               持续时间 ChaosSurgeTime=3000ms，每 ChaosSurgeInterval=500ms 闪烁并发射一轮
+ * @note  MODE_2: 七窍封印 - 在屏幕上生成7个闪烁干扰区域遮挡视野
+ *               持续时间 SealAperturesTime=2000ms，呼应"七窍凿而混沌死"典故
+ * @note  MODE_3: 虚空牵引 - 将玩家向混沌位置缓慢拉近，同时发射追踪火球弹
+ *               持续时间 VoidPullTime=2500ms，每 VoidPullInterval=300ms 拉近一次
+ * @note  MODE_4: 混沌漩涡 - 螺旋式发射子弹，Y位置按正弦波扫射
+ *               持续时间 ChaoticBarrageTime=2000ms，每 ChaoticBarrageInterval=150ms 发射一发
+ * @note  MODE_5: 时空裂隙 - 快速发射带随机缺口的弹幕墙，缺口位置每轮变化
+ *               持续时间 TemporalRiftTime=2500ms，每 TemporalRiftInterval=400ms 发射一轮
+ * @note  MODE_6: 归于混沌 - 全屏弹幕攻击，中间有安全缺口，血量越低缺口越小
+ *               警告时间 ReturnToChaosWarning=500ms，发射时间 ReturnToChaosTime=100ms
+ */
+
+class HundunEnemy : public IRole {
+public:
+    uint16_t              think_count         = 0;
+    static const uint16_t HundunEnemyDeadTime = 500; // 死亡动画时间，单位ms
+
+    uint16_t action_timer   = 0; // 倒计时
+    uint16_t action_MaxTime = 0; // 记录动作最大持续时间
+    uint16_t action_count   = 0; // 记录动作持续时间
+
+    bool positionChange = false;
+
+    // 攻击方式1相关参数 - 混沌涌动
+    static const uint16_t ChaosSurgeTime     = 3000; // 混沌涌动持续时间，单位ms
+    static const uint16_t ChaosSurgeInterval = 500;  // 每次闪烁间隔，单位ms
+
+    // 攻击方式2相关参数 - 七窍封印
+    static const uint16_t SealAperturesTime = 2000; // 七窍封印持续时间，单位ms
+    static const uint8_t  ApertureCount     = 7;    // 干扰区域数量（七窍）
+    uint8_t               aperturePositions[7][2];  // 存储7个干扰区域的位置 [x, y]
+    bool                  aperturesGenerated = false;
+
+    // 攻击方式3相关参数 - 虚空牵引
+    static const uint16_t VoidPullTime     = 2500; // 虚空牵引持续时间，单位ms
+    static const uint16_t VoidPullInterval = 300;  // 每次拉近间隔，单位ms
+    static const uint8_t  VoidPullDistance = 8;    // 每次拉近距离，单位像素
+
+    // 攻击方式4相关参数 - 混沌漩涡
+    static const uint16_t ChaoticBarrageTime     = 2000; // 混沌漩涡持续时间，单位ms
+    static const uint16_t ChaoticBarrageInterval = 150;  // 每次发射间隔，单位ms
+    uint8_t               spiralPhase            = 0;    // 螺旋相位，用于计算Y偏移
+
+    // 攻击方式5相关参数 - 时空裂隙
+    static const uint16_t TemporalRiftTime     = 2500; // 时空裂隙持续时间，单位ms
+    static const uint16_t TemporalRiftInterval = 400;  // 每次发射间隔，单位ms
+    static const uint8_t  RiftGapSize          = 12;   // 缺口大小，单位像素
+    uint8_t               riftWaveCount        = 0;    // 裂隙波次计数
+
+    // 攻击方式6相关参数 - 归于混沌
+    static const uint16_t ReturnToChaosWarning = 500; // 警告时间，单位ms
+    static const uint16_t ReturnToChaosTime    = 100; // 发射时间，单位ms
+    bool                  warningDisplayed     = false;
+
+public:
+    HundunEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1, uint16_t dropExp = 0
+    );
+    ~HundunEnemy() = default;
+
+    void drawRole() override;                                   // 绘制角色（包含分身和干扰效果）
+    void init() override;                                       // 初始化
+    void think() override;                                      // 思考决策
+    void doAction() override;                                   // 执行动作
+    void die() override;                                        // 死亡处理
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
+
+    void chaosSurge();                // 攻击方式1，混沌涌动 - 随机闪烁移动并向4方向发射子弹
+    void sealSevenApertures();        // 攻击方式2，七窍封印 - 生成7个干扰区域遮挡视野
+    void voidPull();                  // 攻击方式3，虚空牵引 - 拉近玩家并发射追踪火球
+    void chaoticBarrage();            // 攻击方式4，混沌漩涡 - 螺旋式发射子弹
+    void temporalRift();              // 攻击方式5，时空裂隙 - 发射带随机缺口的弹幕墙
+    void returnToChaos();             // 攻击方式6，归于混沌 - 全屏弹幕攻击
+};
+
 
 #endif // ENEMYROLE_HPP

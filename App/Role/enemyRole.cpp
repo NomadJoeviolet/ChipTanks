@@ -1,4 +1,4 @@
-#include "enemyRole.hpp"
+﻿#include "enemyRole.hpp"
 #include "bullet.hpp"
 
 #include "etl/algorithm.h"
@@ -1414,16 +1414,29 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
 
 /*******************************************************************/
 /**
- * @brief TaowuEnemy class
- * @note  中文：饕餮 ｜ 英文：Taowu,神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
- * @note  上古 “四凶” 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
- * @note  攻击方式1，闪现至中间位置，随机位置发射大量普通子弹，血量越低，发射持续时间越长，基础时间为3秒，最多为6秒，每秒发射5发
- * @note  攻击方式2，随机位置发射5个火球弹，持续时间3s
- * @note  攻击方式3，中间发射一颗火球弹，最边缘两侧发射各两颗普通子弹
- * @note  攻击方式4，发射一排特殊阵型的子弹，只有中间有缺口
- * @note  攻击方式5，原地留下火球弹并消失
- * @note  攻击方式6，定向闪现，对齐玩家位置闪现，清除CD
+ * @brief TaowuEnemy class - 梼杌 BOSS
+ * @note  中文：梼杌 ｜ 英文：Taowu
+ * @note  神话典故：四凶之一，虎形犬毛、人面猪口、尾长一丈八尺；
+ * @note  上古 "四凶" 之一，性格顽劣不可教化，在荒野中搅乱秩序、捕食人类，代表凶暴与叛逆。
+ * 
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，
+ * @note  攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
+ * 
+ * @note  === 攻击方式 === 
+ * @note  MODE_1: 闪现至中间位置(63,1)，随机位置发射大量普通子弹
+ *               血量越低发射持续时间越长，基础时间 MassiveBasicBulletFireTime=3000ms，最多6000ms
+ *               发射频率：每 1000/BulletsPerSecond=125ms 一发
+ * @note  MODE_2: 闪现至中间位置(63,1)，随机位置发射多个火球弹
+ *               持续时间 FiveFireballBulletFireTime=3000ms
+ *               发射频率：每 3000/FireballCount=375ms 一发，共 FireballCount=8 发
+ * @note  MODE_3: 原地瞬发，中间发射一颗火球弹，最边缘两侧各发射两颗普通子弹
+ *               持续时间 CenterFireballAttackTime=100ms
+ * @note  MODE_4: 发射一排特殊阵型的子弹，只有中间有缺口（缺口范围 12像素）
+ *               持续时间 NotchedBulletsAttackTime=500ms
+ * @note  MODE_5: 闪现至远处(140,1)，发射3颗火球弹（随机Y位置），然后返回(63,1)
+ *               持续时间 BlinkRandomTime=1000ms，分三阶段执行
+ * @note  MODE_6: 定向闪现，对齐玩家Y位置，X位置随机(30-80)，攻击结束后清除CD
+ *               持续时间 BlinkAlignedTime=100ms
  */
 
 TaowuEnemy::TaowuEnemy(
@@ -1654,15 +1667,15 @@ void TaowuEnemy::think() {
                 break;
             case 4:
                 //攻击模式4 - 发射一排特殊阵型的子弹，只有中间有缺口
-                action_timer   = 1000; // 梼杌攻击动作持续时间1000ms
+                action_timer   = NotchedBulletsAttackTime; // 梼杌攻击动作持续时间
                 action_MaxTime = action_timer;
                 action_count   = 0;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_4;
                 break;
             case 5:
-                //攻击模式5 - 随机闪现移动
-                action_timer   = 1000; // 梼杌攻击动作持续时间1000ms
+                //攻击模式5 - 随机闪现移动，留下火球弹并消失
+                action_timer   = BlinkRandomTime; // 闪现持续时间
                 action_MaxTime = action_timer;
                 action_count   = 0;
                 positionChange = false;
@@ -1671,7 +1684,7 @@ void TaowuEnemy::think() {
                 break;
             case 6:
                 //攻击模式6 - 定向闪现，对齐玩家位置闪现
-                action_timer   = 100; // 梼杌攻击动作持续时间100ms
+                action_timer   = BlinkAlignedTime; // 定向闪现时间
                 action_MaxTime = action_timer;
                 action_count   = 0;
                 positionChange = false;
@@ -1755,14 +1768,17 @@ void TaowuEnemy::doAction() {
         }
 
         if (action_timer == 0) {
+            // 攻击模式6，清除CD（在重置 attackMode 之前检查）
+            bool clearCD = (m_pdata->actionData.attackMode == AttackMode::MODE_6);
+
             m_pdata->actionData.currentState       = ActionState::IDLE;
             m_pdata->actionData.attackMode         = AttackMode::NONE;
             action_count                           = 0;
-            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // 攻击后进入冷却时间
-
-            //攻击模式6，清除CD
-            if (m_pdata->actionData.attackMode == AttackMode::MODE_6) {
-                m_pdata->attackData.shootCooldownTimer = 0; //清除冷却时间，快速攻击
+            
+            if (clearCD) {
+                m_pdata->attackData.shootCooldownTimer = 0; // MODE_6 清除冷却时间
+            } else {
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime; // 攻击后进入冷却时间
             }
         }
         break;
@@ -1802,7 +1818,7 @@ void TaowuEnemy::die() {
 
 //攻击技能
 void TaowuEnemy::fireContinuousMassiveBasicBullets() {
-    if (action_count < 1000 / BulletsPerSecond) // 每200ms发射一次
+    if (action_count < 1000 / BulletsPerSecond) // 每125ms发射一次 (1000/8)
         return;
     action_count = 0;
 
@@ -1826,9 +1842,9 @@ void TaowuEnemy::fireContinuousMassiveBasicBullets() {
     shoot(m_x, m_y + offsetY, BulletType::BASIC);
 }
 
-//600ms 一发
+// 每375ms发射一次 (3000/8)
 void TaowuEnemy::fireFiveFireballBulletsAtRandom() {
-    if (action_count < FiveFireballBulletFireTime / FireballCount) // 每600ms发射一次
+    if (action_count < FiveFireballBulletFireTime / FireballCount) // 每375ms发射3发火球
         return;
     action_count = 0;
 
@@ -1852,7 +1868,7 @@ void TaowuEnemy::fireFiveFireballBulletsAtRandom() {
 }
 
 void TaowuEnemy::fireCenterFireballAndSideBasicBullets() {
-    if (action_count < action_MaxTime - 10) // 1000ms 发射一次
+    if (action_count < action_MaxTime - 10) // action_MaxTime=100ms，90ms后发射
         return;
     action_count = 0;
     //发射中间火球弹，侧边普通子弹
@@ -1874,7 +1890,7 @@ void TaowuEnemy::fireCenterFireballAndSideBasicBullets() {
 }
 
 void TaowuEnemy::fireSingleRowNotchedBasicBullets() {
-    if (action_count < action_MaxTime - 10) // 1000ms 发射一次
+    if (action_count < action_MaxTime - 10) // action_MaxTime=500ms，490ms后发射
         return;
     action_count = 0;
     //发射一排特殊阵型的子弹，只有中间有缺口
@@ -1893,30 +1909,43 @@ void TaowuEnemy::fireSingleRowNotchedBasicBullets() {
 }
 
 void TaowuEnemy::blinkToRandomPosition() {
-    if (action_count < 200) return;
+    // 使用 action_MaxTime/3 作为阶段间隔 (BlinkRandomTime=1000ms, 每阶段333.3ms)
+    uint16_t phaseInterval = action_MaxTime / 3 - 20; // 提前20ms执行阶段切换
+    if (action_count < phaseInterval) return;
     action_count = 0;
 
+    // 使用 action_timer 判断当前阶段
+    // action_timer 从 action_MaxTime 开始递减
+    // 阶段1: action_timer > action_MaxTime * 2/3  (刚开始)
+    // 阶段2: action_timer 在 action_MaxTime * 1/3 到 2/3 之间
+    // 阶段3: action_timer < action_MaxTime * 1/3  (快结束)
+    
+    uint16_t phase2Threshold = action_MaxTime * 2 / 3; // 约666ms
+    uint16_t phase3Threshold = action_MaxTime / 3;     // 约333ms
+
     if (!positionChange) {
-        //改变位置
-        m_pdata->spatialData.currentPosX = 140; // 40-80 随机位置
-        m_pdata->spatialData.currentPosY = 1;   // 0-32 随机位置
+        // 阶段1: 闪现到远处位置
+        m_pdata->spatialData.currentPosX = 140;
+        m_pdata->spatialData.currentPosY = 1;
         m_pdata->spatialData.refPosX     = m_pdata->spatialData.currentPosX;
         m_pdata->spatialData.refPosY     = m_pdata->spatialData.currentPosY;
         positionChange                   = true;
-    } else {
-        if (action_timer < 300) {
-            //恢复原位置
-            m_pdata->spatialData.currentPosX = 63;
-            m_pdata->spatialData.currentPosY = 1;
-            m_pdata->spatialData.refPosX     = 63;
-            m_pdata->spatialData.refPosY     = 1;
-        } else {
-            //发射火球弹
-            uint8_t m_x                            = 119;
-            uint8_t m_y                            = rand() % 60 + 1;
-            m_pdata->attackData.shootCooldownTimer = 0; //重置冷却时间，快速发射子弹
+    } else if (action_timer >= phase3Threshold) {
+        // 阶段2: 在远处位置发射3颗火球弹（随机Y位置）
+        // 注意：每次发射前都要重置冷却时间，因为shoot()内部会设置冷却
+        
+        for (int i = 0; i < 3; i++) {
+            m_pdata->attackData.shootCooldownTimer = 0; // 必须在每次shoot前重置
+            uint8_t m_y = rand() % 54 + 6;              // 6-59 随机Y位置
+            uint8_t m_x = 80 + rand() % 42;             // 80-121 随机X位置
             shoot(m_x, m_y, BulletType::FIRE_BALL);
         }
+    } else {
+        // 阶段3: 恢复原位置
+        m_pdata->spatialData.currentPosX = 63;
+        m_pdata->spatialData.currentPosY = 1;
+        m_pdata->spatialData.refPosX     = 63;
+        m_pdata->spatialData.refPosY     = 1;
     }
 }
 
@@ -2161,14 +2190,14 @@ void XiangliuEnemy::think() {
             switch (randomAttackMode) {
             case 1:
                 action_count   = 0;
-                action_timer   = 500; // 相柳攻击动作持续时间500ms
+                action_timer   = 300; // 相柳攻击动作持续时间300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_1;
                 break;
             case 2:
                 action_count   = 0;
-                action_timer   = 500; // 相柳攻击动作持续时间500ms
+                action_timer   = 300; // 相柳攻击动作持续时间300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_2;
@@ -2176,28 +2205,28 @@ void XiangliuEnemy::think() {
 
             case 3:
                 action_count   = 0;
-                action_timer   = 500; // 相柳攻击动作持续时间500ms
+                action_timer   = 300; // 相柳攻击动作持续时间300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_3;
                 break;
             case 4:
                 action_count   = 0;
-                action_timer   = 500; // 相柳攻击动作持续时间500ms
+                action_timer   = 300; // 相柳攻击动作持续时间300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_4;
                 break;
             case 5:
                 action_count   = 0;
-                action_timer   = 500; // 相柳攻击动作持续时间500ms
+                action_timer   = 300; // 相柳攻击动作持续时间300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_5;
                 break;
             case 6:
                 action_count   = 0;
-                action_timer   = 500; // 相柳攻击动作持续时间500ms
+                action_timer   = 300; // 相柳攻击动作持续时间300ms
                 action_MaxTime = action_timer;
 
                 m_pdata->actionData.attackMode = AttackMode::MODE_6;
@@ -2416,6 +2445,683 @@ void XiangliuEnemy::summonOneGudiaoMinion() {
     IRole *minion = new GudiaoEnemy(posX, posY, posX, posY, rand() % 3 + 1);
     if (minion != nullptr) {
         if (!g_entityManager.addRole(minion)) delete minion; // Clean up if not added
+    }
+}
+
+/*******************************************************************/
+
+/*******************************************************************/
+/**
+ * @brief HundunEnemy class - 混沌 BOSS（四凶之首）
+ * @note  中文：混沌 ｜ 英文：Hundun
+ * @note  神话典故：四凶之一，《山海经》记载其形如黄囊，赤如丹火，六足四翼，无面目；
+ * @note  《庄子》有"七窍凿而混沌死"的典故，象征混乱、无序、未分化的原始状态。
+ * 
+ * @note  BOSS级大型敌人，体型巨大（68x64 像素），最高血量（四凶之首），中等攻击力，
+ * @note  低速移动但可瞬移，攻击方式以干扰和混乱为主。
+ * 
+ * @note  === 攻击方式 ===
+ * @note  MODE_1: 混沌涌动 - 随机闪烁移动，同时向4个方向发射普通子弹
+ *               持续时间 ChaosSurgeTime=3000ms，每 ChaosSurgeInterval=500ms 闪烁并发射一轮
+ * @note  MODE_2: 七窍封印 - 在屏幕上生成7个闪烁干扰区域遮挡视野
+ *               持续时间 SealAperturesTime=2000ms，呼应"七窍凿而混沌死"典故
+ * @note  MODE_3: 虚空牵引 - 将玩家向混沌位置缓慢拉近，同时发射追踪火球弹
+ *               持续时间 VoidPullTime=2500ms，每 VoidPullInterval=300ms 拉近一次
+ * @note  MODE_4: 混沌漩涡 - 螺旋式发射子弹，Y位置按正弦波扫射
+ *               持续时间 ChaoticBarrageTime=2000ms，每 ChaoticBarrageInterval=150ms 发射一发
+ * @note  MODE_5: 时空裂隙 - 快速发射带随机缺口的弹幕墙，缺口位置每轮变化
+ *               持续时间 TemporalRiftTime=2500ms，每 TemporalRiftInterval=400ms 发射一轮
+ * @note  MODE_6: 归于混沌 - 全屏弹幕攻击，中间有安全缺口，血量越低缺口越小
+ *               警告时间 ReturnToChaosWarning=500ms，发射时间 ReturnToChaosTime=100ms
+ */
+
+//数值设定参考（四凶之首，最强BOSS）
+//血量：200 + level * 1000（最高血量）
+//攻击力：8 + level * 4（中等攻击力）
+//移动速度：1（低速移动，但有闪现能力）
+//射击冷却时间：6000ms
+//碰撞伤害：15 + level * 5（高碰撞伤害）
+
+HundunEnemy::HundunEnemy(
+    uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
+)
+: IRole() {
+    //图片信息
+    m_pdata->img = &HundunImg;
+
+    //身份信息
+    m_pdata->identity          = RoleIdentity::ENEMY;
+    m_pdata->isActive          = true;
+    m_pdata->initData.isInited = false;
+
+    //等级信息
+    m_pdata->level = level;
+
+    //血量信息
+    //四凶之首，血量最高
+    m_pdata->healthData.currentHealth = 200 + level * 1000;
+    m_pdata->healthData.maxHealth     = 200 + level * 1000;
+
+    //回血信息
+    m_pdata->healthData.healValue       = 50;  // 较高的回血量
+    m_pdata->healthData.healTimeCounter = 0;
+    m_pdata->healthData.healResetTime   = 12000; // 12秒回血间隔
+    m_pdata->healthData.healSpeed       = 5;
+
+    //空间移动信息
+    m_pdata->spatialData.canCrossBorder            = true;
+    m_pdata->spatialData.currentPosX               = startX;
+    m_pdata->spatialData.currentPosY               = startY;
+    m_pdata->spatialData.refPosX                   = startX;
+    m_pdata->spatialData.refPosY                   = startY;
+    m_pdata->spatialData.sizeX                     = m_pdata->img->w; // 68
+    m_pdata->spatialData.sizeY                     = m_pdata->img->h; // 64
+    m_pdata->spatialData.moveSpeed                 = 1; // 低速移动，但有闪现
+    m_pdata->spatialData.consecutiveCollisionCount = 0;
+
+    //初始化位置
+    m_pdata->initData.posX = initPosX;
+    m_pdata->initData.posY = initPosY;
+
+    //攻击信息
+    m_pdata->attackData.attackPower            = 8 + level * 4; // 中等攻击力
+    m_pdata->attackData.shootCooldownSpeed     = 5;
+    m_pdata->attackData.shootCooldownTimer     = 0;
+    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000ms 攻击冷却
+    m_pdata->attackData.bulletSpeed            = 1;
+
+    m_pdata->attackData.bulletRange            = 12;   // 火球弹范围
+    m_pdata->attackData.bulletDamageMultiplier = 1.8f; // 闪电链弹伤害倍率
+
+    m_pdata->attackData.collisionPower = 15 + level * 5; // 高碰撞伤害
+
+    //热量信息（BOSS无热量限制）
+    m_pdata->heatData.maxHeat          = 500;
+    m_pdata->heatData.currentHeat      = 0;
+    m_pdata->heatData.heatPerShot      = 0; // BOSS无热量消耗
+    m_pdata->heatData.heatCoolDownRate = 10;
+
+    //死亡状态信息
+    m_pdata->deathData.deathTimer           = HundunEnemyDeadTime;
+    m_pdata->deathData.isDead               = false;
+    m_pdata->deathData.dropExperiencePoints = dropExp;
+
+    // 初始化攻击模式状态变量
+    positionChange     = false;
+    aperturesGenerated = false;
+    warningDisplayed   = false;
+    spiralPhase        = 0;
+    riftWaveCount      = 0;
+}
+
+void HundunEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
+    // 与其他BOSS保持一致的射击逻辑
+    switch (type) {
+    case BulletType::BASIC:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat)
+                return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
+            if (newBullet != nullptr) {
+                if (g_entityManager.addBullet(newBullet)) {
+                    m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                } else {
+                    delete[] newBullet;
+                }
+            }
+        }
+        break;
+    case BulletType::FIRE_BALL:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat)
+                return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
+            if (newBullet != nullptr) {
+                if (g_entityManager.addBullet(newBullet)) {
+                    m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                } else {
+                    delete[] newBullet;
+                }
+            }
+        }
+        break;
+    case BulletType::LIGHTNING_LINE:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat)
+                return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
+            if (newBullet != nullptr) {
+                if (g_entityManager.addBullet(newBullet)) {
+                    m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+                    m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                } else {
+                    delete[] newBullet;
+                }
+            }
+        }
+        break;
+    }
+}
+
+void HundunEnemy::init() {
+    m_pdata->initData.init_count += controlDelayTime;
+
+    // 从屏幕外缓慢移动到初始位置
+    if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 60) { // 每60ms移动一次
+            m_pdata->spatialData.currentPosX -= 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 60) {
+            m_pdata->spatialData.currentPosX += 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else {
+        m_pdata->initData.isInited   = true;
+        m_pdata->spatialData.refPosX = m_pdata->spatialData.currentPosX;
+        m_pdata->spatialData.refPosY = m_pdata->spatialData.currentPosY;
+        m_pdata->initData.init_count = 0;
+    }
+}
+
+void HundunEnemy::think() {
+    think_count += controlDelayTime;
+    if (think_count < 100) // 每100ms决定一次行动
+        return;
+
+    think_count = 0;
+
+    uint8_t randomAction = rand() % 6;
+    // 随机行动: 0-3 移动, 4 静止, 5 攻击
+
+    if (m_pdata->actionData.currentState == ActionState::IDLE) {
+        // 移动决策
+        if (randomAction == 0) {
+            m_pdata->actionData.moveMode     = MoveMode::LEFT;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+        } else if (randomAction == 1) {
+            m_pdata->actionData.moveMode     = MoveMode::RIGHT;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+        } else if (randomAction == 2) {
+            m_pdata->actionData.moveMode     = MoveMode::DOWN;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+        } else if (randomAction == 3) {
+            m_pdata->actionData.moveMode     = MoveMode::UP;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+        } else if (randomAction == 4) {
+            m_pdata->actionData.moveMode     = MoveMode::NONE;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+        }
+
+        // 攻击决策
+        else if (randomAction == 5) {
+            if (m_pdata->attackData.shootCooldownTimer > 0) {
+                // 冷却中，保持空闲
+                m_pdata->actionData.moveMode     = MoveMode::NONE;
+                m_pdata->actionData.currentState = ActionState::IDLE;
+                return;
+            }
+
+            uint8_t randomAttackMode = rand() % 6 + 1; // 1-6 攻击方式
+            m_pdata->actionData.currentState = ActionState::ATTACKING;
+
+            switch (randomAttackMode) {
+            case 1:
+                // MODE_1: 混沌涌动 - 随机闪烁移动并向8方向发射子弹
+                action_timer   = ChaosSurgeTime; // 3000ms
+                action_MaxTime = action_timer;
+                action_count   = 0;
+                positionChange = false;
+
+                m_pdata->actionData.attackMode = AttackMode::MODE_1;
+                break;
+
+            case 2:
+                // MODE_2: 七窍封印 - 生成7个干扰区域
+                action_timer       = SealAperturesTime; // 2000ms
+                action_MaxTime     = action_timer;
+                action_count       = 0;
+                aperturesGenerated = false;
+
+                m_pdata->actionData.attackMode = AttackMode::MODE_2;
+                break;
+
+            case 3:
+                // MODE_3: 虚空牵引 - 拉近玩家并发射火球
+                action_timer   = VoidPullTime; // 2500ms
+                action_MaxTime = action_timer;
+                action_count   = 0;
+
+                m_pdata->actionData.attackMode = AttackMode::MODE_3;
+                break;
+
+            case 4:
+                // MODE_4: 混沌漩涡 - 螺旋式发射子弹
+                action_timer   = ChaoticBarrageTime; // 2000ms
+                action_MaxTime = action_timer;
+                action_count   = 0;
+                positionChange = false;
+                spiralPhase    = 0; // 重置螺旋相位
+
+                m_pdata->actionData.attackMode = AttackMode::MODE_4;
+                break;
+
+            case 5:
+                // MODE_5: 时空裂隙 - 发射带随机缺口的弹幕墙
+                action_timer   = TemporalRiftTime; // 2500ms
+                action_MaxTime = action_timer;
+                action_count   = 0;
+                positionChange = false;
+                riftWaveCount  = 0; // 重置波次计数
+
+                m_pdata->actionData.attackMode = AttackMode::MODE_5;
+                break;
+
+            case 6:
+                // MODE_6: 归于混沌 - 全屏弹幕攻击
+                action_timer     = ReturnToChaosWarning + ReturnToChaosTime; // 600ms
+                action_MaxTime   = action_timer;
+                action_count     = 0;
+                warningDisplayed = false;
+
+                m_pdata->actionData.attackMode = AttackMode::MODE_6;
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+}
+
+void HundunEnemy::doAction() {
+    if (m_pdata->initData.isInited == false) {
+        return;
+    }
+
+    if (m_pdata->deathData.isDead) {
+        return;
+    }
+
+    switch (m_pdata->actionData.currentState) {
+    case ActionState::IDLE:
+        break;
+
+    case ActionState::MOVING:
+        switch (m_pdata->actionData.moveMode) {
+        case MoveMode::LEFT:
+            move(-1, 0);
+            break;
+        case MoveMode::RIGHT:
+            move(1, 0);
+            break;
+        case MoveMode::UP:
+            move(0, -1);
+            break;
+        case MoveMode::DOWN:
+            move(0, 1);
+            break;
+        default:
+            break;
+        }
+        m_pdata->actionData.currentState = ActionState::IDLE;
+        m_pdata->actionData.moveMode     = MoveMode::NONE;
+        break;
+
+    case ActionState::ATTACKING:
+        // 动作计时
+        action_count += controlDelayTime;
+
+        // 动作倒计时
+        if (action_timer >= controlDelayTime)
+            action_timer -= controlDelayTime;
+        else
+            action_timer = 0;
+
+        // 执行对应攻击技能
+        switch (m_pdata->actionData.attackMode) {
+        case AttackMode::MODE_1:
+            chaosSurge();
+            break;
+        case AttackMode::MODE_2:
+            sealSevenApertures();
+            break;
+        case AttackMode::MODE_3:
+            voidPull();
+            break;
+        case AttackMode::MODE_4:
+            chaoticBarrage();
+            break;
+        case AttackMode::MODE_5:
+            temporalRift();
+            break;
+        case AttackMode::MODE_6:
+            returnToChaos();
+            break;
+        default:
+            break;
+        }
+
+        // 动作结束
+        if (action_timer == 0) {
+            m_pdata->actionData.currentState       = ActionState::IDLE;
+            m_pdata->actionData.attackMode         = AttackMode::NONE;
+            action_count                           = 0;
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+
+            // 重置状态变量
+            positionChange     = false;
+            aperturesGenerated = false;
+            warningDisplayed   = false;
+            spiralPhase        = 0;
+            riftWaveCount      = 0;
+        }
+        break;
+    }
+}
+
+void HundunEnemy::drawRole() {
+    if (m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
+        // 绘制真身
+        OLED_DrawImage(
+            m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
+        );
+
+        // MODE_2: 绘制七窍封印干扰区域
+        if (m_pdata->actionData.attackMode == AttackMode::MODE_2 && aperturesGenerated) {
+            // 闪烁效果：根据时间切换显示
+            bool showApertures = ((action_timer / 100) % 2 == 0);
+            if (showApertures) {
+                for (uint8_t i = 0; i < ApertureCount; i++) {
+                    uint8_t ax = aperturePositions[i][0];
+                    uint8_t ay = aperturePositions[i][1];
+                    // 绘制干扰区域（8x8像素的填充方块）
+                    OLED_DrawFilledRectangle(ax, ay, 8, 8, OLED_COLOR_NORMAL);
+                }
+            }
+        }
+
+        // MODE_6: 绘制警告效果
+        if (m_pdata->actionData.attackMode == AttackMode::MODE_6 && !warningDisplayed) {
+            // 警告阶段：屏幕边缘闪烁
+            if ((action_timer / 50) % 2 == 0) {
+                OLED_DrawRectangle(0, 0, 127, 63, OLED_COLOR_NORMAL);
+                OLED_DrawRectangle(1, 1, 125, 61, OLED_COLOR_NORMAL);
+            }
+        }
+    }
+
+    // 死亡动画
+    if (m_pdata->deathData.isDead) {
+        uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+        uint8_t radius =
+            (HundunEnemyDeadTime - m_pdata->deathData.deathTimer) * 35 / HundunEnemyDeadTime;
+        radius = etl::max(radius, uint8_t(1));
+
+        // 混沌死亡效果：多重扩散圆环
+        OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
+        if (radius > 5) {
+            OLED_DrawCircle(centerX, centerY, radius - 5, OLED_COLOR_NORMAL);
+        }
+    }
+}
+
+void HundunEnemy::die() {
+    if (m_pdata->deathData.deathTimer > 0) {
+        m_pdata->deathData.deathTimer -= controlDelayTime;
+        m_pdata->deathData.deathTimer = etl::max(m_pdata->deathData.deathTimer, uint16_t(0));
+        return;
+    }
+
+    m_pdata->isActive = false;
+}
+
+//=========================== 攻击技能实现 ===========================
+
+/**
+ * @brief MODE_1: 混沌涌动
+ * @note  随机闪烁移动，同时向4个方向发射普通子弹
+ *        呼应混沌"无定形"的特性，弹幕量适中
+ */
+void HundunEnemy::chaosSurge() {
+    if (action_count < ChaosSurgeInterval) // 每500ms执行一次
+        return;
+    action_count = 0;
+
+    // 随机闪现到新位置
+    uint8_t newX = 30 + rand() % 71; // 30-100 随机X位置
+    int8_t  newY = -20 + rand() % 70; // -20-49 随机Y位置（可部分超出屏幕）
+
+    // 限制Y位置范围
+    if (newY < -30) newY = -30;
+    if (newY > 60) newY = 60;
+
+    m_pdata->spatialData.currentPosX = newX;
+    m_pdata->spatialData.currentPosY = newY;
+    m_pdata->spatialData.refPosX     = newX;
+    m_pdata->spatialData.refPosY     = newY;
+
+    // 计算中心位置
+    uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+    // 向4个方向发射普通子弹（上下左右），减少弹幕量
+    // 子弹生成位置在BOSS边缘
+    int8_t directions[4][2] = {
+        {-1, 0},  // 左
+        {1, 0},   // 右
+        {0, -1},  // 上
+        {0, 1}    // 下
+    };
+
+    for (uint8_t i = 0; i < 4; i++) {
+        m_pdata->attackData.shootCooldownTimer = 0; // 重置冷却
+        uint8_t bulletX = centerX + directions[i][0] * 20;
+        uint8_t bulletY = centerY + directions[i][1] * 20;
+        shoot(bulletX, bulletY, BulletType::BASIC);
+    }
+}
+
+/**
+ * @brief MODE_2: 七窍封印
+ * @note  在屏幕上生成7个闪烁干扰区域遮挡视野
+ *        呼应"七窍凿而混沌死"的典故
+ */
+void HundunEnemy::sealSevenApertures() {
+    // 只在技能开始时生成一次干扰区域位置
+    if (!aperturesGenerated) {
+        for (uint8_t i = 0; i < ApertureCount; i++) {
+            // 随机生成干扰区域位置（避免重叠主要游戏区域）
+            aperturePositions[i][0] = rand() % 100 + 10; // 10-109 X位置
+            aperturePositions[i][1] = rand() % 48 + 8;   // 8-55 Y位置
+        }
+        aperturesGenerated = true;
+    }
+
+    // 干扰区域的绘制在 drawRole() 中完成
+    // 此处可添加额外逻辑（如每隔一段时间重新随机位置）
+}
+
+/**
+ * @brief MODE_3: 虚空牵引
+ * @note  将玩家向混沌位置缓慢拉近，同时发射追踪火球弹
+ *        呼应混沌吞噬万物的特性
+ */
+void HundunEnemy::voidPull() {
+    if (action_count < VoidPullInterval) // 每300ms执行一次
+        return;
+    action_count = 0;
+
+    IRole *player = g_entityManager.getPlayerRole();
+    if (player == nullptr) return;
+
+    // 计算方向向量
+    int16_t bossX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    int16_t bossY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+    int16_t playerX = player->getData()->spatialData.currentPosX + player->getData()->spatialData.sizeX / 2;
+    int16_t playerY = player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2;
+
+    int16_t deltaX = bossX - playerX;
+    int16_t deltaY = bossY - playerY;
+
+    int8_t dirX = 0, dirY = 0;
+    if (deltaX < 0) dirX = -1;
+    if (deltaX > 0) dirX = 1;
+    if (deltaY < 0) dirY = -1;
+    if (deltaY > 0) dirY = 1;
+
+    // 拉近玩家（强制移动）
+    for (uint8_t i = 0; i < VoidPullDistance / 2; i++) {
+        player->move(dirX, dirY, true);
+    }
+
+    // 同时发射火球弹（向玩家方向）
+    m_pdata->attackData.shootCooldownTimer = 0;
+    shoot(bossX, bossY, BulletType::FIRE_BALL);
+}
+
+/**
+ * @brief MODE_4: 混沌漩涡
+ * @note  螺旋式发射子弹，子弹按正弦波形从上到下扫射
+ *        体现混沌的"旋转吞噬"特性，与Taowu的随机弹幕区分
+ */
+void HundunEnemy::chaoticBarrage() {
+    if (action_count < ChaoticBarrageInterval) // 每150ms发射一次
+        return;
+    action_count = 0;
+
+    // 第一次执行时移动到中间位置
+    if (!positionChange) {
+        m_pdata->spatialData.currentPosX = 60;
+        m_pdata->spatialData.currentPosY = 0;
+        m_pdata->spatialData.refPosX     = 60;
+        m_pdata->spatialData.refPosY     = 0;
+        positionChange                   = true;
+        spiralPhase                      = 0; // 重置螺旋相位
+    }
+
+    uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+    // 螺旋扫射：Y位置按相位从上到下来回扫
+    // 使用三角函数近似：相位0-8对应Y偏移从-25到+25再回到-25
+    int8_t yOffset = 0;
+    uint8_t phase = spiralPhase % 16; // 16个相位为一个周期
+    if (phase < 8) {
+        yOffset = -25 + phase * 6; // 0->-25, 1->-19, ..., 7->17
+    } else {
+        yOffset = 25 - (phase - 8) * 6; // 8->25, 9->19, ..., 15->-17
+    }
+
+    m_pdata->attackData.shootCooldownTimer = 0;
+    shoot(centerX, centerY + yOffset, BulletType::BASIC);
+
+    spiralPhase++; // 递增相位
+}
+
+/**
+ * @brief MODE_5: 时空裂隙
+ * @note  快速发射一排弹幕墙，但有一个随机位置的小缺口
+ *        缺口位置每轮变化，玩家需快速反应寻找安全位置
+ *        呼应混沌"天地未分"时空交错的特性
+ */
+void HundunEnemy::temporalRift() {
+    if (action_count < TemporalRiftInterval) // 每400ms发射一轮
+        return;
+    action_count = 0;
+
+    // 第一次执行时移动到右侧
+    if (!positionChange) {
+        m_pdata->spatialData.currentPosX = 60;
+        m_pdata->spatialData.currentPosY = 0;
+        m_pdata->spatialData.refPosX     = 60;
+        m_pdata->spatialData.refPosY     = 0;
+        positionChange                   = true;
+    }
+
+    uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+
+    // 随机生成缺口位置（8-52范围，保证缺口在可见区域）
+    uint8_t gapCenter = 8 + rand() % 44; // 缺口中心Y位置
+    uint8_t gapSize   = RiftGapSize;     // 缺口大小（12像素）
+
+    // 发射一排子弹，跳过缺口区域
+    for (uint8_t y = 2; y < 62; y += 6) {
+        // 判断是否在缺口范围内
+        if (y >= gapCenter - gapSize / 2 && y <= gapCenter + gapSize / 2) {
+            continue; // 跳过缺口
+        }
+        m_pdata->attackData.shootCooldownTimer = 0;
+        shoot(centerX, y, BulletType::BASIC);
+    }
+
+    // 每2轮额外发射一个火球弹增加威胁
+    riftWaveCount++;
+    if (riftWaveCount % 2 == 0) {
+        m_pdata->attackData.shootCooldownTimer = 0;
+        shoot(centerX, gapCenter, BulletType::FIRE_BALL); // 火球在缺口位置，迫使玩家移动
+    }
+}
+
+/**
+ * @brief MODE_6: 归于混沌
+ * @note  全屏弹幕攻击，中间有安全缺口，血量越低缺口越小
+ *        终极技能，代表混沌吞噬一切
+ */
+void HundunEnemy::returnToChaos() {
+    // 阶段1: 警告阶段 (前500ms)
+    if (action_timer > ReturnToChaosTime) {
+        // 警告效果在 drawRole() 中绘制
+        return;
+    }
+
+    // 阶段2: 发射弹幕 (最后100ms只执行一次)
+    if (!warningDisplayed) {
+        warningDisplayed = true;
+
+        // 移动到中间位置
+        m_pdata->spatialData.currentPosX = 60;
+        m_pdata->spatialData.currentPosY = 0;
+        m_pdata->spatialData.refPosX     = 60;
+        m_pdata->spatialData.refPosY     = 0;
+
+        uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+        // 计算安全缺口大小：血量越低，缺口越小
+        // 血量100%时缺口24像素，血量0%时缺口8像素
+        float healthRatio = (float)m_pdata->healthData.currentHealth / (float)m_pdata->healthData.maxHealth;
+        int8_t gapSize    = 8 + (int8_t)(healthRatio * 16); // 8-24像素
+
+        // 发射全屏弹幕，中间留缺口
+        for (int8_t offsetY = -30; offsetY <= 30; offsetY += 5) {
+            // 跳过中间缺口区域
+            if (offsetY >= -gapSize / 2 && offsetY <= gapSize / 2) {
+                continue;
+            }
+            m_pdata->attackData.shootCooldownTimer = 0;
+            shoot(centerX, centerY + offsetY, BulletType::BASIC);
+            // 第二排子弹，增加弹幕密度
+            m_pdata->attackData.shootCooldownTimer = 0;
+            shoot(centerX + 15, centerY + offsetY + 2, BulletType::BASIC);
+        }
+
+        // 额外发射两颗火球（增加威胁）
+        m_pdata->attackData.shootCooldownTimer = 0;
+        shoot(centerX, centerY - gapSize / 2 - 5, BulletType::FIRE_BALL);
+        m_pdata->attackData.shootCooldownTimer = 0;
+        shoot(centerX, centerY + gapSize / 2 + 5, BulletType::FIRE_BALL);
     }
 }
 

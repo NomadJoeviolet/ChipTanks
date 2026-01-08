@@ -32,6 +32,7 @@ enum class BOSS_TYPE {
     TAO_TIE,   // 饕餮
     XIANG_LIU, // 相柳
     TAO_WU,    // 梼杌
+    HUN_DUN,   // 混沌（四凶之首）
 };
 
 class GameProgressManager {
@@ -185,8 +186,8 @@ public:
         }
         if (currentChapter == 4) {
             chatpter4Warning = true;
-            // 第四关，挑战关卡，随意一个高数值BOSS
-            BOSS_TYPE bossType = static_cast<BOSS_TYPE>(rand() % 3 + 1);
+            // 第四关，挑战关卡，随机选择一个高数值BOSS（包含四凶之首混沌）
+            BOSS_TYPE bossType = static_cast<BOSS_TYPE>(rand() % 4 + 1);
             switch (bossType) {
             case BOSS_TYPE::TAO_TIE:
                 {
@@ -217,6 +218,18 @@ public:
 
                     // 标记展示Boss海报
                     showWhichBoss = BOSS_TYPE::TAO_WU; // 梼杌Boss
+                    showBoss      = true;
+                    showBossTimer = 2000; // 播放2秒Boss海报
+                    break;
+                }
+            case BOSS_TYPE::HUN_DUN:
+                {
+                    // 混沌 - 四凶之首，最强BOSS
+                    IRole *enemyHundun = new HundunEnemy(156, 1, 60, 1, currentChapter + 2, 300 + rand() % 51);
+                    g_entityManager.addRole(enemyHundun);
+
+                    // 标记展示Boss海报
+                    showWhichBoss = BOSS_TYPE::HUN_DUN; // 混沌Boss
                     showBoss      = true;
                     showBossTimer = 2000; // 播放2秒Boss海报
                     break;
@@ -997,6 +1010,111 @@ public:
             }
         }
     }
+
+    // 混沌 - 无序混乱效果
+    // 特性：无面目、无定形、混乱无序、七窍凿而死
+    void drawBossHundun(uint16_t elapsed) {
+        uint8_t phase = elapsed / 250; // 分为8阶段 (0-7)
+        
+        // 阶段0-1: 混沌粒子从各处随机闪烁出现
+        if (phase <= 1) {
+            // 随机位置闪烁的短线段（模拟混沌粒子）
+            uint8_t particleCount = elapsed / 40;
+            for (uint8_t i = 0; i < particleCount && i < 12; i++) {
+                uint8_t px = ((elapsed * 7 + i * 31) % 55) + 2; // 伪随机位置
+                uint8_t py = ((elapsed * 3 + i * 17) % 55) + 4;
+                uint8_t len = 2 + (i % 3);
+                OLED_DrawLine(px, py, px + len, py, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // 阶段2: 混沌漩涡 - 多个同心圆扭曲效果
+        if (phase == 2) {
+            uint8_t centerX = 96;
+            uint8_t centerY = 32;
+            uint8_t r = (elapsed - 500) / 10;
+            if (r > 3 && r < 40) {
+                // 多个不规则圆环
+                OLED_DrawCircle(centerX, centerY, r, OLED_COLOR_NORMAL);
+                if (r > 8) OLED_DrawCircle(centerX + 3, centerY - 2, r - 6, OLED_COLOR_NORMAL);
+                if (r > 14) OLED_DrawCircle(centerX - 2, centerY + 3, r - 12, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // 阶段3+: Boss图像出现
+        if (phase >= 3) {
+            // 混沌图像，略带抖动效果
+            int8_t shakeX = (phase >= 6) ? ((elapsed / 30) % 3 - 1) : 0;
+            int8_t shakeY = (phase >= 6) ? ((elapsed / 40) % 3 - 1) : 0;
+            OLED_DrawImage(60 + shakeX, 1 + shakeY, &HundunImg, OLED_COLOR_NORMAL);
+        }
+        
+        // 阶段3-4: 名字从虚空中浮现
+        if (phase == 3) {
+            uint8_t charShow = (elapsed - 750) / 60;
+            if (charShow >= 1) OLED_PrintString(1, 5, "H", &font8x6, OLED_COLOR_NORMAL);
+            if (charShow >= 2) OLED_PrintString(7, 5, "U", &font8x6, OLED_COLOR_NORMAL);
+            if (charShow >= 3) OLED_PrintString(13, 5, "N", &font8x6, OLED_COLOR_NORMAL);
+        }
+        if (phase >= 4) {
+            OLED_PrintString(1, 5, "HUN DUN", &font8x6, OLED_COLOR_NORMAL);
+        }
+        
+        // 阶段4-5: 七窍封印 - 7个闪烁的方块（呼应七窍典故）
+        if (phase >= 4 && phase <= 6) {
+            // 7个位置代表七窍
+            uint8_t apertureX[7] = {5, 20, 35, 50, 10, 28, 42};
+            uint8_t apertureY[7] = {20, 25, 22, 26, 38, 42, 36};
+            
+            uint8_t showCount = (elapsed - 1000) / 100;
+            for (uint8_t i = 0; i < showCount && i < 7; i++) {
+                // 交替闪烁
+                if ((elapsed / 80 + i) % 2 == 0) {
+                    OLED_DrawFilledRectangle(apertureX[i], apertureY[i], 6, 6, OLED_COLOR_NORMAL);
+                } else {
+                    OLED_DrawRectangle(apertureX[i], apertureY[i], 6, 6, OLED_COLOR_NORMAL);
+                }
+            }
+        }
+        
+        // 阶段5+: "混沌"特征文字
+        if (phase >= 5) {
+            OLED_PrintString(1, 18, "CHAOS", &font8x6, OLED_COLOR_NORMAL);
+            OLED_PrintString(1, 30, "ORIGIN", &font8x6, OLED_COLOR_NORMAL);
+        }
+        
+        // 阶段6+: 无序边框效果
+        if (phase >= 6) {
+            // 左侧不规则边框
+            uint8_t offset = (elapsed / 100) % 4;
+            OLED_DrawLine(0, offset, 0, 20 + offset, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 30 - offset, 0, 50 - offset, OLED_COLOR_NORMAL);
+            OLED_DrawLine(0, 55 + offset, 0, 63, OLED_COLOR_NORMAL);
+            
+            // 混沌脉动圈
+            uint8_t pulse = (elapsed / 60) % 2;
+            if (pulse == 0) {
+                OLED_DrawCircle(28, 52, 7, OLED_COLOR_NORMAL);
+            } else {
+                OLED_DrawCircle(28, 52, 5, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // 阶段7: 四凶之首 - 最终警示
+        if (phase >= 7) {
+            // 闪烁的"四凶之首"标识
+            if ((elapsed / 50) % 2 == 0) {
+                OLED_PrintString(1, 55, "LEADER", &font8x6, OLED_COLOR_NORMAL);
+            } else {
+                OLED_PrintString(1, 55, "OF ALL", &font8x6, OLED_COLOR_NORMAL);
+            }
+            
+            // 顶部不规则装饰
+            OLED_DrawLine(2, 0, 15, 0, OLED_COLOR_NORMAL);
+            OLED_DrawLine(25, 0, 40, 0, OLED_COLOR_NORMAL);
+            OLED_DrawLine(48, 0, 58, 0, OLED_COLOR_NORMAL);
+        }
+    }
     
     // ========== 主展示函数 ==========
     void drawShowBoss() {
@@ -1036,6 +1154,9 @@ public:
             break;
         case BOSS_TYPE::TAO_WU:
             drawBossTaowu(elapsed);
+            break;
+        case BOSS_TYPE::HUN_DUN:
+            drawBossHundun(elapsed);
             break;
         default:
             break;
