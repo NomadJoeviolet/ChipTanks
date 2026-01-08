@@ -1317,6 +1317,486 @@ void BoEnemy::drumSoundWave() {
         shoot(centerX, centerY + offset, BulletType::BASIC);
     }
 }
+
+/*******************************************************************/
+/**
+ * @brief ShengyuEnemy class - 胜遇 精英敌人（水弹干扰型）
+ * @note  中文：胜遇 ｜ 英文：Shengyu
+ * @note  神话典故：赤色野鸡状凶兽，叫声独特，出现即引发洪水灾厄。
+ * @note  核心能力与"水"绑定，兼具迷惑性与范围压制力。
+ * @note  水雾弥漫：生成多个迷雾区域遮挡视线
+ * @note  洪波推涌：往前推出长条迷雾，从发射位置依次消散
+ * @note  赤羽雷鸣：发射一发雷电子弹
+ */
+/*******************************************************************/
+
+ShengyuEnemy::ShengyuEnemy(
+    uint8_t startX, uint8_t startY, uint8_t initPosX, uint8_t initPosY, uint8_t level, uint16_t dropExp
+)
+: IRole() {
+    //图片信息（需要在font.c中添加ShengyuImg）
+    m_pdata->img = &ShengyuImg;
+
+    //身份信息
+    m_pdata->identity          = RoleIdentity::ENEMY;
+    m_pdata->isActive          = true;
+    m_pdata->initData.isInited = false;
+
+    //等级信息
+    m_pdata->level = level;
+
+    //血量信息: 50 + level * 50（较低血量，偏脆皮）
+    m_pdata->healthData.currentHealth = 50 + level * 50;
+    m_pdata->healthData.maxHealth     = 50 + level * 50;
+
+    //回血信息
+    m_pdata->healthData.healValue       = 1;
+    m_pdata->healthData.healTimeCounter = 0;
+    m_pdata->healthData.healResetTime   = 12000;
+    m_pdata->healthData.healSpeed       = 2;
+
+    //空间移动信息
+    m_pdata->spatialData.canCrossBorder            = false;
+    m_pdata->spatialData.currentPosX               = startX;
+    m_pdata->spatialData.currentPosY               = startY;
+    m_pdata->spatialData.refPosX                   = startX;
+    m_pdata->spatialData.refPosY                   = startY;
+    m_pdata->spatialData.sizeX                     = m_pdata->img->w;
+    m_pdata->spatialData.sizeY                     = m_pdata->img->h;
+    m_pdata->spatialData.moveSpeed                 = 2; // 中速移动
+    m_pdata->spatialData.consecutiveCollisionCount = 0;
+
+    //初始化位置
+    m_pdata->initData.posX = initPosX;
+    m_pdata->initData.posY = initPosY;
+
+    //攻击信息: 4 + level * 1（较低攻击力，主要靠干扰）
+    m_pdata->attackData.attackPower            = 4 + level * 1;
+    m_pdata->attackData.shootCooldownSpeed     = 4;
+    m_pdata->attackData.shootCooldownTimer     = 0;
+    m_pdata->attackData.shootCooldownResetTime = 6000; // 6000/4=1500ms冷却
+    m_pdata->attackData.bulletSpeed            = 1;
+
+    m_pdata->attackData.bulletRange            = 6;    // 火球弹范围
+    m_pdata->attackData.bulletDamageMultiplier = 1.5f; // 闪电链弹伤害倍率
+
+    //碰撞伤害: 6 + level * 2（较低碰撞伤害）
+    m_pdata->attackData.collisionPower = 6 + level * 2;
+
+    //热量信息
+    m_pdata->heatData.maxHeat          = 80;
+    m_pdata->heatData.currentHeat      = 0;
+    m_pdata->heatData.heatPerShot      = 10;
+    m_pdata->heatData.heatCoolDownRate = 12;
+
+    //死亡状态信息
+    m_pdata->deathData.deathTimer           = shengyuEnemyDeadTime;
+    m_pdata->deathData.isDead               = false;
+    m_pdata->deathData.dropExperiencePoints = dropExp;
+
+    // 初始化攻击模式状态变量
+    mistGenerated        = false;
+    floodWaveLaunched    = false;
+    floodWaveCurrentLen  = 0;
+    thunderFiredCount    = 0;
+    for (uint8_t i = 0; i < MistCloudCount; i++) {
+        mistPosX[i] = 0;
+        mistPosY[i] = 0;
+    }
+}
+
+void ShengyuEnemy::shoot(uint8_t x, uint8_t y, BulletType type) {
+    switch (type) {
+    case BulletType::BASIC:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::BASIC);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    case BulletType::FIRE_BALL:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 2 > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::FIRE_BALL);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot * 2;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    case BulletType::LIGHTNING_LINE:
+        {
+            if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * 1.5 > m_pdata->heatData.maxHeat) return;
+            if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+            IBullet *newBullet = createBullet(x, y, BulletType::LIGHTNING_LINE);
+            if (newBullet != nullptr) {
+                taskENTER_CRITICAL();
+                g_entityManager.addBullet(newBullet);
+                taskEXIT_CRITICAL();
+                m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot * 1.5;
+                m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            }
+        }
+        break;
+    }
+}
+
+void ShengyuEnemy::init() {
+    m_pdata->initData.init_count += controlDelayTime;
+
+    // 从右侧入场，移动到初始位置
+    if (m_pdata->spatialData.currentPosX > m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 25) {
+            m_pdata->spatialData.currentPosX -= 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else if (m_pdata->spatialData.currentPosX < m_pdata->initData.posX) {
+        if (m_pdata->initData.init_count >= 25) {
+            m_pdata->spatialData.currentPosX += 1;
+            m_pdata->initData.init_count = 0;
+        }
+    } else {
+        m_pdata->initData.isInited       = true;
+        m_pdata->spatialData.refPosX     = m_pdata->spatialData.currentPosX;
+        m_pdata->spatialData.refPosY     = m_pdata->spatialData.currentPosY;
+        m_pdata->actionData.currentState = ActionState::IDLE;
+        m_pdata->initData.init_count     = 0;
+    }
+}
+
+void ShengyuEnemy::think() {
+    think_count += controlDelayTime;
+    if (think_count < 350) return;  // 350ms思考间隔（干扰型敌人节奏较慢）
+
+    think_count = 0;
+
+    if (m_pdata->actionData.currentState == ActionState::IDLE) {
+        uint8_t randomAction = rand() % 10;
+
+        if (randomAction < 4) {  // 40%概率移动
+            uint8_t moveDir                  = rand() % 4;
+            m_pdata->actionData.currentState = ActionState::MOVING;
+            switch (moveDir) {
+            case 0:
+                m_pdata->actionData.moveMode = MoveMode::LEFT;
+                break;
+            case 1:
+                m_pdata->actionData.moveMode = MoveMode::RIGHT;
+                break;
+            case 2:
+                m_pdata->actionData.moveMode = MoveMode::UP;
+                break;
+            case 3:
+                m_pdata->actionData.moveMode = MoveMode::DOWN;
+                break;
+            }
+        } else if (randomAction < 6) {  // 20%概率待机
+            m_pdata->actionData.currentState = ActionState::IDLE;
+        } else {  // 40%概率攻击
+            m_pdata->actionData.currentState = ActionState::ATTACKING;
+
+            uint8_t attackChoice = rand() % 10;
+            if (attackChoice < 4) {  // 40%概率 MODE_1
+                action_timer                   = MistCloudTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                mistGenerated                  = false;
+                m_pdata->actionData.attackMode = AttackMode::MODE_1;
+            } else if (attackChoice < 7) {  // 30%概率 MODE_2
+                action_timer                   = FloodWaveTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                floodWaveLaunched              = false;
+                floodWaveCurrentLen            = 0;
+                m_pdata->actionData.attackMode = AttackMode::MODE_2;
+            } else {  // 30%概率 MODE_3
+                action_timer                   = RedThunderTime;
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                thunderFiredCount              = 0;
+                m_pdata->actionData.attackMode = AttackMode::MODE_3;
+            }
+        }
+    }
+}
+
+void ShengyuEnemy::doAction() {
+    if (!m_pdata->initData.isInited || m_pdata->deathData.isDead) return;
+
+    switch (m_pdata->actionData.currentState) {
+    case ActionState::IDLE:
+        break;
+
+    case ActionState::MOVING:
+        switch (m_pdata->actionData.moveMode) {
+        case MoveMode::LEFT:
+            move(-1, 0);
+            break;
+        case MoveMode::RIGHT:
+            move(1, 0);
+            break;
+        case MoveMode::UP:
+            move(0, -1);
+            break;
+        case MoveMode::DOWN:
+            move(0, 1);
+            break;
+        default:
+            break;
+        }
+        m_pdata->actionData.currentState = ActionState::IDLE;
+        m_pdata->actionData.moveMode     = MoveMode::NONE;
+        break;
+
+    case ActionState::ATTACKING:
+        action_count += controlDelayTime;
+
+        if (action_timer >= controlDelayTime)
+            action_timer -= controlDelayTime;
+        else
+            action_timer = 0;
+
+        switch (m_pdata->actionData.attackMode) {
+        case AttackMode::MODE_1:
+            mistCloud();
+            break;
+        case AttackMode::MODE_2:
+            floodWave();
+            break;
+        case AttackMode::MODE_3:
+            redThunder();
+            break;
+        default:
+            break;
+        }
+
+        // 动作结束
+        if (action_timer == 0) {
+            m_pdata->actionData.currentState       = ActionState::IDLE;
+            m_pdata->actionData.attackMode         = AttackMode::NONE;
+            action_count                           = 0;
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+
+            // 重置状态变量
+            mistGenerated        = false;
+            floodWaveLaunched    = false;
+            floodWaveCurrentLen  = 0;
+            thunderFiredCount    = 0;
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void ShengyuEnemy::drawRole() {
+    if (m_pdata->img != nullptr && m_pdata->isActive && !m_pdata->deathData.isDead) {
+        OLED_DrawImage(
+            m_pdata->spatialData.currentPosX, m_pdata->spatialData.currentPosY, m_pdata->img, OLED_COLOR_NORMAL
+        );
+
+        // MODE_1 绘制迷雾区域（近实心20x20块 + 动态装饰）
+        if (m_pdata->actionData.attackMode == AttackMode::MODE_1 && mistGenerated) {
+            uint8_t flickerPhase = (action_count / 120) % 3; // 闪烁相位，3档切换
+            
+            for (uint8_t i = 0; i < MistCloudCount; i++) {
+                uint8_t px = mistPosX[i];
+                uint8_t py = mistPosY[i];
+                
+                // 绘制近实心填充（密集横线，留1像素间隙产生纹理）
+                for (uint8_t dy = 0; dy < MistSize; dy++) {
+                    // 根据闪烁相位决定哪些行绘制
+                    if (dy % 3 != flickerPhase) {
+                        OLED_DrawLine(px, py + dy, px + MistSize - 1, py + dy, OLED_COLOR_NORMAL);
+                    }
+                }
+                
+                // 四角装饰（动态闪烁的角标，适配20x20）
+                if (flickerPhase != 0) {
+                    // 左上角
+                    OLED_DrawLine(px, py, px + 3, py, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(px, py, px, py + 3, OLED_COLOR_NORMAL);
+                    // 右上角
+                    OLED_DrawLine(px + MistSize - 4, py, px + MistSize - 1, py, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(px + MistSize - 1, py, px + MistSize - 1, py + 3, OLED_COLOR_NORMAL);
+                    // 左下角
+                    OLED_DrawLine(px, py + MistSize - 1, px + 3, py + MistSize - 1, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(px, py + MistSize - 4, px, py + MistSize - 1, OLED_COLOR_NORMAL);
+                    // 右下角
+                    OLED_DrawLine(px + MistSize - 4, py + MistSize - 1, px + MistSize - 1, py + MistSize - 1, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(px + MistSize - 1, py + MistSize - 4, px + MistSize - 1, py + MistSize - 1, OLED_COLOR_NORMAL);
+                }
+                
+                // 中心十字纹（增加迷雾神秘感，适配20x20）
+                if (flickerPhase == 1) {
+                    uint8_t cx = px + MistSize / 2;
+                    uint8_t cy = py + MistSize / 2;
+                    OLED_DrawLine(cx - 3, cy, cx + 3, cy, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(cx, cy - 3, cx, cy + 3, OLED_COLOR_NORMAL);
+                }
+            }
+        }
+
+        // MODE_2 绘制洪波长条迷雾（向前推进遮挡效果，多层波纹美化）
+        if (m_pdata->actionData.attackMode == AttackMode::MODE_2 && floodWaveLaunched) {
+            if (floodWaveCurrentLen > 0) {
+                // 从胜遇位置向左（前方）延伸
+                uint8_t drawEndX = floodWaveEndX;
+                uint8_t drawStartX = (drawEndX > floodWaveCurrentLen) ? (drawEndX - floodWaveCurrentLen) : 0;
+                uint8_t wavePhase = (action_count / 80) % 4; // 波浪相位
+                
+                // 上边框波浪线
+                OLED_DrawLine(drawStartX, floodWaveY, drawEndX, floodWaveY, OLED_COLOR_NORMAL);
+                // 下边框波浪线
+                OLED_DrawLine(drawStartX, floodWaveY + FloodWaveHeight - 1, drawEndX, floodWaveY + FloodWaveHeight - 1, OLED_COLOR_NORMAL);
+                
+                // 内部动态水波纹（多层交替）
+                for (uint8_t dy = 2; dy < FloodWaveHeight - 2; dy++) {
+                    // 根据时间和Y位置产生动态波浪效果
+                    uint8_t lineOffset = ((dy + wavePhase) % 4);
+                    if (lineOffset < 2) {
+                        // 绘制主波纹线（实线段）
+                        OLED_DrawLine(drawStartX, floodWaveY + dy, drawEndX, floodWaveY + dy, OLED_COLOR_NORMAL);
+                    } else if (lineOffset == 2) {
+                        // 绘制次波纹（间隔虚线效果：短线段）
+                        for (uint8_t sx = drawStartX; sx < drawEndX; sx += 6) {
+                            uint8_t segEnd = (sx + 3 < drawEndX) ? (sx + 3) : drawEndX;
+                            OLED_DrawLine(sx, floodWaveY + dy, segEnd, floodWaveY + dy, OLED_COLOR_NORMAL);
+                        }
+                    }
+                    // lineOffset == 3 时不绘制，形成空隙
+                }
+                
+                // 波浪前沿竖线（强调波头）
+                if (drawStartX > 2) {
+                    OLED_DrawLine(drawStartX, floodWaveY + 2, drawStartX, floodWaveY + FloodWaveHeight - 3, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(drawStartX + 1, floodWaveY + 1, drawStartX + 1, floodWaveY + FloodWaveHeight - 2, OLED_COLOR_NORMAL);
+                }
+            }
+        }
+    }
+
+    // 死亡动画
+    if (m_pdata->deathData.isDead) {
+        uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+        uint8_t radius  = (shengyuEnemyDeadTime - m_pdata->deathData.deathTimer) * 12 / shengyuEnemyDeadTime;
+        radius          = etl::max(radius, uint8_t(1));
+        OLED_DrawCircle(centerX, centerY, radius, OLED_COLOR_NORMAL);
+    }
+}
+
+void ShengyuEnemy::die() {
+    if (m_pdata->deathData.deathTimer > 0) {
+        m_pdata->deathData.deathTimer -= controlDelayTime;
+        m_pdata->deathData.deathTimer = etl::max(m_pdata->deathData.deathTimer, uint16_t(0));
+        return;
+    }
+    m_pdata->isActive = false;
+}
+
+/**
+ * @brief MODE_1: 水雾弥漫
+ * @note  呼应"大水"典故，在场景中生成多个迷雾区域遮挡玩家视线
+ *        迷雾区域在技能持续期间保持显示
+ */
+void ShengyuEnemy::mistCloud() {
+    // 技能开始50ms后生成迷雾位置
+    if (!mistGenerated && action_count >= 50) {
+        mistGenerated = true;
+        
+        // 在屏幕左半部分随机生成迷雾区域（主要遮挡玩家视野区域）
+        for (uint8_t i = 0; i < MistCloudCount; i++) {
+            // 迷雾位置：X在10-70之间（玩家活动区域），Y在5-50之间
+            mistPosX[i] = 10 + (rand() % 60);
+            mistPosY[i] = 5 + (rand() % 45);
+        }
+    }
+    // 迷雾在drawRole中绘制，持续到技能结束
+}
+
+/**
+ * @brief MODE_2: 洪波推涌
+ * @note  往前（向左）推出一长条迷雾屏障遮挡视线
+ *        先快速向前延伸，然后从尾部逐渐消散
+ */
+void ShengyuEnemy::floodWave() {
+    // 技能开始50ms后发射洪波
+    if (!floodWaveLaunched && action_count >= 50) {
+        floodWaveLaunched = true;
+        
+        // 洪波终点固定在胜遇左侧
+        floodWaveEndX = m_pdata->spatialData.currentPosX;
+        // 洪波Y位置与胜遇中心对齐
+        floodWaveY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2 - FloodWaveHeight / 2;
+        
+        // 确保Y位置在屏幕范围内
+        if (floodWaveY < 2) floodWaveY = 2;
+        if (floodWaveY + FloodWaveHeight > 62) floodWaveY = 62 - FloodWaveHeight;
+        floodWaveCurrentLen = 0;
+    }
+    
+    if (floodWaveLaunched) {
+        // 前半段：快速向前延伸（50-1000ms）
+        if (action_count < 1000) {
+            // 每40ms增加12像素长度，更平滑的延伸
+            if (action_count > 50) {
+                floodWaveCurrentLen = ((action_count - 50) / 40) * 12;
+            }
+            if (floodWaveCurrentLen > FloodWaveLength) floodWaveCurrentLen = FloodWaveLength;
+        }
+        // 中间段：保持最大长度（1000-1800ms）
+        else if (action_count < 1800) {
+            floodWaveCurrentLen = FloodWaveLength;
+        }
+        // 后半段：从尾部逐渐消散（1800-2800ms）
+        else {
+            uint16_t fadeTime = action_count - 1800;
+            uint8_t fadeAmount = (fadeTime / 80) * 11; // 每80ms消散11像素
+            if (fadeAmount >= FloodWaveLength) {
+                floodWaveCurrentLen = 0;
+            } else {
+                floodWaveCurrentLen = FloodWaveLength - fadeAmount;
+            }
+        }
+    }
+}
+
+/**
+ * @brief MODE_3: 赤羽雷鸣
+ * @note  呼应"赤"色和"音如录"特征，在自身中央连续发射一串普通子弹
+ *        模拟赤色羽毛散射的效果
+ */
+void ShengyuEnemy::redThunder() {
+    // 每 ThunderInterval ms 发射一发子弹
+    if (action_count >= ThunderInterval * (thunderFiredCount + 1) && thunderFiredCount < ThunderBulletCount) {
+        thunderFiredCount++;
+        
+        uint8_t centerX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+        uint8_t centerY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+        
+        // 每发子弹Y位置有小偏移，形成散射效果
+        int8_t yOffset = (thunderFiredCount % 2 == 0) ? (thunderFiredCount - 3) : (3 - thunderFiredCount);
+        
+        m_pdata->attackData.shootCooldownTimer = 0; // 重置冷却
+        shoot(centerX, centerY + yOffset, BulletType::BASIC);
+    }
+}
+
 /*******************************************************************/
 /**
  * @brief LiliEnemy class -  精英敌人
@@ -1733,7 +2213,6 @@ void LiliEnemy::burrowTrap() {
         }
     }
 }
-
 
 /*******************************************************************/
 

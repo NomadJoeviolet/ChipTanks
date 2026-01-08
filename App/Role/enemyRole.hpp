@@ -166,6 +166,84 @@ public:
     void drumSoundWave();       // 攻击方式3，鼓音震荡 - 发射横向冲击波
 };
 
+
+/**
+ * @brief ShengyuEnemy class - 胜遇 精英敌人（水弹干扰型）
+ * @note  中文：胜遇 ｜ 英文：Shengyu
+ * @note  神话典故：《山海经·西次三经》记载："胜遇状如翟（野鸡），而赤，音如录，
+ *                见则其邑有大水" —— 赤色野鸡状凶兽，叫声独特，出现即引发洪水灾厄。
+ * @note  胜遇是一种野鸡形神兽，浑身赤红，叫声如录，出现预示当地将有洪水泛滥。
+ * 
+ * @note  精英级中型敌人，体型中等，中等血量，低攻击力，中速移动。
+ * @note  会与普通敌人一同出现，攻击方式以干扰和遮挡视野为主，核心能力与"水"绑定。
+ * 
+ * @note  === 攻击方式 ===
+ * @note  MODE_1: 水雾弥漫 - 呼应"大水"典故，在场景中生成多个迷雾区域遮挡玩家视线
+ *               持续时间 MistCloudTime=2000ms，生成 MistCloudCount=4 个迷雾区域
+ * @note  MODE_2: 洪波推涌 - 往前推出一长条迷雾屏障，从发射位置开始逐渐消散
+ *               持续时间 FloodWaveTime=1500ms，迷雾条长度 FloodWaveLength=80 像素
+ * @note  MODE_3: 赤羽雷鸣 - 呼应"赤"色特征，在自身中央发射一发雷电子弹
+ *               持续时间 RedThunderTime=300ms，一次性发射
+ */
+
+//数值设定参考（精英级，偏向干扰型，攻击力较低）
+//血量：50 + level * 50（较低血量，偏脆皮）
+//攻击力：4 + level * 1（较低攻击力，主要靠干扰）
+//移动速度：2（中速移动）
+//碰撞伤害：6 + level * 2（较低碰撞伤害）
+
+class ShengyuEnemy : public IRole {
+public:
+    uint16_t              think_count          = 0;
+    static const uint16_t shengyuEnemyDeadTime = 300; // 死亡动画时间，单位ms
+
+    uint16_t action_timer   = 0; // 倒计时
+    uint16_t action_MaxTime = 0; // 记录动作最大持续时间
+    uint16_t action_count   = 0; // 记录动作持续时间
+
+    // 攻击方式1相关参数 - 水雾弥漫
+    static const uint16_t MistCloudTime  = 3000; // 迷雾持续时间，单位ms（增加）
+    static const uint8_t  MistCloudCount = 2;    // 迷雾区域数量（2个同心矩形块）
+    static const uint8_t  MistSize       = 20;   // 迷雾块固定尺寸20x20
+    uint8_t               mistPosX[MistCloudCount] = {0}; // 迷雾X位置
+    uint8_t               mistPosY[MistCloudCount] = {0}; // 迷雾Y位置
+    bool                  mistGenerated  = false; // 迷雾是否已生成
+
+    // 攻击方式2相关参数 - 洪波推涌
+    static const uint16_t FloodWaveTime      = 2800; // 洪波持续时间，单位ms（增加）
+    static const uint8_t  FloodWaveLength    = 110;  // 迷雾条长度，单位像素（增加）
+    static const uint8_t  FloodWaveHeight    = 18;   // 迷雾条高度，单位像素（增加）
+    uint8_t               floodWaveEndX      = 0;    // 洪波终点X位置（向前延伸）
+    uint8_t               floodWaveY         = 0;    // 洪波Y位置
+    bool                  floodWaveLaunched  = false;// 洪波是否已发射
+    uint8_t               floodWaveCurrentLen = 0;   // 当前可见长度（动态增长后收缩）
+
+    // 攻击方式3相关参数 - 赤羽雷鸣（发射一串普通子弹）
+    static const uint16_t RedThunderTime     = 800;  // 发射持续时间，单位ms
+    static const uint16_t ThunderInterval    = 150;  // 每发间隔，单位ms
+    static const uint8_t  ThunderBulletCount = 5;    // 子弹数量
+    uint8_t               thunderFiredCount  = 0;    // 已发射子弹数
+
+public:
+    ShengyuEnemy(
+        uint8_t startX = 164, uint8_t startY = 32, uint8_t initPosX = 96, uint8_t initPosY = 0, uint8_t level = 1, uint16_t dropExp = 0
+    );
+    ~ShengyuEnemy() = default;
+
+    void drawRole() override;                                   // 绘制角色（包含迷雾效果）
+    void init() override;                                       // 初始化
+    void think() override;                                      // 思考决策
+    void doAction() override;                                   // 执行动作
+    void die() override;                                        // 死亡处理
+    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
+
+    void mistCloud();    // 攻击方式1，水雾弥漫 - 生成迷雾遮挡视线
+    void floodWave();    // 攻击方式2，洪波推涌 - 推出长条迷雾屏障
+    void redThunder();   // 攻击方式3，赤羽雷鸣 - 发射雷电子弹
+};
+
+
+
 /**
  * @brief LiliEnemy class - 狸力 精英敌人
  * @note  中文：狸力 ｜ 英文：Lili

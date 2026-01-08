@@ -220,6 +220,7 @@ enum class DebugEnemyType {
     GUDIAO,        // 古雕（普通小怪）
     ELITE_BO,      // 驳（精英敌人）
     ELITE_LILI,    // 狸力（精英敌人）
+    ELITE_SHENGYU, // 胜遇（精英敌人 - 水弹干扰型）
     BOSS_TAOTIE,   // Boss 饕餮
     BOSS_TAOWU,    // Boss 梼杌
     BOSS_XIANGLIU, // Boss 相柳
@@ -229,7 +230,7 @@ enum class DebugEnemyType {
 
 // 调试模式配置
 struct DebugConfig {
-    DebugEnemyType enemyType = DebugEnemyType::ELITE_LILI ; // 当前测试的敌人类型
+    DebugEnemyType enemyType = DebugEnemyType::ELITE_SHENGYU ; // 当前测试的敌人类型
     uint8_t enemyCount       = 2 ;                       // 生成敌人数量（普通敌人有效）
     bool autoRespawn         = true;                    // 敌人全灭后是否自动重新生成
 };
@@ -281,6 +282,14 @@ static void debugSpawnEnemies() {
             // 精英敌人狸力，可以生成多只测试
             for (int i = 0; i < g_debugConfig.enemyCount; i++) {
                 IRole* enemy = new LiliEnemy(128 + i*20, (i%3)*18+8, 64 + i*10, (i%3)*18 + 8, 1, 0);
+                if (!g_entityManager.addRole(enemy)) delete enemy;
+            }
+            break;
+        }
+        case DebugEnemyType::ELITE_SHENGYU: {
+            // 精英敌人胜遇（水弹干扰型），可以生成多只测试
+            for (int i = 0; i < g_debugConfig.enemyCount; i++) {
+                IRole* enemy = new ShengyuEnemy(128 + i*20, (i%3)*18+8, 64 + i*10, (i%3)*18 + 8, 1, 0);
                 if (!g_entityManager.addRole(enemy)) delete enemy;
             }
             break;
