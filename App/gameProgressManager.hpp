@@ -418,10 +418,10 @@ public:
             }
             break;
         case WaveType::GUDIAO_SQUARE:
-            // 添加古雕方阵
+            // 添加古雕方阵 - 2x2方阵，Y坐标控制在0-46范围内
             for (int i = 0; i < 4; ++i) {
                 IRole *enemyGudiao = new GudiaoEnemy(
-                    156 + (i / 2) * 20, (i % 2) * 40 + 1, 100 + (i / 2) * 10, (i % 2) * 40 + 1, currentChapter,
+                    140 + (i / 2) * 25, (i % 2) * 25 + 8, 80 + (i / 2) * 15, (i % 2) * 25 + 8, currentChapter,
                     35 + rand() % 11
                 );
                 g_entityManager.addRole(enemyGudiao);
@@ -503,12 +503,12 @@ public:
             // 单狸力 + 2个古雕（低难度，错开布置）
             {
                 // 狸力 - 中央
-                IRole *enemyLili = new LiliEnemy(156, 32, 85, 32, currentChapter, 65 + rand() % 16);
+                IRole *enemyLili = new LiliEnemy(156, 28, 85, 28, currentChapter, 65 + rand() % 16);
                 g_entityManager.addRole(enemyLili);
                 
-                // 2个古雕 - 左右分散
+                // 2个古雕 - 上下分散（Y限制在8-28之间）
                 for (int i = 0; i < 2; ++i) {
-                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 45 + 5, 100, i * 45 + 5, currentChapter, 40 + rand() % 11);
+                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 20 + 8, 100, i * 20 + 8, currentChapter, 40 + rand() % 11);
                     g_entityManager.addRole(enemyGudiao);
                 }
             }
@@ -547,16 +547,16 @@ public:
             // 驳 + 胜遇 + 2个普通敌人（高难度）
             {
                 // 驳 - 上方
-                IRole *enemyBo = new BoEnemy(156, 15, 80, 15, currentChapter, 75 + rand() % 18);
+                IRole *enemyBo = new BoEnemy(156, 5, 80, 5, currentChapter, 75 + rand() % 18);
                 g_entityManager.addRole(enemyBo);
                 
                 // 胜遇 - 下方
-                IRole *enemyShengyu = new ShengyuEnemy(156, 45, 80, 45, currentChapter, 72 + rand() % 16);
+                IRole *enemyShengyu = new ShengyuEnemy(156, 35, 80, 35, currentChapter, 72 + rand() % 16);
                 g_entityManager.addRole(enemyShengyu);
                 
                 // 2个古雕 - 右侧
                 for (int i = 0; i < 2; ++i) {
-                    IRole *enemyGudiao = new GudiaoEnemy(142, i * 45 + 10, 110, i * 45 + 10, currentChapter, 45 + rand() % 12);
+                    IRole *enemyGudiao = new GudiaoEnemy(142, i * 45 + 10, 105, i * 35 + 10, currentChapter, 45 + rand() % 12);
                     g_entityManager.addRole(enemyGudiao);
                 }
             }
@@ -566,16 +566,16 @@ public:
             // 驳 + 狸力 + 2个古雕（高难度）
             {
                 // 驳 - 上方
-                IRole *enemyBo = new BoEnemy(156, 12, 78, 12, currentChapter, 78 + rand() % 18);
+                IRole *enemyBo = new BoEnemy(156, 8, 78, 8, currentChapter, 78 + rand() % 18);
                 g_entityManager.addRole(enemyBo);
                 
                 // 狸力 - 下方
-                IRole *enemyLili = new LiliEnemy(156, 48, 78, 48, currentChapter, 78 + rand() % 18);
+                IRole *enemyLili = new LiliEnemy(156, 28, 78, 28, currentChapter, 78 + rand() % 18);
                 g_entityManager.addRole(enemyLili);
                 
-                // 2个古雕 - 中间偏左
+                // 2个古雕 - 上下分散（Y限制在8-28）
                 for (int i = 0; i < 2; ++i) {
-                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 45 + 8, 105, i * 45 + 8, currentChapter, 48 + rand() % 12);
+                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 20 + 8, 105, i * 20 + 8, currentChapter, 48 + rand() % 12);
                     g_entityManager.addRole(enemyGudiao);
                 }
             }
@@ -585,16 +585,16 @@ public:
             // 胜遇 + 狸力 + 1个古雕（高难度）
             {
                 // 胜遇 - 左上
-                IRole *enemyShengyu = new ShengyuEnemy(156, 15, 80, 15, currentChapter, 72 + rand() % 16);
+                IRole *enemyShengyu = new ShengyuEnemy(156, 10, 80, 10, currentChapter, 72 + rand() % 16);
                 g_entityManager.addRole(enemyShengyu);
                 
                 // 狸力 - 左下
-                IRole *enemyLili = new LiliEnemy(156, 45, 80, 45, currentChapter, 78 + rand() % 18);
+                IRole *enemyLili = new LiliEnemy(156, 35, 80, 35, currentChapter, 78 + rand() % 18);
                 g_entityManager.addRole(enemyLili);
                 
                 // 1个古雕 - 右侧
                 {
-                    IRole *enemyGudiao = new GudiaoEnemy(142, 32, 115, 32, currentChapter, 52 + rand() % 12);
+                    IRole *enemyGudiao = new GudiaoEnemy(142, 32, 105, 32, currentChapter, 52 + rand() % 12);
                     g_entityManager.addRole(enemyGudiao);
                 }
             }
@@ -610,7 +610,7 @@ public:
                 
                 // 2个古雕 - 右侧分散
                 for (int i = 0; i < 2; ++i) {
-                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 45 + 5, 110, i * 45 + 5, currentChapter, 42 + rand() % 11);
+                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 45 + 5, 105, i * 35 + 5, currentChapter, 42 + rand() % 11);
                     g_entityManager.addRole(enemyGudiao);
                 }
             }
@@ -639,17 +639,17 @@ public:
             // 精英大型：2精英(Bo+Lili) + 3个古雕（最高难度）
             {
                 // 驳 - 上左
-                IRole *enemyBo = new BoEnemy(156, 10, 75, 10, currentChapter, 85 + rand() % 20);
+                IRole *enemyBo = new BoEnemy(156, 6, 75, 6, currentChapter, 85 + rand() % 20);
                 g_entityManager.addRole(enemyBo);
                 
                 // 狸力 - 下左
-                IRole *enemyLili = new LiliEnemy(156, 50, 75, 50, currentChapter, 85 + rand() % 20);
+                IRole *enemyLili = new LiliEnemy(156, 28, 75, 28, currentChapter, 85 + rand() % 20);
                 g_entityManager.addRole(enemyLili);
                 
-                // 3个古雕 - 右侧分散
+                // 3个古雕 - 右侧纵队分散（Y限制在6-38）
                 for (int i = 0; i < 3; ++i) {
                     IRole *enemyGudiao = new GudiaoEnemy(
-                        142, i * 32 + 10, 112, i * 32 + 10, currentChapter, 55 + rand() % 14
+                        142, i * 16 + 6, 105, i * 16 + 6, currentChapter, 55 + rand() % 14
                     );
                     g_entityManager.addRole(enemyGudiao);
                 }

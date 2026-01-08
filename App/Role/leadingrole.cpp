@@ -43,8 +43,11 @@ LeadingRole::LeadingRole()
     //图片信息
     m_pdata->img = &BITtankImg;
 
-    phoenixWingmanOwned = true;
-    kuiniuWingmanOwned  = true;
+    // phoenixWingmanOwned = true;
+    // kuiniuWingmanOwned  = true;
+    // magicTimOwned       = true;
+    // bulletTypeOwned.fireBallBulletOwed = true;
+    // bulletTypeOwned.lightningLineBulletOwed = true;
 
     //身份信息
     m_pdata->identity          = RoleIdentity::Player;
@@ -296,54 +299,92 @@ void LeadingRole::drawRole() {
             int16_t sizeY = m_pdata->spatialData.sizeY;
 
             // 火焰特效：玩家尾部（X负方向）- 如果拥有火球子弹
-            if (bulletTypeOwned.fireBallBulletOwed && px > 3) {
+            if (bulletTypeOwned.fireBallBulletOwed && px > 10 && py+sizeY/2 > 8 && py + sizeY < 56) {
                 static uint8_t firePhase = 0;
                 firePhase = (firePhase + 1) % 6;
                 
                 int16_t tailX = px;  // 玩家尾部X位置
                 int16_t tailY = py + sizeY / 2;  // Y方向中心
                 
-                // 动态火焰效果 - 多层火焰向后飘动
-                if (firePhase < 2) {
-                    // 帧1：火焰向后上方
-                    OLED_DrawFilledRectangle(tailX - 2, tailY - 1, 1, 3, OLED_COLOR_NORMAL);
-                    OLED_DrawFilledRectangle(tailX - 3, tailY - 2, 1, 2, OLED_COLOR_NORMAL);
-                    OLED_DrawFilledRectangle(tailX - 3, tailY + 1, 1, 2, OLED_COLOR_NORMAL);
-                } else if (firePhase < 4) {
-                    // 帧2：火焰居中
-                    OLED_DrawFilledRectangle(tailX - 2, tailY - 2, 1, 4, OLED_COLOR_NORMAL);
-                    OLED_DrawFilledRectangle(tailX - 3, tailY - 1, 1, 2, OLED_COLOR_NORMAL);
+                // 主火焰核心 - 类似图片中心的火焰形状
+                OLED_DrawFilledRectangle(tailX - 2, tailY - 1, 2, 3, OLED_COLOR_NORMAL);  // 火焰核心
+                
+                // 主火焰舌头 - 向后弯曲延伸（类似图片主火焰）
+                OLED_DrawLine(tailX - 2, tailY, tailX - 5, tailY - 2, OLED_COLOR_NORMAL);   // 主舌向后上弯
+                OLED_DrawLine(tailX - 5, tailY - 2, tailX - 7, tailY - 1, OLED_COLOR_NORMAL); // 主舌回弯
+                OLED_DrawLine(tailX - 2, tailY, tailX - 5, tailY + 2, OLED_COLOR_NORMAL);   // 主舌向后下弯
+                OLED_DrawLine(tailX - 5, tailY + 2, tailX - 7, tailY + 1, OLED_COLOR_NORMAL); // 主舌回弯
+                
+                // 上方副火焰 - 凤凰羽毛弧形（向后上方优雅延伸，X方向缩短）
+                if (firePhase < 3) {
+                    OLED_DrawLine(tailX - 1, tailY - 2, tailX - 3, tailY - 4, OLED_COLOR_NORMAL);  // 羽毛主轴
+                    OLED_DrawLine(tailX - 3, tailY - 4, tailX - 5, tailY - 5, OLED_COLOR_NORMAL);  // 羽毛延伸
+                    OLED_DrawLine(tailX - 5, tailY - 5, tailX - 6, tailY - 4, OLED_COLOR_NORMAL);  // 羽毛尖回勾
+                    // 羽毛分叉
+                    OLED_DrawLine(tailX - 4, tailY - 4, tailX - 5, tailY - 3, OLED_COLOR_NORMAL);
                 } else {
-                    // 帧3：火焰向后下方
-                    OLED_DrawFilledRectangle(tailX - 2, tailY - 1, 1, 3, OLED_COLOR_NORMAL);
-                    OLED_DrawFilledRectangle(tailX - 3, tailY, 1, 2, OLED_COLOR_NORMAL);
-                    OLED_DrawFilledRectangle(tailX - 3, tailY - 2, 1, 1, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(tailX - 1, tailY - 2, tailX - 3, tailY - 3, OLED_COLOR_NORMAL);  // 羽毛主轴
+                    OLED_DrawLine(tailX - 3, tailY - 3, tailX - 5, tailY - 4, OLED_COLOR_NORMAL);  // 羽毛延伸
+                    OLED_DrawLine(tailX - 5, tailY - 4, tailX - 6, tailY - 3, OLED_COLOR_NORMAL);  // 羽毛尖回勾
+                    // 羽毛分叉飘动
+                    OLED_DrawLine(tailX - 4, tailY - 3, tailX - 5, tailY - 2, OLED_COLOR_NORMAL);
+                }
+                
+                // 下方副火焰 - 凤凰羽毛弧形（向后下方对称，X方向缩短）
+                if (firePhase < 3) {
+                    OLED_DrawLine(tailX - 1, tailY + 2, tailX - 3, tailY + 5, OLED_COLOR_NORMAL);  // 羽毛主轴
+                    OLED_DrawLine(tailX - 3, tailY + 5, tailX - 5, tailY + 6, OLED_COLOR_NORMAL);  // 羽毛延伸
+                    OLED_DrawLine(tailX - 5, tailY + 6, tailX - 6, tailY + 5, OLED_COLOR_NORMAL);  // 羽毛尖回勾
+                    // 羽毛分叉
+                    OLED_DrawLine(tailX - 4, tailY + 5, tailX - 5, tailY + 3, OLED_COLOR_NORMAL);
+                } else {
+                    OLED_DrawLine(tailX - 1, tailY + 2, tailX - 3, tailY + 4, OLED_COLOR_NORMAL);  // 羽毛主轴
+                    OLED_DrawLine(tailX - 3, tailY + 4, tailX - 5, tailY + 5, OLED_COLOR_NORMAL);  // 羽毛延伸
+                    OLED_DrawLine(tailX - 5, tailY + 5, tailX - 6, tailY + 4, OLED_COLOR_NORMAL);  // 羽毛尖回勾
+                    // 羽毛分叉飘动
+                    OLED_DrawLine(tailX - 4, tailY + 4, tailX - 5, tailY + 3, OLED_COLOR_NORMAL);
+                }
+                
+                // 火焰尖端闪烁效果
+                if (firePhase < 2) {
+                    OLED_DrawFilledRectangle(tailX - 8, tailY - 4, 1, 1, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(tailX - 8, tailY + 4, 1, 1, OLED_COLOR_NORMAL);
+                } else if (firePhase < 4) {
+                    OLED_DrawFilledRectangle(tailX - 6, tailY - 1, 1, 1, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(tailX - 6, tailY + 1, 1, 1, OLED_COLOR_NORMAL);
                 }
             }
 
             // 闪电特效：玩家头部（X正方向）- 如果拥有闪电子弹
-            if (bulletTypeOwned.lightningLineBulletOwed && px + sizeX < 125) {
+            if (bulletTypeOwned.lightningLineBulletOwed && px + sizeX < 122) {
                 static uint8_t lightningPhase = 0;
                 lightningPhase = (lightningPhase + 1) % 6;
                 
                 int16_t headX = px + sizeX;  // 玩家头部X位置
                 int16_t headY = py + sizeY / 2;  // Y方向中心
                 
-                // 动态闪电效果 - 电弧闪烁
+                // 动态闪电效果 - X方向扩展3像素，更酷炫
                 if (lightningPhase < 2) {
-                    // 帧1：向上的电弧
-                    OLED_DrawLine(headX + 1, headY, headX + 2, headY - 2, OLED_COLOR_NORMAL);
-                    OLED_DrawLine(headX + 2, headY - 2, headX + 3, headY - 1, OLED_COLOR_NORMAL);
+                    // 帧1：向上的锯齿电弧
+                    OLED_DrawLine(headX + 1, headY, headX + 3, headY - 2, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 3, headY - 2, headX + 4, headY - 1, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 4, headY - 1, headX + 6, headY - 3, OLED_COLOR_NORMAL);
                     OLED_DrawFilledRectangle(headX + 1, headY + 1, 1, 1, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(headX + 5, headY, 1, 1, OLED_COLOR_NORMAL);
                 } else if (lightningPhase < 4) {
-                    // 帧2：水平电弧
-                    OLED_DrawLine(headX + 1, headY - 1, headX + 3, headY, OLED_COLOR_NORMAL);
-                    OLED_DrawLine(headX + 1, headY + 1, headX + 3, headY, OLED_COLOR_NORMAL);
+                    // 帧2：水平分叉电弧
+                    OLED_DrawLine(headX + 1, headY, headX + 4, headY, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 4, headY, headX + 6, headY - 2, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 4, headY, headX + 6, headY + 2, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(headX + 3, headY - 1, 1, 1, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(headX + 3, headY + 1, 1, 1, OLED_COLOR_NORMAL);
                 } else {
-                    // 帧3：向下的电弧
-                    OLED_DrawLine(headX + 1, headY, headX + 2, headY + 2, OLED_COLOR_NORMAL);
-                    OLED_DrawLine(headX + 2, headY + 2, headX + 3, headY + 1, OLED_COLOR_NORMAL);
+                    // 帧3：向下的锯齿电弧
+                    OLED_DrawLine(headX + 1, headY, headX + 3, headY + 2, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 3, headY + 2, headX + 4, headY + 1, OLED_COLOR_NORMAL);
+                    OLED_DrawLine(headX + 4, headY + 1, headX + 6, headY + 3, OLED_COLOR_NORMAL);
                     OLED_DrawFilledRectangle(headX + 1, headY - 1, 1, 1, OLED_COLOR_NORMAL);
+                    OLED_DrawFilledRectangle(headX + 5, headY, 1, 1, OLED_COLOR_NORMAL);
                 }
             }
 
@@ -552,7 +593,7 @@ void LeadingRole::magicTimeShoot() {
 
 void LeadingRole::levelUp() {
     if (m_pdata->deathData.isDead) return;
-    if (m_pdata->level >= 10) {
+    if (m_pdata->level >= 15) {
         return; // 已经达到最高等级
     }
 
