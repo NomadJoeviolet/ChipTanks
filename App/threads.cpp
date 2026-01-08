@@ -53,6 +53,11 @@ void oledTaskThread(void *argument) {
                 g_progressManager.drawClearCG();
             }
 
+            else if (g_progressManager.isPlayingChapterCG) {
+                // 播放章节过渡动画
+                g_progressManager.drawChapterCG();
+            }
+
             else if (g_progressManager.showBoss) {
                 // 展示Boss海报
                 g_progressManager.drawShowBoss();
@@ -122,11 +127,15 @@ void keyScanThread(void *argument) {
             }
             if (anyKeyPressed) {
                 g_progressManager.isWaitingStartKey = false; // 开始游戏
+                // 触发第一章的章节动画
+                g_progressManager.isPlayingChapterCG = true;
+                g_progressManager.chapterCGTimer     = 2500;
             }
         }
 
         if (!g_entityManager.isGameOver && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss
-            && !g_progressManager.isPlayingClearCG && !g_progressManager.isWaitingStartKey) {
+            && !g_progressManager.isPlayingClearCG && !g_progressManager.isWaitingStartKey
+            && !g_progressManager.isPlayingChapterCG) {
             // 游戏进行中才响应按键
 
             //测试触发选卡
@@ -210,7 +219,7 @@ void keyScanThread(void *argument) {
 /***********/
 /************************** 调试模式配置 **************************/
 // 设置为 1 启用调试模式，0 为正常游戏模式
-#define DEBUG_MODE_ENABLED 1
+#define DEBUG_MODE_ENABLED 0
 
 #if DEBUG_MODE_ENABLED
 // 调试敌人类型枚举
@@ -245,6 +254,7 @@ static void debugSpawnEnemies() {
     if (g_progressManager.isPlayingOpeningCG) return;
     if (g_progressManager.isWaitingStartKey) return;
     if (g_progressManager.isPlayingClearCG) return;
+    if (g_progressManager.isPlayingChapterCG) return;
     if (g_progressManager.showBoss) return;
     if (g_perkCardManager.m_isSelecting) return;
     // 只有当场上只剩玩家时才生成新敌人
@@ -349,7 +359,8 @@ void gameControlThread(void *argument) {
         } else {
             //游戏进行中
             if (!g_perkCardManager.m_isSelecting && !g_progressManager.isPlayingOpeningCG && !g_progressManager.showBoss
-                && !g_progressManager.isPlayingClearCG && !g_progressManager.PauseGame && !g_progressManager.isWaitingStartKey ) {
+                && !g_progressManager.isPlayingClearCG && !g_progressManager.PauseGame && !g_progressManager.isWaitingStartKey
+                && !g_progressManager.isPlayingChapterCG) {
                 // 非选卡状态且非开场动画且非展示Boss海报，更新游戏逻辑
 #if !DEBUG_MODE_ENABLED
                 // 正常模式：更新游戏进度（调试模式下跳过，由debugSpawnEnemies管理敌人生成）
@@ -363,6 +374,12 @@ void gameControlThread(void *argument) {
                 // 清除需要回收的角色和子弹
                 g_entityManager.cleanupInvalidRoles();
                 g_entityManager.cleanupInvalidBullets();
+                
+                // 更新玩家僚机系统
+                LeadingRole* player = (LeadingRole*)g_entityManager.getPlayerRole();
+                if (player != nullptr) {
+                    player->updateWingmans();
+                }
             }
         }
 

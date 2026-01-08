@@ -22,7 +22,7 @@ public:
     GamePerkCardManager &operator=(const GamePerkCardManager &) = delete;
 
 private:
-    static const uint8_t MAX_CARD_COUNT       = 22; // 总卡片数（2*10 +1*2=22）
+    static const uint8_t MAX_CARD_COUNT       = 28; // 总卡片数（2*10 +1*8=28）
     static const uint8_t SELECTION_SLOT_COUNT = 3;  // 选卡槽数量（3张）
 
     etl::vector<PerkCard, MAX_CARD_COUNT>       m_cardWarehouse;  // 卡片仓库（存所有卡片）
@@ -137,6 +137,25 @@ public:
             break;
         case PerkCardType::MOVE_SPEED_UP:
             player->getData()->spatialData.moveSpeed += selectedCard.param;
+            break;
+        case PerkCardType::HEALTH_UP_PRO:
+            player->getData()->healthData.maxHealth += selectedCard.param;
+            player->getData()->healthData.currentHealth = player->getData()->healthData.maxHealth;
+            break;
+        case PerkCardType::HEAL_SPEED_UP_PRO:
+            player->getData()->healthData.healSpeed += selectedCard.param;
+            break;
+        case PerkCardType::HEAL_AMOUNT_UP_PRO:
+            player->getData()->healthData.healValue += selectedCard.param;
+            break;
+        case PerkCardType::UNLOCK_PHOENIX:
+            player->phoenixWingmanOwned = true;
+            break;
+        case PerkCardType::UNLOCK_KUINIU:
+            player->kuiniuWingmanOwned = true;
+            break;
+        case PerkCardType::MAGIC_TIM:
+            player->magicTimOwned = true;
             break;
         default:
             break;

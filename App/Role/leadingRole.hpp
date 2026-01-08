@@ -48,9 +48,19 @@ class LeadingRole : public IRole {
 public:
     uint16_t              experiencePoints      = 0;
     
-    //满级为 10 级
-    uint16_t experienceToLevelUp[11] = {0, 40 , 100 , 125 , 180 , 220 , 265 , 320 ,  380 , 500 , 999}; // 每级所需经验值
+    //满级为 15 级
+    uint16_t experienceToLevelUp[16] = {0, 40 , 100 , 125 , 180 , 220 , 265 , 320 ,  380 , 500 , 600 , 700 , 800 , 900 , 950 , 999}; // 每级所需经验值
 
+    // ===== 僚机系统 =====
+    bool phoenixWingmanOwned = false;   // 是否拥有凤凰僚机
+    bool kuiniuWingmanOwned = false;    // 是否拥有夔牛僚机
+    bool magicTimOwned = false;         // 是否拥有魔法时间
+    
+    uint16_t phoenixShootTimer = 0;     // 凤凰僚机射击计时器
+    uint16_t kuiniuShootTimer = 0;      // 夔牛僚机射击计时器
+    uint16_t magicTimTimer = 0;         // 魔法时间计时器
+    
+    static const uint16_t WINGMAN_SHOOT_INTERVAL = 2000; // 僚机射击间隔2.0秒
 
 public:
     BulletTypeOwned bulletTypeOwned = BulletTypeOwned(1,0,0); // 默认只拥有普通子弹
@@ -66,6 +76,13 @@ public:
     void shoot(uint8_t x , uint8_t y , BulletType type) override;
     void drawRole() override;
     
+    // 僚机相关函数
+    void updateWingmans();              // 更新僚机状态（计时器和射击）
+    void drawPhoenixWingman();          // 绘制凤凰僚机
+    void drawKuiniuWingman();           // 绘制夔牛僚机
+    void phoenixShoot();                // 凤凰发射火球
+    void kuiniuShoot();                 // 夔牛发射雷电
+    void magicTimeShoot();               // 魔法时间发射子弹
 };
 
 #endif // LEADINGROLE_HPP

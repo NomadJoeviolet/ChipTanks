@@ -25,6 +25,28 @@ enum class WaveType {
     MIXED_SMALL,  // 混合小型阵型 2feilian + 1Gudiao
     MIXED_MEDIUM, // 混合中型阵型 5feilian +1Gudiao
     MIXED_LARGE,  // 混合大型阵型 5feilian + 2Gudiao
+
+    //精英敌人单体配置（低难度 ⭐⭐）
+    ELITE_SOLO_BO,       // 单驳 + 2个飞廉（低难度）
+    ELITE_SOLO_SHENGYU,  // 单胜遇 + 3个魑魅（低难度）
+    ELITE_SOLO_LILI,     // 单狸力 + 2个古雕（低难度）
+
+    //精英敌人纯净配置（中低难度 ⭐⭐⭐）
+    ELITE_ONLY_BO,       // 纯驳（无普通怪）（中低难度）
+    ELITE_ONLY_SHENGYU,  // 纯胜遇（无普通怪）（中低难度）
+    ELITE_ONLY_LILI,     // 纯狸力（无普通怪）（中低难度）
+
+    //精英混合配置（中难度 ⭐⭐⭐⭐）
+    MIXED_ELITE_SMALL,  // 精英小型：1精英(Bo) + 2个古雕（中难度）
+    MIXED_ELITE_MEDIUM, // 精英中型：1精英(Lili) + 4个飞廉（中难度）
+
+    //精英敌人双体配置（高难度 ⭐⭐⭐⭐⭐）
+    ELITE_PAIR_BO_SHENGYU,   // 驳 + 胜遇 + 2个普通敌人（高难度）
+    ELITE_PAIR_BO_LILI,      // 驳 + 狸力 + 2个普通敌人（高难度）
+    ELITE_PAIR_SHENGYU_LILI, // 胜遇 + 狸力 + 1个古雕（高难度）
+
+    //精英大型配置（最高难度 ⭐⭐⭐⭐⭐⭐）
+    MIXED_ELITE_LARGE,  // 精英大型：2精英(Bo+Lili) + 3个古雕（最高难度）
 };
 
 enum class BOSS_TYPE {
@@ -38,7 +60,7 @@ enum class BOSS_TYPE {
 class GameProgressManager {
 public:
     uint8_t currentChapter = 1; // 当前游戏关卡
-    uint8_t lastChapter    = 4; // 最大游戏关卡
+    uint8_t lastChapter    = 5; // 最大游戏关卡（5个章节）
 
     uint8_t currentWave            = 1;  // 当前波次
     uint8_t maxWave                = 15; // 最大波次
@@ -51,6 +73,10 @@ public:
 
     bool     isPlayingClearCG = false; // 是否播放通关动画
     uint16_t clearCGTimer     = 0;     // 通关动画计时器
+
+    // 章节动画相关
+    bool     isPlayingChapterCG = false; // 是否播放章节动画
+    uint16_t chapterCGTimer     = 0;     // 章节动画计时器
 
     bool chatpter4Warning = false; // 第四章警告标记
     BOSS_TYPE showWhichBoss = BOSS_TYPE::NONE; // 展示Boss类型
@@ -88,6 +114,10 @@ public:
         // 通关动画
         isPlayingClearCG = false;
         clearCGTimer     = 0;
+
+        // 章节动画
+        isPlayingChapterCG = false;
+        chapterCGTimer     = 0;
 
         // 重置展示Boss海报状态
         showBoss      = false;
@@ -131,16 +161,21 @@ public:
                 }
 
                 // 重置波次数据
-                if (currentChapter <= 3) {
+                if (currentChapter <= 4) {
                     currentWave            = 1;
-                    currentChapterMaxWaves = 8 + rand() % 4; // 随机生成当前关卡波次，8~11波
+                    currentChapterMaxWaves = 7 + currentChapter + rand() % 3; // 章节越高波次越多
                 } else {
+                    // 第5章（最终章节）
                     currentWave            = 1;
-                    currentChapterMaxWaves = 1;
+                    currentChapterMaxWaves = 1; // 直接BOSS战
                 }
+                
+                // 触发章节动画
+                isPlayingChapterCG = true;
+                chapterCGTimer     = 2500; // 2.5秒章节动画
             }
 
-            if (currentWave == currentChapterMaxWaves / 2 && currentChapter != 4) {
+            if (currentWave == currentChapterMaxWaves / 2 && currentChapter <= 4) {
                 g_perkCardManager.triggerPerkSelection(); // 触发选卡机制
             }
             // 添加新一波敌人角色
@@ -184,14 +219,25 @@ public:
             showBossTimer = 2000; // 播放2秒Boss海报
             return;
         }
-        if (currentChapter == 4) {
-            chatpter4Warning = true;
-            // 第四关，挑战关卡，随机选择一个高数值BOSS（包含四凶之首混沌）
+        if (currentChapter == 4 && currentWave == currentChapterMaxWaves) {
+            // 第四关最后一波，固定添加Boss混沌
+            IRole *enemyHundun = new HundunEnemy(156, 1, 60, 1, currentChapter, 200 + rand() % 31);
+            g_entityManager.addRole(enemyHundun);
+
+            // 标记展示Boss海报
+            showWhichBoss = BOSS_TYPE::HUN_DUN; // 混沌Boss
+            showBoss      = true;
+            showBossTimer = 2000; // 播放2秒Boss海报
+            return;
+        }
+        if (currentChapter == 5) {
+            chatpter4Warning = true; // 复用警告标记
+            // 第五关，最终挑战关卡，随机选择一个高数值BOSS
             BOSS_TYPE bossType = static_cast<BOSS_TYPE>(rand() % 4 + 1);
             switch (bossType) {
             case BOSS_TYPE::TAO_TIE:
                 {
-                    IRole *enemyTaotie = new TaotieEnemy(156, 1 , 64,1 , currentChapter + 2 , 200 + rand() % 51);
+                    IRole *enemyTaotie = new TaotieEnemy(156, 1 , 64, 1, currentChapter + 1, 250 + rand() % 51);
                     g_entityManager.addRole(enemyTaotie);
 
                     // 标记展示Boss海报
@@ -202,7 +248,7 @@ public:
                 }
             case BOSS_TYPE::XIANG_LIU:
                 {
-                    IRole *enemyXiangliu = new XiangliuEnemy(156, 1, 64, 1, currentChapter + 2 , 230 + rand() % 51);
+                    IRole *enemyXiangliu = new XiangliuEnemy(156, 1, 64, 1, currentChapter + 1, 280 + rand() % 51);
                     g_entityManager.addRole(enemyXiangliu);
 
                     // 标记展示Boss海报
@@ -213,7 +259,7 @@ public:
                 }
             case BOSS_TYPE::TAO_WU:
                 {
-                    IRole *enemyTaowu = new TaowuEnemy(156, 1 , 64, 1 , currentChapter + 2 , 260 + rand() % 51);
+                    IRole *enemyTaowu = new TaowuEnemy(156, 1, 64, 1, currentChapter + 1, 310 + rand() % 51);
                     g_entityManager.addRole(enemyTaowu);
 
                     // 标记展示Boss海报
@@ -225,7 +271,7 @@ public:
             case BOSS_TYPE::HUN_DUN:
                 {
                     // 混沌 - 四凶之首，最强BOSS
-                    IRole *enemyHundun = new HundunEnemy(156, 1, 60, 1, currentChapter + 2, 300 + rand() % 51);
+                    IRole *enemyHundun = new HundunEnemy(156, 1, 60, 1, currentChapter + 1, 350 + rand() % 51);
                     g_entityManager.addRole(enemyHundun);
 
                     // 标记展示Boss海报
@@ -241,16 +287,81 @@ public:
             return;
         }
 
-        WaveType enemyType = static_cast<WaveType>(rand() % 10); // 随机选择敌人类型
-
-        // 根据关卡调整敌人类型概率
-        if (currentChapter == 1
-            && (enemyType == WaveType::GUDIAO_SQUARE || enemyType == WaveType::MIXED_MEDIUM
-                || enemyType == WaveType::MIXED_LARGE || enemyType == WaveType::FEILIAN_CLUSTER)) {
-            enemyType = WaveType::THREE_Feilian; // 第一关避免混合阵型
-        }
-        if (currentChapter == 3 && (enemyType == WaveType::THREE_Feilian)) {
-            enemyType = WaveType::MIXED_LARGE; // 第三关避免简单的飞廉阵型
+        // ===== 根据章节确定波次难度 =====
+        WaveType enemyType;
+        uint8_t randVal = rand() % 100;
+        
+        switch (currentChapter) {
+        case 1:
+            // 第1章：只有普通波次（简单敌人）
+            // WaveType 0-9: 普通阵型
+            if (randVal < 40) {
+                // 40%概率：魑魅/飞廉基础阵型
+                enemyType = static_cast<WaveType>(rand() % 4); // CHIMEI_LINE ~ FEILIAN_CLUSTER
+            } else if (randVal < 75) {
+                // 35%概率：古雕阵型
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::GUDIAO_SINGLE));
+            } else {
+                // 25%概率：混合小型
+                enemyType = WaveType::MIXED_SMALL;
+            }
+            break;
+            
+        case 2:
+            // 第2章：普通波次 + 低难度精英波次
+            if (randVal < 30) {
+                // 30%概率：普通混合阵型
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::MIXED_SMALL));
+            } else if (randVal < 55) {
+                // 25%概率：古雕阵型
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::GUDIAO_SINGLE));
+            } else if (randVal < 80) {
+                // 25%概率：低难度精英单体（ELITE_SOLO_*）
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::ELITE_SOLO_BO));
+            } else {
+                // 20%概率：飞廉群阵
+                enemyType = WaveType::FEILIAN_CLUSTER;
+            }
+            break;
+            
+        case 3:
+            // 第3章：中等波次 + 中低/中难度精英波次
+            if (randVal < 25) {
+                // 25%概率：普通混合大型阵型
+                enemyType = WaveType::MIXED_LARGE;
+            } else if (randVal < 50) {
+                // 25%概率：精英纯净配置（ELITE_ONLY_*）
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::ELITE_ONLY_BO));
+            } else if (randVal < 75) {
+                // 25%概率：精英混合配置（MIXED_ELITE_SMALL/MEDIUM）
+                enemyType = static_cast<WaveType>(rand() % 2 + static_cast<int>(WaveType::MIXED_ELITE_SMALL));
+            } else {
+                // 25%概率：低难度精英单体
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::ELITE_SOLO_BO));
+            }
+            break;
+            
+        case 4:
+            // 第4章：高难度波次（双精英 + 精英混合）
+            if (randVal < 35) {
+                // 35%概率：高难度双精英配置（ELITE_PAIR_*）
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::ELITE_PAIR_BO_SHENGYU));
+            } else if (randVal < 65) {
+                // 30%概率：精英混合配置
+                enemyType = static_cast<WaveType>(rand() % 2 + static_cast<int>(WaveType::MIXED_ELITE_SMALL));
+            } else if (randVal < 85) {
+                // 20%概率：精英纯净配置
+                enemyType = static_cast<WaveType>(rand() % 3 + static_cast<int>(WaveType::ELITE_ONLY_BO));
+            } else {
+                // 15%概率：最高难度配置
+                enemyType = WaveType::MIXED_ELITE_LARGE;
+            }
+            break;
+            
+        default:
+            // 第5章及以后：最高难度（只刷BOSS，不会走到这里）
+            enemyType = WaveType::MIXED_ELITE_LARGE;
+            break;
         }
 
         switch (enemyType) {
@@ -356,12 +467,347 @@ public:
                 g_entityManager.addRole(enemyGudiao);
             }
             break;
+
+        //===== 精英敌人单体配置（低难度）=====
+        case WaveType::ELITE_SOLO_BO:
+            // 单驳 + 2个小怪（低难度，精英怪左侧，普通怪右侧错开）
+            {
+                // 驳 - 左侧
+                IRole *enemyBo = new BoEnemy(156, 32, 80, 32, currentChapter, 60 + rand() % 16);
+                g_entityManager.addRole(enemyBo);
+                
+                // 2个飞廉 - 右侧错开
+                for (int i = 0; i < 2; ++i) {
+                    IRole *enemyFeilian = new FeilianEnemy(140, i * 25 + 8, 110, i * 25 + 8, currentChapter, 12 + rand() % 5);
+                    g_entityManager.addRole(enemyFeilian);
+                }
+            }
+            break;
+
+        case WaveType::ELITE_SOLO_SHENGYU:
+            // 单胜遇 + 3个小怪（低难度）
+            {
+                // 胜遇 - 中央偏上
+                IRole *enemyShengyu = new ShengyuEnemy(156, 20, 85, 20, currentChapter, 55 + rand() % 14);
+                g_entityManager.addRole(enemyShengyu);
+                
+                // 3个魑魅 - 上下分布
+                for (int i = 0; i < 3; ++i) {
+                    IRole *enemyChiMei = new ChiMeiEnemy(124, i * 22 + 5, 95, i * 22 + 5, currentChapter, 8 + rand() % 3);
+                    g_entityManager.addRole(enemyChiMei);
+                }
+            }
+            break;
+
+        case WaveType::ELITE_SOLO_LILI:
+            // 单狸力 + 2个古雕（低难度，错开布置）
+            {
+                // 狸力 - 中央
+                IRole *enemyLili = new LiliEnemy(156, 32, 85, 32, currentChapter, 65 + rand() % 16);
+                g_entityManager.addRole(enemyLili);
+                
+                // 2个古雕 - 左右分散
+                for (int i = 0; i < 2; ++i) {
+                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 45 + 5, 100, i * 45 + 5, currentChapter, 40 + rand() % 11);
+                    g_entityManager.addRole(enemyGudiao);
+                }
+            }
+            break;
+
+        //===== 精英敌人纯净配置（中低难度 ⭐⭐⭐）=====
+        case WaveType::ELITE_ONLY_BO:
+            // 纯驳（无普通怪）（中低难度）
+            {
+                // 单个驳 - 屏幕中央，给玩家充分空间操纵
+                IRole *enemyBo = new BoEnemy(156, 32, 64, 32, currentChapter, 85 + rand() % 20);
+                g_entityManager.addRole(enemyBo);
+            }
+            break;
+
+        case WaveType::ELITE_ONLY_SHENGYU:
+            // 纯胜遇（无普通怪）（中低难度）
+            {
+                // 单个胜遇 - 屏幕中央
+                IRole *enemyShengyu = new ShengyuEnemy(156, 32, 64, 32, currentChapter, 80 + rand() % 18);
+                g_entityManager.addRole(enemyShengyu);
+            }
+            break;
+
+        case WaveType::ELITE_ONLY_LILI:
+            // 纯狸力（无普通怪）（中低难度）
+            {
+                // 单个狸力 - 屏幕中央
+                IRole *enemyLili = new LiliEnemy(156, 32, 64, 32, currentChapter, 90 + rand() % 20);
+                g_entityManager.addRole(enemyLili);
+            }
+            break;
+
+        //===== 精英敌人双体配置（高难度 ⭐⭐⭐⭐⭐）=====
+        case WaveType::ELITE_PAIR_BO_SHENGYU:
+            // 驳 + 胜遇 + 2个普通敌人（高难度）
+            {
+                // 驳 - 上方
+                IRole *enemyBo = new BoEnemy(156, 15, 80, 15, currentChapter, 75 + rand() % 18);
+                g_entityManager.addRole(enemyBo);
+                
+                // 胜遇 - 下方
+                IRole *enemyShengyu = new ShengyuEnemy(156, 45, 80, 45, currentChapter, 72 + rand() % 16);
+                g_entityManager.addRole(enemyShengyu);
+                
+                // 2个古雕 - 右侧
+                for (int i = 0; i < 2; ++i) {
+                    IRole *enemyGudiao = new GudiaoEnemy(142, i * 45 + 10, 110, i * 45 + 10, currentChapter, 45 + rand() % 12);
+                    g_entityManager.addRole(enemyGudiao);
+                }
+            }
+            break;
+
+        case WaveType::ELITE_PAIR_BO_LILI:
+            // 驳 + 狸力 + 2个古雕（高难度）
+            {
+                // 驳 - 上方
+                IRole *enemyBo = new BoEnemy(156, 12, 78, 12, currentChapter, 78 + rand() % 18);
+                g_entityManager.addRole(enemyBo);
+                
+                // 狸力 - 下方
+                IRole *enemyLili = new LiliEnemy(156, 48, 78, 48, currentChapter, 78 + rand() % 18);
+                g_entityManager.addRole(enemyLili);
+                
+                // 2个古雕 - 中间偏左
+                for (int i = 0; i < 2; ++i) {
+                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 45 + 8, 105, i * 45 + 8, currentChapter, 48 + rand() % 12);
+                    g_entityManager.addRole(enemyGudiao);
+                }
+            }
+            break;
+
+        case WaveType::ELITE_PAIR_SHENGYU_LILI:
+            // 胜遇 + 狸力 + 1个古雕（高难度）
+            {
+                // 胜遇 - 左上
+                IRole *enemyShengyu = new ShengyuEnemy(156, 15, 80, 15, currentChapter, 72 + rand() % 16);
+                g_entityManager.addRole(enemyShengyu);
+                
+                // 狸力 - 左下
+                IRole *enemyLili = new LiliEnemy(156, 45, 80, 45, currentChapter, 78 + rand() % 18);
+                g_entityManager.addRole(enemyLili);
+                
+                // 1个古雕 - 右侧
+                {
+                    IRole *enemyGudiao = new GudiaoEnemy(142, 32, 115, 32, currentChapter, 52 + rand() % 12);
+                    g_entityManager.addRole(enemyGudiao);
+                }
+            }
+            break;
+
+        //===== 精英混合配置（中难度 ⭐⭐⭐⭐）=====
+        case WaveType::MIXED_ELITE_SMALL:
+            // 精英小型：1精英(Bo) + 2个古雕（中难度）
+            {
+                // 驳 - 左侧
+                IRole *enemyBo = new BoEnemy(156, 30, 75, 30, currentChapter, 70 + rand() % 16);
+                g_entityManager.addRole(enemyBo);
+                
+                // 2个古雕 - 右侧分散
+                for (int i = 0; i < 2; ++i) {
+                    IRole *enemyGudiao = new GudiaoEnemy(140, i * 45 + 5, 110, i * 45 + 5, currentChapter, 42 + rand() % 11);
+                    g_entityManager.addRole(enemyGudiao);
+                }
+            }
+            break;
+
+        case WaveType::MIXED_ELITE_MEDIUM:
+            // 精英中型：1精英(Lili) + 4个飞廉（中难度）
+            {
+                // 狸力 - 左侧中央
+                IRole *enemyLili = new LiliEnemy(156, 28, 80, 28, currentChapter, 72 + rand() % 16);
+                g_entityManager.addRole(enemyLili);
+                
+                // 4个飞廉 - 右侧阵列
+                for (int i = 0; i < 4; ++i) {
+                    IRole *enemyFeilian = new FeilianEnemy(
+                        140 + (i / 2) * 18, (i % 2) * 28 + 8, 105 + (i / 2) * 8, (i % 2) * 28 + 8, currentChapter,
+                        14 + rand() % 6
+                    );
+                    g_entityManager.addRole(enemyFeilian);
+                }
+            }
+            break;
+
+        //===== 精英大型配置（最高难度 ⭐⭐⭐⭐⭐⭐）=====
+        case WaveType::MIXED_ELITE_LARGE:
+            // 精英大型：2精英(Bo+Lili) + 3个古雕（最高难度）
+            {
+                // 驳 - 上左
+                IRole *enemyBo = new BoEnemy(156, 10, 75, 10, currentChapter, 85 + rand() % 20);
+                g_entityManager.addRole(enemyBo);
+                
+                // 狸力 - 下左
+                IRole *enemyLili = new LiliEnemy(156, 50, 75, 50, currentChapter, 85 + rand() % 20);
+                g_entityManager.addRole(enemyLili);
+                
+                // 3个古雕 - 右侧分散
+                for (int i = 0; i < 3; ++i) {
+                    IRole *enemyGudiao = new GudiaoEnemy(
+                        142, i * 32 + 10, 112, i * 32 + 10, currentChapter, 55 + rand() % 14
+                    );
+                    g_entityManager.addRole(enemyGudiao);
+                }
+            }
+            break;
         default:
             break;
         }
     }
 
     // 绘图展示功能
+    
+    // 绘制章节过渡动画 - 科技感风格
+    void drawChapterCG() {
+        if (chapterCGTimer >= 2 * controlDelayTime)
+            chapterCGTimer -= 2 * controlDelayTime;
+        else {
+            isPlayingChapterCG = false;
+            chapterCGTimer     = 0;
+            return;
+        }
+
+        uint16_t elapsed = 2500 - chapterCGTimer; // 已经过的时间
+        uint8_t phase = elapsed / 500; // 分为5个阶段
+
+        // 章节标题和主题词
+        char chapterStr[16];
+        char themeWord[16] = "UNKNOWN";
+        sprintf(chapterStr, "CHAPTER %d", currentChapter);
+        
+        switch (currentChapter) {
+        case 1: strcpy(themeWord, "- GREED -");  break;  // 贪婪 - 饕餮
+        case 2: strcpy(themeWord, "- VENOM -");  break;  // 剧毒 - 相柳
+        case 3: strcpy(themeWord, "- FURY -");   break;  // 狂暴 - 梼杌
+        case 4: strcpy(themeWord, "- CHAOS -");  break;  // 混沌 - 混沌
+        case 5: strcpy(themeWord, "- DOOM -");   break;  // 厄运 - 随机BOSS
+        default: strcpy(themeWord, "- ??? -");   break;
+        }
+
+        // 阶段0: 扫描线从左向右扫过
+        if (phase == 0) {
+            uint8_t scanX = (elapsed * 128) / 500;
+            // 扫描线
+            OLED_DrawLine(scanX, 0, scanX, 63, OLED_COLOR_NORMAL);
+            OLED_DrawLine(scanX + 1, 0, scanX + 1, 63, OLED_COLOR_NORMAL);
+            // 扫描线后的粒子效果
+            for (uint8_t i = 0; i < scanX; i += 8) {
+                if ((i / 8 + elapsed / 50) % 3 == 0) {
+                    OLED_DrawFilledRectangle(i, 28 + (rand() % 8), 2, 2, OLED_COLOR_NORMAL);
+                }
+            }
+        }
+        
+        // 阶段1: 科技边框渐入
+        if (phase >= 1) {
+            uint8_t frameProgress = (phase == 1) ? ((elapsed - 500) * 20) / 500 : 20;
+            
+            // 上下边框线（从中心向两侧展开）
+            uint8_t halfLen = frameProgress * 3;
+            OLED_DrawLine(64 - halfLen, 8, 64 + halfLen, 8, OLED_COLOR_NORMAL);
+            OLED_DrawLine(64 - halfLen, 55, 64 + halfLen, 55, OLED_COLOR_NORMAL);
+            
+            // 四角科技装饰
+            if (frameProgress > 10) {
+                // 左上
+                OLED_DrawLine(5, 8, 5, 18, OLED_COLOR_NORMAL);
+                OLED_DrawLine(5, 8, 15, 8, OLED_COLOR_NORMAL);
+                OLED_DrawLine(5, 18, 10, 13, OLED_COLOR_NORMAL);
+                // 右上
+                OLED_DrawLine(122, 8, 122, 18, OLED_COLOR_NORMAL);
+                OLED_DrawLine(112, 8, 122, 8, OLED_COLOR_NORMAL);
+                OLED_DrawLine(122, 18, 117, 13, OLED_COLOR_NORMAL);
+                // 左下
+                OLED_DrawLine(5, 55, 5, 45, OLED_COLOR_NORMAL);
+                OLED_DrawLine(5, 55, 15, 55, OLED_COLOR_NORMAL);
+                OLED_DrawLine(5, 45, 10, 50, OLED_COLOR_NORMAL);
+                // 右下
+                OLED_DrawLine(122, 55, 122, 45, OLED_COLOR_NORMAL);
+                OLED_DrawLine(112, 55, 122, 55, OLED_COLOR_NORMAL);
+                OLED_DrawLine(122, 45, 117, 50, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // 阶段2: 章节标题渐入（打字机效果）
+        if (phase >= 2) {
+            // 保持边框
+            OLED_DrawLine(4, 8, 123, 8, OLED_COLOR_NORMAL);
+            OLED_DrawLine(4, 55, 123, 55, OLED_COLOR_NORMAL);
+            OLED_DrawLine(5, 8, 5, 18, OLED_COLOR_NORMAL);
+            OLED_DrawLine(122, 8, 122, 18, OLED_COLOR_NORMAL);
+            OLED_DrawLine(5, 55, 5, 45, OLED_COLOR_NORMAL);
+            OLED_DrawLine(122, 55, 122, 45, OLED_COLOR_NORMAL);
+            
+            // 章节标题（逐字显示）
+            uint8_t showChars = (phase == 2) ? ((elapsed - 1000) / 60) : 10;
+            if (showChars > 10) showChars = 10;
+            
+            char displayStr[16] = {0};
+            for (uint8_t i = 0; i < showChars && chapterStr[i] != '\0'; i++) {
+                displayStr[i] = chapterStr[i];
+            }
+            OLED_PrintString(34, 20, displayStr, &font8x6, OLED_COLOR_NORMAL);
+            
+            // 闪烁光标
+            if (showChars < 10 && (elapsed / 80) % 2 == 0) {
+                uint8_t cursorX = 34 + showChars * 6;
+                OLED_DrawFilledRectangle(cursorX, 20, 5, 8, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // 阶段3: 主题词渐入
+        if (phase >= 3) {
+            // 保持边框和章节标题
+            OLED_DrawLine(4, 8, 123, 8, OLED_COLOR_NORMAL);
+            OLED_DrawLine(4, 55, 123, 55, OLED_COLOR_NORMAL);
+            OLED_DrawLine(5, 8, 5, 18, OLED_COLOR_NORMAL);
+            OLED_DrawLine(122, 8, 122, 18, OLED_COLOR_NORMAL);
+            OLED_DrawLine(5, 55, 5, 45, OLED_COLOR_NORMAL);
+            OLED_DrawLine(122, 55, 122, 45, OLED_COLOR_NORMAL);
+            OLED_PrintString(34, 20, chapterStr, &font8x6, OLED_COLOR_NORMAL);
+            
+            // 装饰分隔线
+            OLED_DrawLine(30, 32, 97, 32, OLED_COLOR_NORMAL);
+            OLED_DrawFilledRectangle(26, 30, 3, 5, OLED_COLOR_NORMAL);
+            OLED_DrawFilledRectangle(98, 30, 3, 5, OLED_COLOR_NORMAL);
+            
+            // 主题词（闪烁效果）
+            if ((elapsed / 100) % 2 == 0 || phase >= 4) {
+                OLED_PrintString(34, 38, themeWord, &font8x6, OLED_COLOR_NORMAL);
+            }
+        }
+        
+        // 阶段4: 完整显示 + 闪烁效果
+        if (phase >= 4) {
+            // 数据流装饰效果
+            static uint8_t dataFlowOffset = 0;
+            dataFlowOffset = (dataFlowOffset + 1) % 20;
+            
+            // 左侧数据流
+            for (uint8_t i = 0; i < 4; i++) {
+                uint8_t y = 12 + ((i * 5 + dataFlowOffset) % 40);
+                OLED_DrawLine(8, y, 12, y, OLED_COLOR_NORMAL);
+            }
+            // 右侧数据流
+            for (uint8_t i = 0; i < 4; i++) {
+                uint8_t y = 12 + ((i * 5 + dataFlowOffset + 10) % 40);
+                OLED_DrawLine(115, y, 119, y, OLED_COLOR_NORMAL);
+            }
+            
+            // 角落闪烁点
+            if ((elapsed / 120) % 2 == 0) {
+                OLED_DrawFilledRectangle(7, 10, 2, 2, OLED_COLOR_NORMAL);
+                OLED_DrawFilledRectangle(118, 10, 2, 2, OLED_COLOR_NORMAL);
+                OLED_DrawFilledRectangle(7, 51, 2, 2, OLED_COLOR_NORMAL);
+                OLED_DrawFilledRectangle(118, 51, 2, 2, OLED_COLOR_NORMAL);
+            }
+        }
+    }
     
     // 绘制暂停界面 - 科技风格
     void drawPauseUI() {

@@ -11,12 +11,18 @@ enum class PerkCardType {
     ATTACK_SPEED_UP,         // 5. 攻击速度+3
     HEAT_CAPACITY_UP,        // 6. 热量上限+25
     HEAT_COOL_DOWN_UP,       // 7. 热量冷却量+2
-    UNLOCK_FIREBALL,         // 8. 解锁火球弹（原第8条，修正编号避免重复）
-    UNLOCK_LIGHTNING,        // 9. 解锁闪电弹（原第9条）
+    UNLOCK_FIREBALL,         // 8. 解锁火球弹
+    UNLOCK_LIGHTNING,        // 9. 解锁闪电弹
     FIREBALL_RANGE_UP,       // 10. 火球范围+5
     LIGHTNING_MULTIPLIER_UP, // 11. 闪电倍率×1.5
     MOVE_SPEED_UP,           // 12. 神速：移动速度+1
-    MAX_CARD_TYPES           // 占位符：标记卡型总数（12种）
+    HEALTH_UP_PRO,           // 13. 生命值+200 (高级版)
+    HEAL_SPEED_UP_PRO,       // 14. 恢复速度+4 (高级版)
+    HEAL_AMOUNT_UP_PRO,      // 15. 恢复量+10 (高级版)
+    UNLOCK_PHOENIX,          // 16. 解锁凤凰僚机
+    UNLOCK_KUINIU,           // 17. 解锁夔牛僚机
+    MAGIC_TIM,               // 18. 魔法时间：自动发射子弹
+    MAX_CARD_TYPES           // 占位符：标记卡型总数
 };
 
 class PerkCard {
@@ -61,6 +67,12 @@ constexpr struct PerkCardConfig {
     {PerkCardType::FIREBALL_RANGE_UP,       "Fireball Range +5", 5,   2},
     {PerkCardType::LIGHTNING_MULTIPLIER_UP, "LightingDamage+1.5",    15,  2}, // 15=1.5×10
     {PerkCardType::MOVE_SPEED_UP,           "Move Speed +1",     1,   1},
+    {PerkCardType::HEALTH_UP_PRO,           "Health +200",       200, 1},
+    {PerkCardType::HEAL_SPEED_UP_PRO,       "Heal Speed +4",     4,   1},
+    {PerkCardType::HEAL_AMOUNT_UP_PRO,      "Heal Amount +10",   10,  1},
+    {PerkCardType::UNLOCK_PHOENIX,          "Get Phoenix",   0,   1},
+    {PerkCardType::UNLOCK_KUINIU,           "Get KuiNiu",    0,   1},
+    {PerkCardType::MAGIC_TIM,               "Magic Time",         0,   1},
 };
 
 #endif // PREKCARD_HPP
