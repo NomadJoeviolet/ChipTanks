@@ -32,7 +32,7 @@ public:
         return m_pdata;
     }
 
-    virtual void shoot(uint8_t x , uint8_t y , BulletType type) = 0;
+    virtual void shoot(uint8_t x , uint8_t y , BulletType type);  // 默认实现在role.cpp中
     virtual void doAction() = 0;
     virtual void init() = 0;
     virtual void die() = 0;

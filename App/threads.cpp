@@ -254,8 +254,8 @@ enum class DebugEnemyType {
 
 // 调试模式配置
 struct DebugConfig {
-    DebugEnemyType enemyType = DebugEnemyType::ELITE_SHENGYU ; // 当前测试的敌人类型
-    uint8_t enemyCount       = 2 ;                       // 生成敌人数量（普通敌人有效）
+    DebugEnemyType enemyType = DebugEnemyType::BOSS_HUNDUN ; // 当前测试的敌人类型
+    uint8_t enemyCount       = 1 ;                       // 生成敌人数量（普通敌人有效）
     bool autoRespawn         = true;                    // 敌人全灭后是否自动重新生成
 };
 

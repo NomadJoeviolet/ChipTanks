@@ -2,6 +2,11 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+
+#include "../gameEntityManager.hpp"
+
+extern GameEntityManager g_entityManager;
+
 //一定要注意这里的子弹创建函数的实现和细节
 //此处决定发射子弹的数值和类型
 
@@ -179,4 +184,25 @@ void IRole::takeDamage(uint8_t damage) {
 
 bool IRole::isActive() {
     return m_pdata->isActive;
+}
+
+// 通用shoot函数实现，子类可以直接使用或override
+void IRole::shoot(uint8_t x, uint8_t y, BulletType type) {
+    float heatMultiplier = 1.0f;
+    if (type == BulletType::FIRE_BALL) heatMultiplier = 2.0f;
+    else if (type == BulletType::LIGHTNING_LINE) heatMultiplier = 1.5f;
+
+    if (m_pdata->heatData.currentHeat + m_pdata->heatData.heatPerShot * heatMultiplier > m_pdata->heatData.maxHeat)
+        return;
+    if (m_pdata->attackData.shootCooldownTimer > 0) return;
+
+    IBullet *newBullet = createBullet(x, y, type);
+    if (newBullet != nullptr) {
+        if (g_entityManager.addBullet(newBullet)) {
+            m_pdata->attackData.shootCooldownTimer = m_pdata->attackData.shootCooldownResetTime;
+            m_pdata->heatData.currentHeat += m_pdata->heatData.heatPerShot;
+        } else {
+            delete newBullet;
+        }
+    }
 }

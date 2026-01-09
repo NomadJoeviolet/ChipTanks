@@ -44,7 +44,6 @@ public:
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
 
 /**
@@ -70,7 +69,6 @@ public:
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
 
 /**
@@ -94,7 +92,6 @@ public:
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 };
 
 
@@ -121,7 +118,7 @@ public:
  */
 
 //数值设定参考（精英级，比普通敌人强，比BOSS弱）
-//血量：80 + level * 80（中等血量）
+//血量：40 + level * 200
 //攻击力：6 + level * 2（较高攻击力）
 //移动速度：2（中速移动）
 //碰撞伤害：10 + level * 3（较高碰撞伤害）
@@ -159,7 +156,6 @@ public:
     void think() override;                                      // 思考决策
     void doAction() override;                                   // 执行动作
     void die() override;                                        // 死亡处理
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
 
     void chargeTowardsPlayer(); // 攻击方式1，冲锋践踏 - 向玩家方向冲锋
     void tigerClawAttack();     // 攻击方式2，虎牙利爪 - 发射扇形子弹
@@ -179,16 +175,16 @@ public:
  * 
  * @note  === 攻击方式 ===
  * @note  MODE_1: 水雾弥漫 - 呼应"大水"典故，在场景中生成多个迷雾区域遮挡玩家视线
- *               持续时间 MistCloudTime=2000ms，生成 MistCloudCount=4 个迷雾区域
+ *               持续时间 MistCloudTime=3000ms，生成 MistCloudCount=2 个迷雾区域
  * @note  MODE_2: 洪波推涌 - 往前推出一长条迷雾屏障，从发射位置开始逐渐消散
- *               持续时间 FloodWaveTime=1500ms，迷雾条长度 FloodWaveLength=80 像素
- * @note  MODE_3: 赤羽雷鸣 - 呼应"赤"色特征，在自身中央发射一发雷电子弹
- *               持续时间 RedThunderTime=300ms，一次性发射
+ *               持续时间 FloodWaveTime=2800ms，迷雾条长度 FloodWaveLength=110 像素
+ * @note  MODE_3: 赤羽雷鸣 - 呼应“赤”色特征，发射一串普通子弹
+ *               持续时间 RedThunderTime=800ms，每 ThunderInterval=150ms 发射一发，共 5 发
  */
 
 //数值设定参考（精英级，偏向干扰型，攻击力较低）
-//血量：50 + level * 50（较低血量，偏脆皮）
-//攻击力：4 + level * 1（较低攻击力，主要靠干扰）
+//血量：50 + level * 220
+//攻击力：10 + level * 4
 //移动速度：2（中速移动）
 //碰撞伤害：6 + level * 2（较低碰撞伤害）
 
@@ -235,7 +231,6 @@ public:
     void think() override;                                      // 思考决策
     void doAction() override;                                   // 执行动作
     void die() override;                                        // 死亡处理
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
 
     void mistCloud();    // 攻击方式1，水雾弥漫 - 生成迷雾遮挡视线
     void floodWave();    // 攻击方式2，洪波推涌 - 推出长条迷雾屏障
@@ -256,7 +251,7 @@ public:
  * 
  * @note  === 攻击方式 ===
  * @note  MODE_1: 土涌突刺 - 呼应"土功"，在前方间隔发射火球弹（土块爆炸）
- *               持续时间 EarthSurgeTime=1200ms，每 EarthSurgeInterval=300ms 发射一发火球
+ *               持续时间 EarthSurgeTime=1200ms，每 EarthSurgeInterval=400ms 发射一发火球
  * @note  MODE_2: 獠吠震波 - 呼应"其音如狗吠"，发射5发扇形普通子弹阵
  *               持续时间 BarkWaveTime=400ms，一次性发射
  * @note  MODE_3: 穴地陷阱 - 呼应"见则其县多土功"，在随机位置挖掘陷阱后爆炸
@@ -264,8 +259,8 @@ public:
  */
 
 //数值设定参考（精英级，比普通敌人强，比BOSS弱）
-//血量：60 + level * 60（中等血量，比驳稍弱）
-//攻击力：5 + level * 2（中等攻击力）
+//血量：60 + level * 160
+//攻击力：6 + level * 3
 //移动速度：2（中速移动）
 //碰撞伤害：8 + level * 2（中等碰撞伤害）
 
@@ -307,7 +302,6 @@ public:
     void think() override;                                      // 思考决策
     void doAction() override;                                   // 执行动作
     void die() override;                                        // 死亡处理
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
 
     void earthSurge();  // 攻击方式1，土涌突刺 - 发射火球弹
     void barkWave();    // 攻击方式2，獠吠震波 - 发射扇形子弹
@@ -366,7 +360,6 @@ public:
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 
     void pullPlayerAndDevourAttack();        // 吸引玩家并进行吞噬攻击，攻击方式1
     void fireThreeRowsBasicBullets();        // 发射三排普通子弹，攻击方式2
@@ -442,7 +435,6 @@ public:
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 
     void fireContinuousMassiveBasicBullets();     // 攻击方式1，随机位置发射大量普通子弹
     void fireFiveFireballBulletsAtRandom();       // 攻击方式2，随机位置发射5个火球弹
@@ -485,7 +477,6 @@ public:
     void think() override;                                      // 只保留声明
     void doAction() override;                                   // 只保留声明
     void die() override;                                        // 只保留声明
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 只保留声明
 
 
     void fireNineRowsBasicBullets();      // 攻击方式1，发射九排普通子弹
@@ -507,7 +498,7 @@ public:
  * @note  低速移动但可瞬移，攻击方式以干扰和混乱为主。
  * 
  * @note  === 攻击方式 ===
- * @note  MODE_1: 混沌涌动 - 随机闪烁移动，同时向4个方向发射普通子弹
+ * @note  MODE_1: 混沌涌动 - 随机闪烁移动，同时向4个方向发射普通子弹，夹杂火球
  *               持续时间 ChaosSurgeTime=3000ms，每 ChaosSurgeInterval=500ms 闪烁并发射一轮
  * @note  MODE_2: 七窍封印 - 在屏幕上生成7个闪烁干扰区域遮挡视野
  *               持续时间 SealAperturesTime=2000ms，呼应"七窍凿而混沌死"典故
@@ -574,7 +565,6 @@ public:
     void think() override;                                      // 思考决策
     void doAction() override;                                   // 执行动作
     void die() override;                                        // 死亡处理
-    void shoot(uint8_t x, uint8_t y, BulletType type) override; // 发射子弹
 
     void chaosSurge();                // 攻击方式1，混沌涌动 - 随机闪烁移动并向4方向发射子弹
     void sealSevenApertures();        // 攻击方式2，七窍封印 - 生成7个干扰区域遮挡视野
