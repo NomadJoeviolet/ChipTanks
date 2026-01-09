@@ -7,7 +7,7 @@
 //controlDelayTime = 10
 //设计冷却和热量机制查看role.cpp
 //射击冷却时间=resetTime/ (Speed) ms
-//热量冷却速率= heatCoolDownRate 每次冷却时间间隔由200ms
+//热量冷却速率= heatCoolDownRate 每次冷却时间间隔由2000ms
 
 //普通子弹热量消耗倍率 1
 //火球弹热量消耗倍率 2
@@ -16,9 +16,9 @@
 //role.cpp中的createBullet决定发射子弹的数值和机制
 //普通子弹击中敌人后造成伤害， attackPower 点伤害
 //火球弹击中敌人后对击中的敌人造成一次伤害，并在一定范围内造成范围伤害（击中的敌人也会受到范围伤害）
-//两次伤害均为 attackPower +30 点伤害
+//两次伤害均为 attackPower +10 点伤害
 
-//闪电链弹一束条的范围穿透伤害，mul*attackPower+10 点伤害
+//闪电链弹一束条的范围穿透伤害，mul*attackPower+30 点伤害
 
 uint8_t const boundary_deadzone = 5; // 左侧边界
 
@@ -316,8 +316,13 @@ public:
  * @brief TaotieEnemy class
  * @note  中文：饕餮 ｜ 英文：Taotie,神话典故：四凶之一，羊身人面、眼在腋下、虎齿人爪，声音似婴儿；
  * @note  上古 “四凶” 之一，贪婪无度，能吞食天地万物，专食人类与牲畜，象征极致贪欲。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，低速移动，攻击方式多样且具有威胁性，擅长近战。
- * @note  攻击方式1，将玩家向自己拉近，进行吞噬攻击 
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，低速移动，攻击方式多样且具有威胁性，擅长近战。 * 
+ * @note  === 数值设定 ===
+ * @note  血量：50 + level * 1700
+ * @note  攻击力：2 + level * 4
+ * @note  碰撞伤害：10 + level * 10
+ * 
+ * @note  === 攻击方式 === * @note  攻击方式1，将玩家向自己拉近，进行吞噬攻击 
  * @note  攻击方式2，发射三排普通子弹
  * @note  攻击方式3，向前冲撞，进行撞击攻击
  * @note  攻击方式4, 向后碾压，从玩家左侧出现，进行碾压攻击
@@ -376,6 +381,11 @@ public:
  * 
  * @note  BOSS级大型敌人，体型巨大（64x64 像素），低血量，高攻击力，高速移动，
  * @note  攻击方式多样且具有威胁性，擅长闪现移动与大量弹幕。
+ * 
+ * @note  === 数值设定 ===
+ * @note  血量：30 + level * 1200
+ * @note  攻击力：10 + level * 6
+ * @note  碰撞伤害：7 + level * 5
  * 
  * @note  === 攻击方式 === 
  * @note  MODE_1: 闪现至中间位置(63,1)，随机位置发射大量普通子弹
@@ -449,6 +459,13 @@ public:
  * @note  中文：相柳 ｜ 英文：Xiangliu,神话典故：九头蛇形怪兽，居于洪水之中，毒气弥漫，所到之处草木皆枯，河流干涸。
  * @note  九头蛇形怪兽，能喷射剧毒，所到之处草木皆枯，河流干涸，象征灾难与毁灭。
  * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，中速移动，攻击方式多样且具有威胁性。
+ * 
+ * @note  === 数值设定 ===
+ * @note  血量：30 + level * 1300
+ * @note  攻击力：3 + level * 5
+ * @note  碰撞伤害：12 + level * 4
+ * 
+ * @note  === 攻击方式 ===
  * @note  攻击方式1，发射九排普通子弹
  * @note  攻击方式2，发射三排闪电
  * @note  攻击方式3，发射三排火球弹
@@ -497,8 +514,13 @@ public:
  * @note  BOSS级大型敌人，体型巨大（64x64 像素），最高血量（四凶之首），中等攻击力，
  * @note  低速移动但可瞬移，攻击方式以干扰和混乱为主。
  * 
+ * @note  === 数值设定 ===
+ * @note  血量：40 + level * 1400
+ * @note  攻击力：8 + level * 6
+ * @note  碰撞伤害：15 + level * 8
+ * 
  * @note  === 攻击方式 ===
- * @note  MODE_1: 混沌涌动 - 随机闪烁移动，同时向4个方向发射普通子弹，夹杂火球
+ * @note  MODE_1: 混沌涌动 - 随机闪烁移动，同时向8个方向发射普通子弹，夹杂火球
  *               持续时间 ChaosSurgeTime=3000ms，每 ChaosSurgeInterval=500ms 闪烁并发射一轮
  * @note  MODE_2: 七窍封印 - 在屏幕上生成7个闪烁干扰区域遮挡视野
  *               持续时间 SealAperturesTime=2000ms，呼应"七窍凿而混沌死"典故
@@ -507,7 +529,7 @@ public:
  * @note  MODE_4: 混沌漩涡 - 螺旋式发射子弹，Y位置按正弦波扫射
  *               持续时间 ChaoticBarrageTime=2000ms，每 ChaoticBarrageInterval=150ms 发射一发
  * @note  MODE_5: 时空裂隙 - 快速发射带随机缺口的弹幕墙，缺口位置每轮变化
- *               持续时间 TemporalRiftTime=2500ms，每 TemporalRiftInterval=400ms 发射一轮
+ *               持续时间 TemporalRiftTime=2500ms，每 TemporalRiftInterval=550ms 发射一轮
  * @note  MODE_6: 归于混沌 - 全屏弹幕攻击，中间有安全缺口，血量越低缺口越小
  *               警告时间 ReturnToChaosWarning=500ms，发射时间 ReturnToChaosTime=100ms
  */

@@ -1929,8 +1929,8 @@ TaotieEnemy::TaotieEnemy(
     m_pdata->level = level;
 
     // 血量信息
-    m_pdata->healthData.currentHealth = 250 + level * 1200;
-    m_pdata->healthData.maxHealth     = 250 + level * 1200;
+    m_pdata->healthData.currentHealth = 50 + level * 1700;
+    m_pdata->healthData.maxHealth     = 50 + level * 1700;
 
     // 回血信息
     m_pdata->healthData.healValue       = 20;
@@ -1954,7 +1954,7 @@ TaotieEnemy::TaotieEnemy(
     m_pdata->initData.posY = initPosY;
 
     // 攻击信息
-    m_pdata->attackData.attackPower            = 2 + level * 5;
+    m_pdata->attackData.attackPower            = 2 + level * 4;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
@@ -2422,8 +2422,8 @@ TaowuEnemy::TaowuEnemy(
 
     // 血量信息
     //（具体数值按敌人类型设计）
-    m_pdata->healthData.currentHealth = 130 + level * 1200;
-    m_pdata->healthData.maxHealth     = 130 + level * 1200;
+    m_pdata->healthData.currentHealth = 30 + level * 1200;
+    m_pdata->healthData.maxHealth     = 30 + level * 1200;
 
     // 治疗信息
     m_pdata->healthData.healValue       = 250;
@@ -2447,7 +2447,7 @@ TaowuEnemy::TaowuEnemy(
     m_pdata->initData.posY = initPosY;
 
     // 攻击信息
-    m_pdata->attackData.attackPower            = 15 + level * 5;
+    m_pdata->attackData.attackPower            = 10 + level * 6;
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 5000; //5000 ms
@@ -3340,8 +3340,8 @@ HundunEnemy::HundunEnemy(
 
     // 血量信息
     // 设置血量相关信息，随着等级增加，血量增加
-    m_pdata->healthData.currentHealth = 50 + level * 1400;
-    m_pdata->healthData.maxHealth     = 50 + level * 1400;
+    m_pdata->healthData.currentHealth = 40 + level * 1400;
+    m_pdata->healthData.maxHealth     = 40 + level * 1400;
 
     // 治疗信息
     m_pdata->healthData.healValue       = 250; // 每次的治疗值
@@ -3365,7 +3365,7 @@ HundunEnemy::HundunEnemy(
     m_pdata->initData.posY = initPosY;
 
     // 攻击信息
-    m_pdata->attackData.attackPower            = 4 + level * 4; // 中等伤害
+    m_pdata->attackData.attackPower            = 8 + level * 6; // 中等伤害
     m_pdata->attackData.shootCooldownSpeed     = 5;
     m_pdata->attackData.shootCooldownTimer     = 0;
     m_pdata->attackData.shootCooldownResetTime = 6000; // 6000ms 射击冷却时间
@@ -3373,7 +3373,7 @@ HundunEnemy::HundunEnemy(
 
     m_pdata->attackData.bulletRange            = 12;             // 子弹射击范围
     m_pdata->attackData.bulletDamageMultiplier = 1.8f;           // 子弹伤害倍率
-    m_pdata->attackData.collisionPower         = 15 + level * 5; // 碰撞威力
+    m_pdata->attackData.collisionPower         = 15 + level * 8; // 碰撞威力
 
     // 热量信息（BOSS 特殊值）
     m_pdata->heatData.maxHeat          = 250;
