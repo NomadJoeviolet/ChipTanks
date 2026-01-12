@@ -201,7 +201,8 @@ void keyScanThread(void *argument) {
                 bool confirmKeyPressed = (
                     key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_RIGHT)] == 1 ||
                     key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_LEFT)] == 1 ||
-                    key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_UP)] == 1
+                    key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_UP)] == 1 ||
+                    key.m_rightKeyButton[static_cast<uint8_t>(RightKeyState::KEY_DOWN)] == 1
                 );
                 
                 // 冷却期间不响应确认键，只重置计时器
