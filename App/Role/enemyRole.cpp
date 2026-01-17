@@ -2040,7 +2040,7 @@ void TaotieEnemy::think() {
                 return;
             }
 
-            uint8_t randomAttackMode         = rand() % 5 + 1; // 1-5 攻击模式
+            uint8_t randomAttackMode         = rand() % 6 + 1; // 1-6 攻击模式
             m_pdata->actionData.currentState = ActionState::ATTACKING;
 
             switch (randomAttackMode) {
@@ -2070,12 +2070,19 @@ void TaotieEnemy::think() {
             case 4:
                 // 攻击方式4，向后磾压，从玩家左侧出现，进行磾压攻击
                 // 出现位置距离玩家左侧 100 像素
-                action_timer                   = 4000; // 攻击持续时间4000ms
+                // action_timer                   = 4000; // 攻击持续时间4000ms
+                // action_MaxTime                 = action_timer;
+                // action_count                   = 0;
+                // appearedForCrush               = false;
+                // comeBackForCrush               = false;
+                // m_pdata->actionData.attackMode = AttackMode::MODE_4;
+                // 攻击方式6，将玩家拉近并发射随机中量弹幕
+                action_timer                   = 2200; // 攻击持续时间2200ms
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
-                appearedForCrush               = false;
-                comeBackForCrush               = false;
-                m_pdata->actionData.attackMode = AttackMode::MODE_4;
+                m_pdata->actionData.attackMode = AttackMode::MODE_6;
+                break;
+
                 break;
             case 5:
                 // 攻击方式5，将玩家向自己拉近，同时向前冲撞
@@ -2083,6 +2090,13 @@ void TaotieEnemy::think() {
                 action_MaxTime                 = action_timer;
                 action_count                   = 0;
                 m_pdata->actionData.attackMode = AttackMode::MODE_5;
+                break;
+            case 6:
+                // 攻击方式6，将玩家拉近并发射随机中量弹幕
+                action_timer                   = 2200; // 攻击持续时间2200ms
+                action_MaxTime                 = action_timer;
+                action_count                   = 0;
+                m_pdata->actionData.attackMode = AttackMode::MODE_6;
                 break;
             default:
                 // 默认攻击方式1
@@ -2157,6 +2171,9 @@ void TaotieEnemy::doAction() {
             break;
         case AttackMode::MODE_5:
             pullPlayerAndChargeForwardAttack();
+            break;
+        case AttackMode::MODE_6:
+            pullPlayerAndScatterBullets();
             break;
         default:
             break;
@@ -2374,6 +2391,61 @@ void TaotieEnemy::pullPlayerAndChargeForwardAttack() {
     if (action_timer <= action_MaxTime * 3 / 4 && action_timer > action_MaxTime / 4) dir = 0; // 中期保持静止
     if (action_timer <= action_MaxTime / 4) dir = 2;                                          // 后期向右冲锋
     move(dir, 0);
+}
+
+// 攻击方式6：拉近玩家并发射中量随机普通子弹弹幕
+void TaotieEnemy::pullPlayerAndScatterBullets() {
+    // 控制触发节奏：每 150ms 进行一次拉扯与弹幕发射
+    if (action_count < 150) return;
+    action_count = 0;
+
+    IRole *player = g_entityManager.getPlayerRole();
+    if (player == nullptr) return;
+
+    // 计算玩家相对于Taotie的方向并进行一次拉扯
+    int16_t deltaX = (m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2)
+                     - (player->getData()->spatialData.currentPosX + player->getData()->spatialData.sizeX / 2);
+    int16_t deltaY = (m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2)
+                     - (player->getData()->spatialData.currentPosY + player->getData()->spatialData.sizeY / 2);
+
+    int8_t dirX = 0;
+    int8_t dirY = 0;
+    if (deltaX < 0)
+        dirX = -1;
+    else if (deltaX > 0)
+        dirX = 1;
+    else
+        dirX = 1;
+
+    if (deltaY < 0)
+        dirY = -1;
+    else if (deltaY > 0)
+        dirY = 1;
+    else
+        dirY = 0;
+
+    player->move(dirX, dirY, true);
+
+    // 发射中量随机散射普通子弹（偏移随机）
+    uint8_t originX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
+    uint8_t originY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
+
+    const uint8_t bulletCount = 8;          // 中量弹幕
+    const int8_t  spreadRange = 10;         // 随机偏移范围
+    for (uint8_t i = 0; i < bulletCount; ++i) {
+        int16_t offsetX = (rand() % (spreadRange + 1)) - spreadRange / 2; // 约 -5..+5
+        int16_t offsetY = (rand() % (spreadRange + 1)) - spreadRange / 2;
+
+        int16_t bx = originX + offsetX;
+        int16_t by = originY + offsetY;
+
+        bx = etl::clamp<int16_t>(bx, 0, 159);
+        by = etl::clamp<int16_t>(by, 0, 63);
+
+        m_pdata->attackData.shootCooldownTimer = 0;
+        m_pdata->heatData.currentHeat          = 0;
+        shoot(static_cast<uint8_t>(bx), static_cast<uint8_t>(by), BulletType::BASIC);
+    }
 }
 
 /*******************************************************************/

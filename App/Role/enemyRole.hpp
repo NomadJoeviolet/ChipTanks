@@ -51,6 +51,7 @@ public:
  * @note  中文：蛊雕 ｜ 英文：Gudiao,神话典故：山海经中大型猛禽凶兽，以哭声诱捕人类，擅长飞行捕猎，是山中食人恶兽的代表。
  * @note  中速飞行的中型敌人，体型居中（15x15 像素），攻击力较高，适合伏击玩家。
  * @note  攻击方式为发射高伤害普通子弹，每次从身体中心的两侧发射，攻击速度低。
+     void pullPlayerAndScatterBullets();      // 拉近玩家并发射随机中量弹幕，攻击方式6
  * @note  只会发射普通子弹，但行动方式较为直接，死亡后会发出一颗火球弹。
  */
 class GudiaoEnemy : public IRole {
@@ -316,17 +317,20 @@ public:
  * @brief TaotieEnemy class
  * @note  中文：饕餮 ｜ 英文：Taotie,神话典故：四凶之一，羊身人面、眼在腋下、虎齿人爪，声音似婴儿；
  * @note  上古 “四凶” 之一，贪婪无度，能吞食天地万物，专食人类与牲畜，象征极致贪欲。
- * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，低速移动，攻击方式多样且具有威胁性，擅长近战。 * 
+ * @note  BOSS级大型敌人，体型巨大（64x64 像素），高血量，高攻击力，低速移动，攻击方式多样且具有威胁性，擅长近战。
+ *
  * @note  === 数值设定 ===
  * @note  血量：50 + level * 1700
  * @note  攻击力：2 + level * 4
  * @note  碰撞伤害：10 + level * 10
- * 
- * @note  === 攻击方式 === * @note  攻击方式1，将玩家向自己拉近，进行吞噬攻击 
+ *
+ * @note  === 攻击方式 ===
+ * @note  攻击方式1，将玩家向自己拉近，进行吞噬攻击
  * @note  攻击方式2，发射三排普通子弹
  * @note  攻击方式3，向前冲撞，进行撞击攻击
  * @note  攻击方式4, 向后碾压，从玩家左侧出现，进行碾压攻击
  * @note  攻击方式5, 将玩家向自己拉近，同时向前冲撞
+ * @note  攻击方式6, 拉近玩家并发射随机中量普通子弹弹幕
  */
 
 class TaotieEnemy : public IRole {
@@ -371,6 +375,8 @@ public:
     void chargeForwardAndRamAttack();        // 向前冲撞并进行撞击攻击，攻击方式3
     void appearLeftAndRollBackCrushAttack(); // 从左侧出现并进行碾压攻击，攻击方式4
     void pullPlayerAndChargeForwardAttack(); // 吸引玩家并向前冲撞攻击，攻击方式5
+    void pullPlayerAndScatterBullets();      // 拉近玩家并发射随机中量弹幕，攻击方式6
+    
 };
 
 /**

@@ -83,3 +83,24 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     etl::etl
     # Add user defined libraries
 )
+
+
+# 添加自定义命令，在编译完成后自动生成 HEX 文件
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+         COMMAND ${CMAKE_OBJCOPY} -O ihex      # 生成 HEX 文件
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.elf"
+        "${CMAKE_BINARY_DIR}/${PROJECT_NAME}.hex"
+    COMMENT "Generating HEX file"
+    VERBATIM
+)
+
+# 添加自定义命令，在编译完成后自动生成 BIN 文件
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+COMMAND ${CMAKE_OBJCOPY} -O binary      # 生成 BIN 文件
+"${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.elf"
+"${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin"
+    COMMENT "Converting ELF to BIN"
+    VERBATIM
+)
+
+
