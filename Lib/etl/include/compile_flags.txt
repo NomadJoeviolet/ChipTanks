@@ -1,0 +1,4 @@
+# clangd fallback flags for ETL headers when no compile_commands entry exists.
+# Ensures .h ETL headers are parsed as C++ (ETL uses namespace/template heavily).
+-xc++
+-std=gnu++17

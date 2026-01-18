@@ -1,5 +1,19 @@
 {
+    // clangd 解析 STM32 交叉编译工程的关键：
+    // 1) 使用 CMake 生成的 compile_commands.json（否则会回退到默认 x86_64 配置）。
+    // 2) 允许 clangd 调用 ARM GCC 驱动查询系统/标准库头文件搜索路径。
+    "clangd.arguments": [
+        //"--compile-commands-dir=build/Debug",
+        "--compile-commands-dir=build/Release",
+        "--query-driver=C:\\INCLUD~1\\Tools\\EMBEDD~1\\ARM-NO~1\\142BCE~1.3RE\\bin\\AR10B2~1.EXE",
+        "--enable-config",
+        "--background-index",
+        "--log=verbose"
+    ],
+
     "files.associations": {
+        "**/Lib/etl/include/**/*.h": "cpp",
+        "**/Lib/etl/include/**/*.hpp": "cpp",
         "new": "cpp",
         "cstdint": "cpp",
         "array": "cpp",

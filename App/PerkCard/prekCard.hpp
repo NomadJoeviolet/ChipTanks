@@ -2,6 +2,7 @@
 #define PREKCARD_HPP
 
 #include "stdint.h"
+#include <string.h>
 
 enum class PerkCardType {
     HEAL_SPEED_UP,           // 1. 恢复速度+2

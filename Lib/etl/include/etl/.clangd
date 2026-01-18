@@ -1,0 +1,16 @@
+# 仅作用于 ETL 目录（以及其子目录），用于让 clangd 正确解析 ETL 的 .h 头。
+# 现象：unknown type name 'namespace' / 'template'，并且日志里出现 "Indexing c17 standard library"。
+# 根因：clangd 对 .h 常按 C 处理，或给头文件“借用”了某个 .c 的编译参数（例如 -std=gnu11 / -x c）。
+# 这里强制改为 C++ 解析。
+
+CompileFlags:
+  Remove:
+    - "-std=gnu11"
+    - "-std=c11"
+    - "-std=gnu99"
+    - "-std=c99"
+    - "-x"
+    - "c"
+  Add:
+    - "-xc++"
+    - "-std=gnu++17"

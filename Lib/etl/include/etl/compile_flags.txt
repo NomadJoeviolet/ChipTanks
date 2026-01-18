@@ -1,0 +1,4 @@
+# clangd fallback flags for ETL headers in this directory.
+# Ensures .h headers are parsed as C++ even when opened directly.
+-xc++
+-std=gnu++17
