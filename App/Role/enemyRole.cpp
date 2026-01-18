@@ -2430,10 +2430,10 @@ void TaotieEnemy::pullPlayerAndScatterBullets() {
     uint8_t originX = m_pdata->spatialData.currentPosX + m_pdata->spatialData.sizeX / 2;
     uint8_t originY = m_pdata->spatialData.currentPosY + m_pdata->spatialData.sizeY / 2;
 
-    const uint8_t bulletCount = 8;          // 中量弹幕
-    const int8_t  spreadRange = 10;         // 随机偏移范围
+    const uint8_t bulletCount = 2;          // 中量弹幕
+    const int8_t  spreadRange = 20;         // 随机偏移范围
     for (uint8_t i = 0; i < bulletCount; ++i) {
-        int16_t offsetX = (rand() % (spreadRange + 1)) - spreadRange / 2; // 约 -5..+5
+        int16_t offsetX = (rand() % (spreadRange + 1)) - spreadRange / 2; // 约 -10..+10
         int16_t offsetY = (rand() % (spreadRange + 1)) - spreadRange / 2;
 
         int16_t bx = originX + offsetX;
