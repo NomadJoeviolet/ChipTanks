@@ -20,12 +20,12 @@
 游戏通过按键进行操作：
 
 - **移动控制**：
-  - **Key 10**：向上移动 (UP) / 菜单上选
-  - **Key 11**：向下移动 (DOWN) / 菜单下选
-  - **Key 15**：向左移动 (LEFT)
-  - **Key 7**：向右移动 (RIGHT)
+  - **KeyLeft_up**：向上移动 (UP) / 菜单上选
+  - **KeyLeft_down**：向下移动 (DOWN) / 菜单下选
+  - **KeyLeft_left**：向左移动 (LEFT)
+  - **KeyLeft_right**：向右移动 (RIGHT)
 - **功能控制**：
-  - **Key 3**：确认选择 (Select) —— 用于在升级界面选择 PerkCard。
+  - **KeyRight_all**：确认选择 (Select) —— 用于在升级界面选择 PerkCard。
 - **攻击**：
   - 坦克会自动锁定并攻击，自动判定冷却和热量。
 
